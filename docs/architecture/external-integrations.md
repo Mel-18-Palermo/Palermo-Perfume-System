@@ -77,4 +77,3 @@ they never call a live payment environment or include real customer data.
 - [OpenAI developer quickstart](https://platform.openai.com/docs/quickstart)
 - [OpenAI API authentication](https://platform.openai.com/docs/api-reference/authentication)
 - [OpenAI platform data controls](https://platform.openai.com/docs/models/default-usage-policies-by-endpoint)
-

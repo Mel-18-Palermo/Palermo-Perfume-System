@@ -120,4 +120,3 @@ Production release is blocked until the team records:
 - [OWASP Transport Layer Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html)
 - [MySQL 8.0 encrypted connection protocols](https://dev.mysql.com/doc/refman/8.0/en/encrypted-connection-protocols-ciphers.html)
 - [MySQL 8.0 InnoDB data-at-rest encryption](https://dev.mysql.com/doc/refman/8.0/en/innodb-data-encryption.html)
-

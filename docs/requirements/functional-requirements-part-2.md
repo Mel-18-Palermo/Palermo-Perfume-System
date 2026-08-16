@@ -94,4 +94,3 @@ Every implementation pull request must cite its requirement IDs and add or updat
 acceptance evidence. Changes to an ID are reviewed with the related use case, data design, UI flow,
 privacy controls, and test case. Superseded requirements remain in version history; IDs are not
 silently reused.
-
