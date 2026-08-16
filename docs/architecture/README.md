@@ -6,6 +6,9 @@ committing to a hosting-specific framework.
 The detailed folder, module, request-flow, database, and integration rules are in
 [the backend architecture specification](backend-architecture.md).
 
+The provider-neutral payment and OpenAI boundaries are in
+[the external integrations specification](external-integrations.md).
+
 ## Boundaries
 
 - `public/` is the only web-facing directory.
