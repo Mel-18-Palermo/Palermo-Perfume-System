@@ -32,3 +32,6 @@ Input validation, XSS, CSRF, and SQL injection controls are documented in
 
 Personal-information flows, privacy risks, and pre-release actions are documented in
 [the privacy impact assessment](docs/security/privacy-impact-assessment.md).
+
+The required AES-256, TLS 1.3, and key-management boundaries are documented in
+[the data encryption architecture](docs/security/encryption-architecture.md).
