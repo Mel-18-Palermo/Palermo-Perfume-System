@@ -1,0 +1,30 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Composer
+/vendor/
+composer.phar
+
+# Test and analysis output
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+/build/
+
+# Runtime data
+/storage/cache/*
+/storage/logs/*
+/storage/sessions/*
+!/storage/cache/.gitkeep
+!/storage/logs/.gitkeep
+!/storage/sessions/.gitkeep
+
+# IDE and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

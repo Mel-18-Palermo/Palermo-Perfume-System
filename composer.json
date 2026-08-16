@@ -1,0 +1,43 @@
+{
+  "name": "palermo/perfume-system",
+  "description": "PHP/MySQL application for the Palermo Perfume System capstone project.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.2",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "vlucas/phpdotenv": "^5.6"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Palermo\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "lint": "find public src tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l",
+    "analyse": "phpstan analyse --memory-limit=1G",
+    "test": "phpunit",
+    "ci": [
+      "@lint",
+      "@analyse",
+      "@test"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
