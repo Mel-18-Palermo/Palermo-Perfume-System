@@ -35,3 +35,6 @@ Personal-information flows, privacy risks, and pre-release actions are documente
 
 The required AES-256, TLS 1.3, and key-management boundaries are documented in
 [the data encryption architecture](docs/security/encryption-architecture.md).
+
+Scent-profile collection, approved uses, de-identification, and deletion rules are documented in
+[the scent-profile privacy protocol](docs/security/scent-profile-privacy.md).
