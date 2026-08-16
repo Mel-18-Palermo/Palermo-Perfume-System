@@ -26,3 +26,6 @@ the repository does not claim those controls are active merely because they appe
 
 The current role and permission rules are documented in
 [the RBAC specification](docs/security/rbac.md).
+
+Input validation, XSS, CSRF, and SQL injection controls are documented in
+[the web security specification](docs/security/web-controls.md).
