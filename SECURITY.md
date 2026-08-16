@@ -29,3 +29,6 @@ The current role and permission rules are documented in
 
 Input validation, XSS, CSRF, and SQL injection controls are documented in
 [the web security specification](docs/security/web-controls.md).
+
+Personal-information flows, privacy risks, and pre-release actions are documented in
+[the privacy impact assessment](docs/security/privacy-impact-assessment.md).
