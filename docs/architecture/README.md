@@ -3,6 +3,9 @@
 The initial code uses a small front-controller structure so the team can add features without
 committing to a hosting-specific framework.
 
+The detailed folder, module, request-flow, database, and integration rules are in
+[the backend architecture specification](backend-architecture.md).
+
 ## Boundaries
 
 - `public/` is the only web-facing directory.
