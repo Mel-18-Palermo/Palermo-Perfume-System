@@ -23,3 +23,6 @@ and suggested mitigation without using real customer data.
 Encryption at rest, TLS configuration, backups, payment compliance, retention, and deployment access
 controls depend on the selected hosting and service providers. They must be verified before release;
 the repository does not claim those controls are active merely because they appear in requirements.
+
+The current role and permission rules are documented in
+[the RBAC specification](docs/security/rbac.md).
