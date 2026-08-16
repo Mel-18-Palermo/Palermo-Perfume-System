@@ -4,6 +4,10 @@ Use Mermaid as the default source format for architecture diagrams, DFDs, ERDs, 
 diagrams, and process flows. Keep each diagram in a focused Markdown file so GitHub renders it and
 reviewers can see meaningful line-by-line changes.
 
+Current diagrams:
+
+- [DFD level 1](dfd-level-1.md), issue #146
+
 ```mermaid
 flowchart LR
     Customer["Customer"] --> System["Palermo Perfume System"]
