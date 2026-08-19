@@ -1,41 +1,110 @@
 # Contributing
 
-All work must be traceable to a GitHub issue and reviewed through a pull request. Do not push feature,
-documentation, fix, or test work directly to `main`.
+All Palermo project work must be traceable through GitHub.
 
-## Workflow
+## Core workflow
 
-1. Read the issue and confirm its acceptance criteria. Ask for missing detail before coding.
-2. Update local `main`, then create one branch for the issue:
-   - `feature/<issue>-<short-name>`
-   - `fix/<issue>-<short-name>`
-   - `docs/<issue>-<short-name>`
-   - `test/<issue>-<short-name>`
-3. Make small commits with clear messages.
-4. Run the repository lint, type-check, test, and build commands once the application scaffold is
-   present.
-5. Push the branch and open a pull request containing `Closes #<issue>`.
-6. Address review feedback and wait for CI before merge.
+Every normal change follows:
 
-Do not create a shared `develop` branch. `main` is the reviewed integration branch.
+**1 issue → 1 branch → focused commits → 1 pull request → review → merge**
 
-## Review boundaries
+Do not push directly to `main`.
 
-Prisma migrations and executable schemas, authentication and authorization, security/privacy
-controls, payment handling, AI integrations, environment configuration, and CI/CD require review by
-the backend/security lead. Documentation owners may design and propose these areas but should not
-merge executable changes independently.
+Do not create a shared `develop` branch.
 
-## Evidence and data safety
+## Starting work
 
-Use sanitized test data. Never commit `.env`, API keys, passwords, payment information, identifiable
-customer data, private chat logs, or production exports. Put assessment evidence in the relevant
-`docs/` directory and link it from the issue or pull request.
+1. Read the assigned GitHub issue.
+2. Confirm its scope, dependencies, and acceptance criteria.
+3. Update local `main`.
+4. Create a short-lived branch from the current `main`.
+
+Branch naming:
+
+- `feat/<issue>-<short-name>`
+- `fix/<issue>-<short-name>`
+- `docs/<issue>-<short-name>`
+- `test/<issue>-<short-name>`
+- `chore/<issue>-<short-name>`
+
+Example:
+
+`docs/162-auth-requirements`
+
+## Commits
+
+Keep commits small and understandable.
+
+Preferred commit format:
+
+- `docs: define authentication requirements`
+- `feat: add product catalogue page`
+- `fix: prevent duplicate checkout submission`
+- `test: add cart total cases`
+- `chore: configure repository tooling`
+
+Do not combine unrelated work in one commit or pull request.
+
+## Pull requests
+
+Every pull request must:
+
+- link its GitHub issue;
+- describe what changed;
+- identify relevant requirement IDs;
+- explain how the work was validated;
+- contain only work within the assigned scope;
+- resolve review conversations before merge.
+
+Use `Closes #<issue-number>` when the pull request fully satisfies the issue.
+
+## Documentation
+
+Canonical documentation is Markdown.
+
+Canonical system diagrams use Mermaid.
+
+Do not submit undocumented diagrams as the only editable source.
+
+## Protected technical areas
+
+Changes involving the following require review by the backend/security lead:
+
+- Prisma schema and migrations;
+- Supabase/database configuration;
+- authentication and authorization;
+- payment processing;
+- server-side business logic;
+- AI integrations;
+- secrets or environment configuration;
+- security and privacy controls;
+- CI/CD and deployment configuration.
+
+Frontend contributors should not modify these areas unless their assigned issue explicitly requires it.
+
+## Security and data safety
+
+Never commit:
+
+- `.env` files;
+- API keys;
+- passwords;
+- database credentials;
+- payment credentials or card data;
+- real customer data;
+- session tokens;
+- private production logs.
+
+Use synthetic data for development and assessment evidence.
 
 ## Definition of done
 
-- The linked issue acceptance criteria are satisfied.
-- Automated and relevant manual tests pass.
-- Documentation and `.env.example` are current.
-- The pull request has a focused diff and no unrelated files.
-- CI passes and review conversations are resolved.
+Work is complete only when:
+
+- issue acceptance criteria are satisfied;
+- the change stays within issue scope;
+- relevant documentation is updated;
+- required validation or tests pass;
+- no secrets or sensitive data are included;
+- review comments are resolved;
+- the pull request is approved for integration.
