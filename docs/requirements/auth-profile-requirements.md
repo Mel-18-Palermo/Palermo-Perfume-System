@@ -2,7 +2,7 @@
 
 ## Status
 
-**Working SRS refinement — pending team/supervisor/client validation.**
+**Validated team SRS refinement — source ambiguities resolved by recorded project decisions D-001 through D-007, with stakeholder confirmation still available if later required.**
 
 This document refines canonical requirements `FR-AUTH-001` through `FR-PROFILE-008`.
 
@@ -10,7 +10,7 @@ The supplied Palermo project brief provides the requirement names and source num
 
 ### Priority rule for this refinement
 
-All 15 requirements are proposed as **MUST** because they are explicitly listed in the Palermo functional-requirement baseline and form the core customer account/profile capability. This MoSCoW priority is a team proposal and is not stated by the source document.
+All 15 requirements are classified as **MUST** by the development team because they are explicitly listed in the Palermo functional-requirement baseline and form the core customer account/profile capability. This MoSCoW priority is a team decision and is not stated by the source document.
 
 ### Actor rule for this refinement
 
@@ -29,13 +29,13 @@ External technical services such as an email provider are not treated as busines
 
 **Source #:** 1  
 **Source baseline:** Customer account registration  
-**Proposed actor:** Visitor  
-**Proposed priority:** MUST  
-**Refinement status:** Proposed
+**Actor:** Visitor  
+**Priority:** MUST  
+**Refinement status:** Validated by D-003
 
 ### SRS requirement
 
-The system shall allow a visitor to create a customer account by submitting the approved registration information.
+The system shall allow a visitor to create a customer account by submitting a name, email address, and password.
 
 ### Preconditions
 
@@ -44,18 +44,21 @@ The system shall allow a visitor to create a customer account by submitting the 
 
 ### Success outcome
 
-- A new customer account is created.
-- The account enters the approved initial account state.
+- A new customer account is created with an internal system identifier.
+- The submitted email address becomes the unique customer login identifier.
+- The account enters `PENDING_VERIFICATION`.
 - The email-verification process can be initiated under `FR-AUTH-002`.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
-1. A visitor can submit all approved required registration fields.
+1. A visitor can submit name, email address, and password to register.
 2. Missing or invalid required values are rejected and the account is not created.
-3. The configured unique customer-account identifier cannot create a duplicate active account.
-4. A successful registration creates only one customer account for the submitted registration request.
-5. The created account is associated only with the registering customer.
-6. Successful registration makes the account eligible for the approved verification/activation process.
+3. The email address is normalised according to the approved authentication design and must be unique among customer login identifiers.
+4. Duplicate customer registration using an existing unique email identifier is rejected.
+5. The system creates an opaque internal customer identifier independent of the customer's email address.
+6. A successful registration creates only one customer account for the submitted request.
+7. The resulting account state is `PENDING_VERIFICATION`.
+8. Additional profile, address, marketing, or fragrance-preference data is not required during registration.
 
 ### Dependencies
 
@@ -65,15 +68,16 @@ The system shall allow a visitor to create a customer account by submitting the 
 
 ### Data involved
 
-- Approved registration fields — exact field set pending decision
-- Account identifier
+- Internal customer identifier
+- Name
+- Email address
+- Authentication credential
 - Account status
 - Verification status
 
-### Open decisions
+### Decision
 
-- `REQ-AUTH-001`
-- `REQ-AUTH-002`
+**D-003:** Registration requires only name, email, and password. Email is the unique customer login identifier; an opaque internal identifier is used for the customer record.
 
 ### Traceability
 
@@ -88,32 +92,33 @@ The system shall allow a visitor to create a customer account by submitting the 
 
 **Source #:** 2  
 **Source baseline:** Customer email verification  
-**Proposed actor:** Visitor / Customer  
-**Proposed priority:** MUST  
-**Refinement status:** Proposed
+**Actor:** Visitor / Customer  
+**Priority:** MUST  
+**Refinement status:** Validated by D-001
 
 ### SRS requirement
 
-The system shall provide an email-verification process that allows the email address associated with a customer account to be verified.
+The system shall provide an email-verification process that verifies control of the email address associated with a newly registered customer account.
 
 ### Preconditions
 
-- A customer account exists.
+- A customer account exists in `PENDING_VERIFICATION`.
 - The account has an email address that requires verification.
 
 ### Success outcome
 
 - The account email is recorded as verified.
-- The account can proceed according to the approved account-lifecycle rules.
+- Successful verification triggers `FR-AUTH-006` account activation.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
-1. The system can initiate verification for an eligible unverified customer email.
-2. A valid verification action marks the corresponding email address as verified.
-3. An invalid, expired, or already-consumed verification credential does not verify another account.
+1. The system can initiate email verification for an eligible unverified customer account.
+2. A valid verification action marks only the intended account email as verified.
+3. An invalid, expired, or already-consumed verification credential does not verify an account.
 4. Verification of one account cannot change the verification state of another account.
 5. Repeating an already-completed verification does not create a duplicate customer account.
 6. Failure of the external email-delivery mechanism does not falsely mark the email as verified.
+7. Successful email verification triggers the approved automatic activation transition defined by `FR-AUTH-006`.
 
 ### Dependencies
 
@@ -130,9 +135,9 @@ The system shall provide an email-verification process that allows the email add
 - Verification credential/reference
 - Verification timestamps where required
 
-### Open decisions
+### Decision
 
-- `REQ-AUTH-002`
+**D-001:** Email verification and account activation remain separate requirements. Verification confirms control of the registered email address; successful verification automatically triggers account activation. No manual administrator approval is required unless later requested by the stakeholder.
 
 ### Traceability
 
@@ -313,35 +318,38 @@ The system shall provide an account-recovery process that allows an eligible cus
 
 **Source #:** 6  
 **Source baseline:** Customer account activation  
-**Proposed actor:** Customer  
-**Proposed priority:** MUST  
-**Refinement status:** OPEN — lifecycle meaning must be confirmed
+**Trigger:** Successful email verification  
+**Priority:** MUST  
+**Refinement status:** Validated by D-001
 
 ### SRS requirement
 
-The system shall support activation of a customer account according to the approved customer-account lifecycle.
+The system shall automatically activate an eligible customer account after successful verification of its registered email address.
 
 ### Preconditions
 
-- A customer account exists.
-- The account is in an approved state from which activation is permitted.
+- A customer account exists in `PENDING_VERIFICATION`.
+- `FR-AUTH-002` has successfully verified the account email.
 
 ### Success outcome
 
-- The account enters the approved active state.
+- The customer account transitions from `PENDING_VERIFICATION` to `ACTIVE`.
+- The account becomes eligible for customer login under `FR-AUTH-003`.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
-1. Only an account in an approved activation-eligible state can be activated.
+1. Only a `PENDING_VERIFICATION` account with successfully verified email can transition to `ACTIVE`.
 2. Successful activation changes only the intended customer's account state.
 3. Invalid account-state transitions are rejected.
 4. Activation does not create a second customer account.
-5. The resulting active account can use only the functions permitted by its authenticated role and verification state.
+5. No manual administrator approval is required for normal customer activation.
+6. An `ACTIVE` account can authenticate only through the approved login process and receives only customer-authorised privileges.
 
 ### Dependencies
 
 - `FR-AUTH-001`
 - `FR-AUTH-002`
+- `FR-AUTH-003`
 - `FR-AUTH-007`
 
 ### Data involved
@@ -351,14 +359,14 @@ The system shall support activation of a customer account according to the appro
 - Verification status
 - Account-state timestamps where required
 
-### Open decisions
+### Decision
 
-- `REQ-AUTH-002`
+**D-001:** Activation is an automatic lifecycle transition following successful email verification.
 
 ### Traceability
 
 - Use case: TBD
-- UI: TBD
+- UI: No independent customer action required; verification flow may communicate activation outcome
 - Data entities: TBD
 - Test cases: TBD
 
@@ -368,51 +376,52 @@ The system shall support activation of a customer account according to the appro
 
 **Source #:** 7  
 **Source baseline:** Customer account deactivation  
-**Proposed actor:** Customer  
-**Proposed priority:** MUST  
-**Refinement status:** OPEN — deactivation lifecycle must be confirmed
+**Actor:** Customer  
+**Priority:** MUST  
+**Refinement status:** Validated by D-002
 
 ### SRS requirement
 
-The system shall allow an authorised customer to request deactivation of their own customer account according to the approved account-lifecycle and data-retention rules.
+The system shall allow an authenticated customer to deactivate their own active customer account, after which the account shall be marked `DEACTIVATED` and its active authenticated sessions invalidated.
 
 ### Preconditions
 
 - The customer is authenticated.
-- The account is in a state from which customer-requested deactivation is permitted.
+- The customer account is `ACTIVE`.
 
 ### Success outcome
 
-- The customer account enters the approved deactivated state.
-- The deactivated account can no longer perform functions that require an active customer account.
+- The customer account transitions from `ACTIVE` to `DEACTIVATED`.
+- Existing authenticated sessions for that customer are invalidated.
+- The account cannot authenticate while deactivated.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
 1. A customer can request deactivation only for their own account.
-2. A successful deactivation changes the account to the approved deactivated state.
-3. A deactivated account cannot authenticate or perform protected customer actions unless the approved lifecycle explicitly allows reactivation.
-4. Deactivation does not silently delete business records that must be retained for legitimate order, invoice, audit, or legal purposes.
-5. Existing authenticated sessions are handled according to the approved deactivation policy.
-6. Reactivation, if permitted, follows the approved activation process rather than creating a new customer account.
+2. A successful deactivation changes the account state from `ACTIVE` to `DEACTIVATED`.
+3. A deactivated account cannot authenticate or perform protected customer actions.
+4. Existing authenticated sessions are invalidated as part of the deactivation process.
+5. Deactivation does not silently delete historical order, invoice, payment-reference, or audit records that must be retained.
+6. Profile/personal-data retention or deletion is governed separately by the approved privacy and DPIA rules.
+7. Reactivation is not included in the current approved behaviour and remains unspecified unless later requested and approved.
 
 ### Dependencies
 
 - `FR-AUTH-003`
 - `FR-AUTH-004`
-- `FR-AUTH-006`
 - Privacy, retention, audit, and session-management NFRs
 
 ### Data involved
 
 - Customer account identifier
 - Account status
-- Deactivation timestamp/reason where approved
+- Deactivation timestamp where required
 - Session state
-- Retained customer-related records
+- Retained customer-related business records
 
-### Open decisions
+### Decision
 
-- `REQ-AUTH-003`
+**D-002:** Deactivation is customer self-service for an authenticated `ACTIVE` account. It is not account deletion. Reactivation is not silently added to scope.
 
 ### Traceability
 
@@ -479,13 +488,13 @@ The system shall allow an authenticated customer to view and update the approved
 
 **Source #:** 9  
 **Source baseline:** Delivery address management  
-**Proposed actor:** Customer  
-**Proposed priority:** MUST  
-**Refinement status:** Proposed with address-model decision pending
+**Actor:** Customer  
+**Priority:** MUST  
+**Refinement status:** Validated by D-004
 
 ### SRS requirement
 
-The system shall allow an authenticated customer to manage delivery-address information associated with their own account according to the approved address model.
+The system shall allow an authenticated customer to create, view, update, and remove one current delivery address associated with their own account.
 
 ### Preconditions
 
@@ -493,17 +502,18 @@ The system shall allow an authenticated customer to manage delivery-address info
 
 ### Success outcome
 
-- Valid delivery-address changes are stored and are available to customer functions that require delivery information.
+- Valid current delivery-address information is stored for the customer.
+- When an order is placed, the applicable delivery address is copied into that order as an immutable order-address snapshot.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
-1. A customer can create delivery-address information allowed by the approved address model.
-2. A customer can view their own stored delivery-address information.
-3. A customer can update their own stored delivery-address information.
-4. A customer can remove delivery-address information when removal is permitted by the approved order/data-retention rules.
-5. Invalid required address values are rejected.
-6. A customer cannot access another customer's saved delivery-address information.
-7. Changing saved address information does not silently alter immutable delivery details already recorded for a confirmed order.
+1. A customer can maintain at most one current saved delivery address in their profile.
+2. The customer can view and update their own current delivery address.
+3. The customer can remove the saved delivery address when permitted by the approved checkout rules.
+4. Invalid required address values are rejected.
+5. A customer cannot access another customer's saved delivery address.
+6. Changing the current profile delivery address does not alter delivery-address snapshots stored against previously confirmed orders.
+7. Checkout can use the current saved delivery address as the initial delivery address when available.
 
 ### Dependencies
 
@@ -515,12 +525,12 @@ The system shall allow an authenticated customer to manage delivery-address info
 ### Data involved
 
 - Customer account identifier
-- Approved delivery-address fields
-- Address record identifier if multiple-address support is approved
+- Current delivery-address fields
+- Immutable order-address snapshot at order placement
 
-### Open decisions
+### Decision
 
-- `REQ-PROFILE-001`
+**D-004:** One current delivery address is stored per customer; historical orders preserve independent immutable address snapshots.
 
 ### Traceability
 
@@ -535,13 +545,13 @@ The system shall allow an authenticated customer to manage delivery-address info
 
 **Source #:** 10  
 **Source baseline:** Billing address management  
-**Proposed actor:** Customer  
-**Proposed priority:** MUST  
-**Refinement status:** Proposed with address-model decision pending
+**Actor:** Customer  
+**Priority:** MUST  
+**Refinement status:** Validated by D-004
 
 ### SRS requirement
 
-The system shall allow an authenticated customer to manage billing-address information associated with their own account according to the approved billing and payment model.
+The system shall allow an authenticated customer to create, view, update, and remove one current billing address associated with their own account, with the option to use the current delivery address as the billing address.
 
 ### Preconditions
 
@@ -549,16 +559,17 @@ The system shall allow an authenticated customer to manage billing-address infor
 
 ### Success outcome
 
-- Valid billing-address changes are stored for the customer where billing-address storage is required by the approved checkout/payment design.
+- Valid current billing-address information is stored where a separate billing address is required.
+- When an order is placed, the applicable billing details are copied into that order as an immutable order-address snapshot.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
-1. A customer can create billing-address information permitted by the approved address model.
-2. A customer can view their own stored billing-address information.
-3. A customer can update their own stored billing-address information.
-4. A customer can remove billing-address information when removal is permitted.
-5. Invalid required billing-address values are rejected.
-6. A customer cannot access another customer's stored billing-address information.
+1. A customer can maintain at most one current saved billing address in their profile.
+2. The customer can choose to use the current delivery address as the billing address.
+3. The customer can maintain a separate current billing address when required.
+4. Invalid required billing-address values are rejected.
+5. A customer cannot access another customer's stored billing address.
+6. Changing the current profile billing address does not alter billing-address snapshots stored against previously confirmed orders.
 7. Customer profile storage does not store payment-card numbers or security codes as part of billing-address management.
 
 ### Dependencies
@@ -571,12 +582,13 @@ The system shall allow an authenticated customer to manage billing-address infor
 ### Data involved
 
 - Customer account identifier
-- Approved billing-address fields
-- Address record identifier if multiple-address support is approved
+- Current billing-address fields
+- Same-as-delivery indicator where used
+- Immutable order-address snapshot at order placement
 
-### Open decisions
+### Decision
 
-- `REQ-PROFILE-001`
+**D-004:** One current billing address is stored per customer; billing may reuse the delivery address; historical orders preserve independent immutable address snapshots.
 
 ### Traceability
 
@@ -591,13 +603,13 @@ The system shall allow an authenticated customer to manage billing-address infor
 
 **Source #:** 11  
 **Source baseline:** Fragrance preference profile creation  
-**Proposed actor:** Customer  
-**Proposed priority:** MUST  
-**Refinement status:** Proposed
+**Actor:** Customer  
+**Priority:** MUST  
+**Refinement status:** Validated by D-005
 
 ### SRS requirement
 
-The system shall allow an authenticated customer to create a fragrance preference profile containing the approved fragrance-preference fields.
+The system shall allow an authenticated customer to maintain a fragrance preference profile containing the source-defined preference categories: favourite fragrance notes, preferred perfume intensity, and optional fragrance-sensitivity/avoidance information.
 
 ### Preconditions
 
@@ -606,15 +618,17 @@ The system shall allow an authenticated customer to create a fragrance preferenc
 ### Success outcome
 
 - A fragrance preference profile is associated with the authenticated customer.
+- The customer's generated Fragrance Identity is treated as system-generated output rather than manually entered preference data.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
 1. An authenticated customer can create a fragrance preference profile for their own account.
-2. The profile accepts only the approved fragrance-preference fields.
-3. Optional preference fields can be left unanswered where the approved SRS marks them optional.
-4. The system explains the purpose of collected fragrance-preference information at the point required by the approved privacy design.
-5. Invalid submitted values are rejected without creating corrupt preference data.
-6. A customer cannot create or modify a fragrance preference profile belonging to another customer.
+2. The profile contains only the approved preference categories and later explicitly approved additions.
+3. Favourite notes, preferred intensity, and fragrance sensitivity/avoidance fields are optional at profile level.
+4. The system does not require address, marketing, demographic, or unrelated personal information to create the fragrance preference profile.
+5. Invalid submitted values are rejected without corrupting previously stored valid preference data.
+6. A customer cannot create or modify another customer's fragrance preference profile.
+7. The generated Fragrance Identity is not accepted as customer-entered profile input.
 
 ### Dependencies
 
@@ -628,13 +642,14 @@ The system shall allow an authenticated customer to create a fragrance preferenc
 ### Data involved
 
 - Customer account identifier
-- Approved fragrance-preference fields
-- Preference-profile status/timestamps where required
+- Favourite fragrance-note references
+- Preferred perfume intensity
+- Optional fragrance-sensitivity/avoidance data
+- Generated Fragrance Identity output
 
-### Open decisions
+### Decision
 
-- `REQ-PROFILE-002`
-- `REQ-PROFILE-003`
+**D-005:** The persistent preference profile is limited to source-defined preference categories. Input fields are optional at profile level; Fragrance Identity is generated output.
 
 ### Traceability
 
@@ -751,48 +766,48 @@ The system shall allow an authenticated customer to select and maintain a prefer
 
 **Source #:** 14  
 **Source baseline:** Fragrance sensitivity recording  
-**Proposed actor:** Customer  
-**Proposed priority:** MUST  
-**Refinement status:** OPEN — privacy/data meaning must be confirmed
+**Actor:** Customer  
+**Priority:** MUST  
+**Refinement status:** Validated by D-006
 
 ### SRS requirement
 
-The system shall allow an authenticated customer to record, update, and remove approved fragrance-sensitivity information in their own fragrance preference profile.
+The system shall allow an authenticated customer to optionally record fragrance characteristics or fragrance notes they prefer to avoid due to personal sensitivity or preference.
 
 ### Preconditions
 
 - The customer is authenticated.
-- The project has defined what information qualifies as an approved fragrance-sensitivity field.
+- Approved fragrance-note/avoidance values are available.
 
 ### Success outcome
 
-- Approved sensitivity information is stored for the authenticated customer according to the approved privacy design.
+- Optional non-medical fragrance-avoidance information is stored for the authenticated customer.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
-1. The customer can record fragrance-sensitivity information using only the approved input model.
-2. The customer can view, update, or remove their own stored sensitivity information.
-3. The field can remain unanswered when the approved SRS treats sensitivity information as optional.
-4. The system provides the required privacy explanation at the point of collection.
-5. A customer cannot access another customer's sensitivity information.
-6. The application does not solicit additional medical or health information unless such collection is explicitly approved through the SRS and DPIA.
-7. Invalid or unsupported sensitivity values are rejected according to the approved data model.
+1. The customer can record one or more approved fragrance characteristics or fragrance notes to avoid.
+2. The customer can view, update, and remove their own stored avoidance information.
+3. The field may remain unanswered.
+4. A customer cannot access another customer's avoidance information.
+5. The application does not request or require medical diagnoses, medical history, medications, allergy diagnoses, or other health-condition information under this requirement.
+6. The avoidance information may be used by approved recommendation/identity logic only as a negative preference or exclusion signal.
+7. Invalid or unsupported values are rejected according to the approved fragrance-note data model.
 
 ### Dependencies
 
 - `FR-PROFILE-004`
-- DPIA/privacy decisions
+- Fragrance-note catalogue requirements
 - Privacy, authorisation, validation, and data-minimisation NFRs
 
 ### Data involved
 
 - Customer preference profile
-- Approved sensitivity field(s)
-- Data classification — pending decision
+- Approved fragrance-note/characteristic avoidance references
+- Non-medical preference classification
 
-### Open decisions
+### Decision
 
-- `REQ-PROFILE-004`
+**D-006:** “Fragrance sensitivity” is implemented as optional non-medical fragrance avoidance/preference data. Medical and health-condition data is outside this requirement.
 
 ### Traceability
 
@@ -808,40 +823,46 @@ The system shall allow an authenticated customer to record, update, and remove a
 
 **Source #:** 15  
 **Source baseline:** Customer fragrance identity generation  
-**Proposed actor:** Customer  
-**Proposed priority:** MUST  
-**Refinement status:** OPEN — identity inputs/output rules must be defined
+**Actor:** Customer  
+**Priority:** MUST  
+**Refinement status:** Validated by D-007
 
 ### SRS requirement
 
-The system shall generate a customer fragrance identity from the approved fragrance-preference inputs using the approved Fragrance Identity rules.
+The system shall generate a customer's Fragrance Identity using a deterministic, rule-based classification derived from the customer's approved fragrance preference data.
 
 ### Preconditions
 
-- The customer has supplied the minimum approved input set required to generate a fragrance identity.
-- The approved Fragrance Identity rules are available.
+- The customer is authenticated.
+- At least one approved positive preference input exists: one favourite fragrance note or a preferred perfume intensity.
+- The approved Fragrance Identity rule set is available.
 
 ### Success outcome
 
-- A fragrance identity result is generated for the customer.
-- The result is associated with the customer's profile according to the approved data model.
+- A primary fragrance-family/profile result is generated for the customer.
+- The result includes a customer-facing explanation derived from contributing approved preferences.
+- The generated identity is associated with the customer's profile.
 
-### Proposed acceptance criteria
+### Acceptance criteria
 
-1. A customer who has supplied the minimum required inputs can request or trigger fragrance-identity generation according to the approved user flow.
-2. The generation process uses only approved profile inputs and the approved identity rules.
-3. The generated identity is stored or displayed only for the intended customer unless an approved administrative/reporting requirement states otherwise.
-4. If required inputs are missing, the system does not fabricate an identity and instead indicates that additional approved information is required.
-5. Re-running generation with unchanged approved inputs and the same rule version produces a consistent result where the approved algorithm is deterministic.
-6. A customer can view their current generated fragrance identity.
-7. Changes to preference data cause identity regeneration only according to the approved lifecycle rule.
+1. Fragrance Identity generation requires at least one positive preference input.
+2. Sensitivity/avoidance information alone is insufficient to generate an identity.
+3. Generation uses only approved preference inputs and the approved deterministic rule set.
+4. The result identifies a primary fragrance family/profile using the canonical fragrance-family vocabulary once that vocabulary is frozen.
+5. The result provides an explanation based on contributing approved preferences.
+6. The system does not infer medical, psychological, personality, or demographic characteristics from the preference data.
+7. If minimum required input is missing, the system does not fabricate an identity and indicates that additional positive preference information is required.
+8. Re-running generation with unchanged approved inputs and the same rule version produces a consistent result.
+9. When relevant preference inputs change, the current identity is marked for regeneration rather than silently replaced.
+10. The customer can view their current generated Fragrance Identity.
 
 ### Dependencies
 
 - `FR-PROFILE-004`
 - `FR-PROFILE-005`
 - `FR-PROFILE-006`
-- `FR-PROFILE-007` only if sensitivity data is approved as an identity input
+- `FR-PROFILE-007`
+- Fragrance-family catalogue requirements
 - `FR-PERSONAL-007`
 - `FR-PERSONAL-008`
 - Recommendation and data-integrity requirements
@@ -850,12 +871,14 @@ The system shall generate a customer fragrance identity from the approved fragra
 
 - Customer preference profile
 - Approved Fragrance Identity inputs
-- Identity result/label
-- Identity rule/version identifier where required
+- Primary identity family/profile
+- Customer-facing explanation
+- Identity rule/version identifier
+- Identity freshness/stale state
 
-### Open decisions
+### Decision
 
-- `REQ-PROFILE-005`
+**D-007:** Fragrance Identity is deterministic and rule-based. Exact family taxonomy and scoring weights remain a later design decision and must reuse the canonical catalogue/fragrance-family vocabulary.
 
 ### Traceability
 
@@ -869,21 +892,38 @@ The system shall generate a customer fragrance identity from the approved fragra
 
 # Validation Summary
 
-## Proposed priority
+## Approved project decisions
 
-All requirements in this document: **MUST — pending stakeholder validation**.
+| Decision | Resolution |
+|---|---|
+| `D-001` | Successful email verification automatically activates a `PENDING_VERIFICATION` customer account; no normal administrator approval step. |
+| `D-002` | Authenticated customers may self-deactivate an `ACTIVE` account; sessions are invalidated; deactivation is not deletion; reactivation is not currently added to scope. |
+| `D-003` | Registration requires name, email, and password only; email is the unique login identifier; customer records use an opaque internal identifier. |
+| `D-004` | One current delivery address and one current billing address per customer; billing may reuse delivery; confirmed orders store immutable address snapshots. |
+| `D-005` | Fragrance preference profile contains favourite notes, preferred intensity, and optional non-medical sensitivity/avoidance data; profile input fields are optional; Fragrance Identity is generated output. |
+| `D-006` | Fragrance sensitivity means non-medical fragrance avoidance/preference data; medical/health-condition data is not collected under this requirement. |
+| `D-007` | Fragrance Identity uses deterministic rule-based classification, requires at least one positive preference input, and does not silently regenerate when source preferences change. |
 
-## Proposed actors
+## Priority
+
+All requirements in this document: **MUST — development-team delivery classification.**
+
+## Business actors used by these requirements
 
 - Visitor
 - Customer
 
-## Requirements that cannot be fully frozen yet
+`FR-AUTH-006` is a system-triggered lifecycle transition rather than a separate actor-driven use case.
 
-- `FR-AUTH-006` — activation meaning
-- `FR-AUTH-007` — deactivation/reactivation and retention lifecycle
-- `FR-PROFILE-002` / `FR-PROFILE-003` — exact saved-address model
-- `FR-PROFILE-007` — meaning and privacy classification of fragrance sensitivity
-- `FR-PROFILE-008` — identity inputs, output taxonomy, and generation lifecycle
+## Remaining downstream design items
 
-The unresolved decisions are recorded in the project-wide `open-questions.md`.
+These do not block the AUTH + PROFILE functional baseline, but must be defined consistently in later SRS work:
+
+- exact password policy and authentication-provider choice;
+- exact address-field schema;
+- canonical fragrance-note and fragrance-family vocabularies;
+- exact Fragrance Identity family taxonomy and deterministic scoring weights;
+- privacy/DPIA retention rules for deactivated accounts;
+- use-case, UI, entity, sequence, and test traceability.
+
+AUTH + PROFILE requirements are now ready to feed the actor/use-case modelling stage.

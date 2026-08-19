@@ -46,78 +46,88 @@ This register records ambiguities and omissions in the supplied Palermo project 
 
 **Related requirements:** `FR-AUTH-001`, `FR-AUTH-003`, `FR-AUTH-005`
 
-**Source status:** The supplied brief names account registration, login and password reset but does not define the registration fields or the unique customer-account identifier.
+**Resolution:** Registration requires name, email address, and password only. Email is the unique customer login identifier; the customer record uses an opaque internal identifier. Additional profile information is collected through the relevant profile requirements.
 
-**Decision needed:** Confirm the required registration fields and whether email is the unique customer login/account identifier.
+**Decision:** `D-003`
 
-**Status:** Open
+**Status:** Resolved for SRS baseline
+
 
 ## REQ-AUTH-002 - Relationship between email verification and account activation
 
 **Related requirements:** `FR-AUTH-002`, `FR-AUTH-003`, `FR-AUTH-006`
 
-**Source status:** Email verification and customer account activation are listed as separate functional requirements, but the source does not define whether verification itself activates the account or whether activation is a separate state transition.
+**Resolution:** Newly registered accounts enter `PENDING_VERIFICATION`. Successful email verification automatically transitions the eligible account to `ACTIVE`. Normal customer activation does not require administrator approval. Login is permitted only for an eligible `ACTIVE` account.
 
-**Decision needed:** Define the initial customer-account states and the exact transition from registration to verified and active status, including whether login is allowed before verification.
+**Decision:** `D-001`
 
-**Status:** Open
+**Status:** Resolved for SRS baseline
+
 
 ## REQ-AUTH-003 - Account deactivation and reactivation lifecycle
 
 **Related requirements:** `FR-AUTH-006`, `FR-AUTH-007`
 
-**Source status:** Account activation and account deactivation are listed, but the source does not define who initiates deactivation, whether a customer may reactivate, what happens to existing sessions, or how retained business records are handled.
+**Resolution:** An authenticated customer may self-deactivate their own `ACTIVE` account. Deactivation changes the account to `DEACTIVATED`, invalidates active sessions, and blocks login. Deactivation is not deletion; historical business records remain subject to approved retention rules. Reactivation is not added to current scope unless later requested and approved.
 
-**Decision needed:** Confirm self-service versus administrator-controlled deactivation, session termination behaviour, reactivation rules, and retention of profiles/orders/invoices after deactivation.
+**Decision:** `D-002`
 
-**Status:** Open
+**Status:** Resolved for SRS baseline; detailed retention remains a DPIA design item
+
 
 ## REQ-PROFILE-001 - Delivery and billing address model
 
 **Related requirements:** `FR-PROFILE-002`, `FR-PROFILE-003`
 
-**Source status:** Delivery address management and billing address management are listed, but the source does not define whether each customer stores one address or multiple saved addresses, required address fields, default-address behaviour, or whether billing addresses must be persisted.
+**Resolution:** Each customer may maintain one current delivery address and one current billing address. Billing may reuse the delivery address. Confirmed orders store immutable delivery/billing address snapshots so later profile edits do not change historical order records.
 
-**Decision needed:** Define address cardinality, approved address fields, default-selection behaviour, and whether billing-address persistence is required for the sandbox payment design.
+**Decision:** `D-004`
 
-**Status:** Open
+**Status:** Resolved for SRS baseline; exact address fields remain a data-design item
+
 
 ## REQ-PROFILE-002 - Fragrance preference profile field set
 
 **Related requirements:** `FR-PROFILE-004`, `FR-PROFILE-005`, `FR-PROFILE-006`, `FR-PROFILE-007`
 
-**Source status:** The brief names fragrance preference profile creation and several preference categories but does not define the complete profile field set.
+**Resolution:** The persistent preference profile is limited to the source-defined categories: favourite fragrance notes, preferred perfume intensity, and optional fragrance sensitivity/avoidance information. Fragrance Identity is generated system output rather than manually entered preference data.
 
-**Decision needed:** Define the approved preference fields, which are optional versus required, and the allowed values or catalogue relationships for each field.
+**Decision:** `D-005`
 
-**Status:** Open
+**Status:** Resolved for SRS baseline
+
 
 ## REQ-PROFILE-003 - Optionality and minimum profile completion
 
 **Related requirements:** `FR-PROFILE-004`, `FR-PROFILE-008`
 
-**Source status:** The project documentation recommends making fragrance-profile fields optional wherever possible, but the minimum information required to generate a fragrance identity is not defined.
+**Resolution:** Preference-profile input fields are optional at profile level. Fragrance Identity generation requires at least one positive preference input: one favourite fragrance note or a preferred perfume intensity. Sensitivity/avoidance information alone is insufficient.
 
-**Decision needed:** Define which profile fields may remain blank and the minimum approved input set required before a fragrance identity can be generated.
+**Decisions:** `D-005`, `D-007`
 
-**Status:** Open
+**Status:** Resolved for SRS baseline
+
 
 ## REQ-PROFILE-004 - Meaning and privacy classification of fragrance sensitivity
 
 **Related requirements:** `FR-PROFILE-007`
 
-**Source status:** The brief requires fragrance sensitivity recording but does not define whether this means non-medical scent avoidance/preferences or collection of allergy, health, or other sensitive information.
+**Resolution:** Fragrance sensitivity is treated as optional non-medical fragrance avoidance/preference data. The system will not request or require medical diagnoses, medical history, medications, allergy diagnoses, or other health-condition information under this requirement.
 
-**Decision needed:** Define the allowed sensitivity data, prohibit unapproved medical data collection, and confirm the required DPIA/privacy controls before implementation.
+**Decision:** `D-006`
 
-**Status:** Open
+**Status:** Resolved for SRS baseline
+
 
 ## REQ-PROFILE-005 - Fragrance Identity algorithm contract
 
 **Related requirements:** `FR-PROFILE-008`, `FR-PERSONAL-007`, `FR-PERSONAL-008`
 
-**Source status:** The project requires customer fragrance identity generation and separately lists a fragrance discovery quiz and AI-based recommendations, but it does not define the exact Fragrance Identity inputs, scoring rules, output labels, regeneration rules, or relationship to the later quiz/recommendation features.
+**Resolution:** Fragrance Identity uses deterministic rule-based classification derived from approved positive preferences, with avoidance data acting only as a negative/exclusion signal. It produces a primary fragrance-family/profile result plus an explanation. Relevant profile changes mark the identity for regeneration rather than silently replacing it.
 
-**Decision needed:** Define the minimum inputs, identity taxonomy/output, scoring or rule approach, persistence behaviour, regeneration trigger, and relationship between Fragrance Identity, discovery quiz, and AI recommendations.
+**Decision:** `D-007`
 
-**Status:** Open
+**Remaining design item:** Exact family taxonomy and scoring weights must reuse the canonical fragrance-family vocabulary once catalogue requirements are refined.
+
+**Status:** Resolved for SRS functional baseline; scoring details deferred to system design
+
