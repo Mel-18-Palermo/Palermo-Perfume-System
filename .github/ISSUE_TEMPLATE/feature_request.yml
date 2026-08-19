@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose a change tied to an approved requirement.
+description: Propose an implementation change tied to an approved requirement.
 title: "[Feature]: "
 labels:
   - enhancement
@@ -7,33 +7,48 @@ body:
   - type: input
     id: requirement
     attributes:
-      label: Requirement or assessment item
-      placeholder: FR-01, NFR-02, or assessment criterion
+      label: Canonical requirement ID
+      description: Features must trace back to the approved SRS.
+      placeholder: "FR-DISCOVERY-003"
     validations:
       required: true
+
   - type: textarea
-    id: problem
+    id: user_need
     attributes:
-      label: User problem
-      description: Describe the user need without prescribing implementation.
+      label: User or business need
+      description: Describe the observable need without prescribing unnecessary implementation detail.
     validations:
       required: true
+
   - type: textarea
     id: outcome
     attributes:
-      label: Expected outcome
+      label: Expected behaviour
+      description: Describe what the system must do when the feature is complete.
     validations:
       required: true
+
   - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
       placeholder: |
         - [ ] Given ..., when ..., then ...
-        - [ ] Tests or evidence are attached
+        - [ ] Requirement traceability is maintained
+        - [ ] Relevant tests or evidence are included
     validations:
       required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope boundaries
+      description: State what is included and explicitly excluded.
+    validations:
+      required: true
+
   - type: textarea
     id: risks
     attributes:
-      label: Security, privacy, data, or integration risks
+      label: Security, privacy, data, or integration considerations

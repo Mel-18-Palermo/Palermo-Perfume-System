@@ -1,48 +1,60 @@
 name: Bug report
-description: Report reproducible incorrect behaviour.
+description: Report reproducible incorrect behaviour in the Palermo system.
 title: "[Bug]: "
 labels:
   - bug
 body:
   - type: markdown
     attributes:
-      value: Do not include passwords, API keys, payment data, or real customer information.
+      value: Do not include passwords, API keys, payment data, session tokens, or real customer information.
+
   - type: textarea
     id: summary
     attributes:
       label: Summary
-      description: What went wrong?
+      description: What is wrong?
     validations:
       required: true
+
+  - type: input
+    id: requirement
+    attributes:
+      label: Related requirement ID
+      placeholder: "FR-CART-003 or NFR-RESP-001"
+
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
       placeholder: |
         1. Go to ...
-        2. Enter test data ...
+        2. Enter synthetic test data ...
         3. Observe ...
     validations:
       required: true
+
   - type: textarea
     id: expected
     attributes:
       label: Expected behaviour
     validations:
       required: true
+
   - type: textarea
     id: actual
     attributes:
       label: Actual behaviour
     validations:
       required: true
+
   - type: input
     id: environment
     attributes:
       label: Environment
-      placeholder: Local, preview, browser/device, Node.js version
+      placeholder: "Local/preview, browser/device, relevant runtime version"
+
   - type: textarea
     id: evidence
     attributes:
       label: Safe evidence
-      description: Add sanitized screenshots or logs only.
+      description: Add sanitised screenshots, logs, or test output only.

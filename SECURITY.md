@@ -1,41 +1,69 @@
-# Security policy
+# Security Policy
 
-## Reporting a vulnerability
+## Current phase
 
-Do not open a public issue containing vulnerability details, credentials, personal information, or
-payment data. Use the repository's private security-reporting option if enabled; otherwise contact the
-project lead through the team's agreed private channel. Include a safe reproduction, likely impact,
-and suggested mitigation without using real customer data.
+The Palermo Perfume System is currently in the Software Requirements Specification (SRS) phase.
 
-## Development baseline
+Security controls documented during this phase describe intended requirements and design decisions. They must not be presented as implemented or verified until the application exists and the relevant controls have been tested.
 
-- Keep secrets in environment variables and out of Git.
-- Use Prisma parameterized operations and review every use of raw database queries.
-- Escape output for its destination and validate input at trust boundaries.
-- Apply CSRF protection to state-changing browser requests.
-- Enforce authorization server-side for every protected action.
-- Use an approved authentication library or managed identity provider; never implement password
-  storage with custom cryptography.
-- Minimize collected personal data and use synthetic test data.
-- Do not log credentials, session identifiers, payment data, or sensitive scent-profile details.
-- Do not expose development diagnostics, source maps, or verbose errors in production.
-- Run dependency, static-analysis, and test checks before merge.
+## Reporting a security issue
 
-Encryption at rest, TLS configuration, backups, payment compliance, retention, and deployment access
-controls depend on the selected hosting and service providers. They must be verified before release;
-the repository does not claim those controls are active merely because they appear in requirements.
+Do not disclose vulnerabilities, credentials, personal information, payment information, session data, or other sensitive material in a public GitHub issue.
 
-The current role and permission rules are documented in
-[the RBAC specification](docs/security/rbac.md).
+Report suspected security issues to the project lead through the team's approved private communication channel. Include only the minimum information required to reproduce and assess the issue.
 
-Input validation, XSS, CSRF, and SQL injection controls are documented in
-[the web security specification](docs/security/web-controls.md).
+## Repository security rules
 
-Personal-information flows, privacy risks, and pre-release actions are documented in
-[the privacy impact assessment](docs/security/privacy-impact-assessment.md).
+Never commit:
 
-The required AES-256, TLS 1.3, and key-management boundaries are documented in
-[the data encryption architecture](docs/security/encryption-architecture.md).
+- `.env` files or populated environment configuration;
+- API keys or access tokens;
+- database connection strings or passwords;
+- payment credentials or card data;
+- private keys or certificates;
+- real customer personal information;
+- session identifiers;
+- production database exports;
+- private application logs containing sensitive data.
 
-Scent-profile collection, approved uses, de-identification, and deletion rules are documented in
-[the scent-profile privacy protocol](docs/security/scent-profile-privacy.md).
+Synthetic data must be used for development, testing, demonstrations, screenshots, and assessment evidence.
+
+## Application security baseline
+
+When implementation begins, the project must apply security controls appropriate to the approved SRS, including:
+
+- server-side authentication and authorisation;
+- least-privilege role-based access control;
+- server-side input validation;
+- safe output handling;
+- protected session management;
+- parameterised database access through Prisma;
+- controlled use of raw database queries;
+- secure secret storage;
+- transport encryption;
+- safe payment-provider integration;
+- privacy-conscious AI integration;
+- security-relevant logging without sensitive payloads;
+- dependency and automated security checks where practical.
+
+Security controls must be linked to approved requirements and validated through the project test plan.
+
+## High-risk changes
+
+The following areas require review by the backend/security lead before integration:
+
+- authentication and authorisation;
+- Prisma schema and migrations;
+- Supabase configuration;
+- server-side business logic;
+- payment processing;
+- AI integrations;
+- environment and secret configuration;
+- security and privacy controls;
+- CI/CD and deployment configuration.
+
+## Security documentation
+
+Detailed security and privacy documentation will be created under `docs/security/` as the SRS is developed.
+
+No security control should be claimed as implemented merely because it appears in requirements or design documentation.

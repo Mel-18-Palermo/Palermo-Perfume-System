@@ -1,2 +1,18 @@
-# Request Pawan's review on every pull request.
+# Default review owner for all repository changes
 * @HexCodeYT
+
+# Repository governance
+/.github/ @HexCodeYT
+/CONTRIBUTING.md @HexCodeYT
+/SECURITY.md @HexCodeYT
+/README.md @HexCodeYT
+
+# Requirements and technical design
+/docs/requirements/ @HexCodeYT
+/docs/diagrams/ @HexCodeYT
+/docs/security/ @HexCodeYT
+
+# Implementation-critical paths once application development begins
+/prisma/ @HexCodeYT
+/src/app/api/ @HexCodeYT
+/src/lib/ @HexCodeYT
