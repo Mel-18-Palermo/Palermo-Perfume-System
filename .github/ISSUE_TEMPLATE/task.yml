@@ -1,46 +1,89 @@
 name: Project task
-description: Define an assessable, reviewable unit of team work.
+description: Create a scoped, reviewable Palermo project task.
 title: "[Task]: "
 body:
   - type: textarea
     id: objective
     attributes:
       label: Objective
-      description: State the concrete deliverable and why it is needed.
+      description: State the concrete deliverable and why it is required.
     validations:
       required: true
+
+  - type: input
+    id: requirements
+    attributes:
+      label: Requirement IDs or SRS section
+      description: Use canonical IDs where applicable.
+      placeholder: "FR-AUTH-001, NFR-SEC-001, SRS Section 6"
+    validations:
+      required: true
+
   - type: dropdown
     id: workstream
     attributes:
       label: Workstream
       options:
-        - Requirements and use cases
-        - Project management and report
+        - Requirements
+        - SRS writing
+        - Mermaid diagrams
         - UI/UX
-        - Database analysis
-        - Backend, security, and integration
-        - Testing and quality assurance
-        - Shared team activity
+        - Data and ERD
+        - Security and privacy
+        - Testing
+        - Project management
+        - Frontend implementation
+        - Backend and integration
+        - Repository and CI/CD
     validations:
       required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      description: Define exactly what this issue is allowed to change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: State related work that must not be included in this issue.
+    validations:
+      required: true
+
   - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
       placeholder: |
-        - [ ] Deliverable is committed on a non-main branch
+        - [ ] Deliverable satisfies the stated requirement or SRS section
+        - [ ] Markdown or Mermaid renders correctly where applicable
         - [ ] Evidence is linked
-        - [ ] Relevant checks pass
     validations:
       required: true
+
   - type: textarea
-    id: evidence
+    id: files
     attributes:
-      label: Evidence required
-      description: List files, screenshots, tests, diagrams, or review records expected.
+      label: Expected files or deliverables
+      description: List the repository paths this task is expected to create or modify.
+      placeholder: |
+        docs/srs/06-use-case.md
+        docs/diagrams/use-case.mmd
     validations:
       required: true
+
   - type: textarea
     id: dependencies
     attributes:
       label: Dependencies and blockers
+      description: Identify prerequisite issues, decisions, or requirements.
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence required
+      description: State what must be attached or linked before the issue can close.
