@@ -1,81 +1,97 @@
 # Palermo Perfume System
 
-Palermo Perfume System is a capstone e-commerce application for fragrance discovery and purchasing.
-The project covers customer accounts and scent profiles, an interactive fragrance quiz, catalogue
-search and note filtering, cart and checkout, sandbox payments and invoices, AI-assisted support,
-administration, privacy and security controls, testing, and assessment documentation.
+Palermo Perfume System is a client-facing capstone project for an intelligent online perfume selling platform.
 
-The repository is currently being reset to the technology stack recorded in the Interim SRS. It is
-not a finished product or production deployment. Feature behaviour must be implemented through the
-linked issues and reviewed pull requests.
+The project is currently in the **Software Requirements Specification (SRS) phase**. Application implementation will begin only after SRS v1.0 is reviewed and frozen.
 
-## Approved stack
+## Current phase
 
-- Next.js with React and TypeScript
-- Node.js runtime
+**SRS development**
+
+The current priorities are:
+
+- validate and normalise the Palermo functional requirements;
+- define measurable non-functional requirements;
+- establish project scope and assumptions;
+- model system actors and use cases;
+- design the software and data architecture;
+- produce Mermaid-based system diagrams;
+- prepare the data dictionary, DPIA, test plan, and implementation plan;
+- maintain traceability between requirements, design, implementation, and testing.
+
+No application scaffold should be introduced until the SRS baseline is approved.
+
+## Planned technology stack
+
+The current implementation baseline is:
+
+- Next.js
+- React
+- TypeScript
 - Prisma ORM
-- Supabase Postgres
-- Vercel hosting
-- GitHub Actions for continuous integration
+- Supabase PostgreSQL
+- Stripe sandbox for payment testing
 
-The database schema, authentication provider, payment sandbox, AI provider configuration, and
-deployment automation will be introduced through separate reviewed changes.
+Additional services, hosting, authentication, AI integrations, deployment tooling, and supporting libraries will be selected through reviewed technical decisions.
 
-## Current status
+## Repository rules
 
-The obsolete application foundation has been removed. The next implementation task is to add a
-minimal Next.js and TypeScript scaffold, followed by Prisma configuration and a reviewed Supabase
-schema.
+`main` is the protected integration branch.
 
-There are no valid installation or development commands until that scaffold is committed. Do not
-add ad hoc setup steps to `main` in the meantime.
+All changes must follow:
 
-## Planned configuration
+1. GitHub issue
+2. Short-lived branch
+3. Focused commits
+4. Pull request
+5. Review
+6. Merge into `main`
 
-| Variable | Purpose |
-| --- | --- |
-| `NEXT_PUBLIC_APP_URL` | Public application origin |
-| `DATABASE_URL` | Pooled Supabase Postgres connection used by the application |
-| `DIRECT_URL` | Direct Supabase Postgres connection used for Prisma migrations |
-| `OPENAI_API_KEY` | Server-only AI integration credential when approved |
-| `PAYMENT_PROVIDER` | Approved payment sandbox identifier |
-| `PAYMENT_SANDBOX_API_KEY` | Server-only payment sandbox credential |
+Direct pushes to `main` are prohibited.
 
-Copy `.env.example` to the local environment file selected by the application scaffold. Never
-commit populated credentials or expose server-only variables to browser code.
+Force pushes to protected branches are prohibited.
 
-## Project structure
+There is no shared `develop` branch.
 
-```text
-docs/
-  architecture/         Technical decisions and diagrams
-  deployment/           Hosting and release decisions
-  diagrams/             DFD, ERD, domain, and UI-flow sources or exports
-  project-management/   Sprints, meetings, feedback, and contribution evidence
-  requirements/         Requirements, use cases, and traceability
-  security/             Privacy and application-security specifications
-  testing/              Test plans, cases, UAT, defects, and results
-.github/                 Issue forms, ownership rules, and pull-request template
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the required workflow.
 
-The application directories will be documented after the scaffold exists. See
-[the architecture baseline](docs/architecture/README.md) and
-[issue responsibility map](docs/TEAM_RESPONSIBILITIES.md).
+## Documentation rules
 
-## Team workflow
+Project documentation is maintained as Markdown.
 
-`main` is the reviewed integration branch. Each change starts with an issue and uses a short-lived
-`feature/`, `fix/`, `docs/`, `test/`, or `chore/` branch. Pull requests must link the issue, explain
-validation, pass the available checks, and resolve review comments. There is no shared `develop`
-branch.
+Documentation: `.md`  
+Diagrams: Mermaid
 
-Detailed instructions are in [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting and development
-expectations are in [SECURITY.md](SECURITY.md). Repository governance is documented in
-[the branch-protection checklist](docs/BRANCH_PROTECTION.md).
+Mermaid source is the canonical form for system diagrams. Fixed image exports may be produced later for assessment submission or presentation purposes.
 
-## Deployment status
+## Documentation structure
 
-Vercel is the selected application host and Supabase is the selected managed database platform.
-Continuous deployment is not configured during the stack reset. Deployment configuration must wait
-for the application scaffold, environment ownership, migration procedure, health check, and rollback
-procedure to be reviewed.
+- `docs/requirements/` — Functional, non-functional, open questions, and traceability requirements
+- `docs/srs/` — SRS section source material
+- `docs/diagrams/` — Mermaid system diagrams
+- `docs/ui/` — UI design specifications and supporting material
+- `docs/security/` — Privacy and security design
+- `docs/testing/` — Test strategy, cases, results, and evidence
+- `docs/project-management/` — Meetings, supervisor feedback, planning, and contribution evidence
+
+## Requirements baseline
+
+The supplied Palermo project specification currently contains:
+
+- 91 explicitly listed functional requirement entries due to a duplicated source requirement number;
+- 33 non-functional requirement categories;
+- four named modules that require additional requirements clarification.
+
+Canonical requirement IDs are maintained in:
+
+- `docs/requirements/functional-requirements.md`
+- `docs/requirements/non-functional-requirements.md`
+- `docs/requirements/open-questions.md`
+
+These files are the requirements source of truth for the new project baseline.
+
+## Implementation status
+
+Application development has **not started** under the reset baseline.
+
+The implementation phase begins after SRS v1.0 is frozen.
