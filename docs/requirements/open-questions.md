@@ -1,39 +1,35 @@
 # Open Requirements Questions
 
-This register records ambiguities and omissions in the supplied Palermo project requirements. Do not silently resolve these by assumption.
+This register records ambiguities and omissions in the supplied Palermo project requirements. Development-team decisions may resolve an ambiguity for the SRS baseline but must not be presented as source-supplied detail.
 
 ## REQ-GAP-001 - Inventory and Production Batch Management
 
 **Source status:** Module is explicitly named, but no complete numbered functional-requirement breakdown is supplied.
 
-**Decision needed:** Confirm the minimum client-required inventory and production-batch capabilities before SRS v1.0 freeze.
+**Resolution:** Development-team-derived minimum scope is defined by `DER-INVENTORY-001` through `DER-INVENTORY-006` and decisions `D-067` through `D-072`.
 
-**Status:** Open
-
+**Status:** Resolved for SRS baseline as derived scope; not source-numbered client requirements.
 ## REQ-GAP-002 - Customer Reviews and Fragrance Community
 
 **Source status:** Module is explicitly named, but no complete numbered functional-requirement breakdown is supplied.
 
-**Decision needed:** Confirm whether the final system requires reviews only, community interactions, moderation, or another defined subset.
+**Resolution:** Development-team-derived minimum scope is defined by `DER-REVIEW-001`, `DER-COMMUNITY-001`, `D-073`, and `D-074`. The baseline community feature is the public review space only.
 
-**Status:** Open
-
+**Status:** Resolved for SRS baseline as derived scope; not source-numbered client requirements.
 ## REQ-GAP-003 - Loyalty, Subscription and Referral Management
 
 **Source status:** Module is explicitly named, but no complete numbered functional-requirement breakdown is supplied.
 
-**Decision needed:** Confirm minimum loyalty, subscription and referral behaviour before SRS v1.0 freeze.
+**Resolution:** Development-team-derived minimum scope is defined by `DER-LOYALTY-001`, `DER-SUBSCRIPTION-001`, `DER-REFERRAL-001`, and decisions `D-075` through `D-077`.
 
-**Status:** Open
-
+**Status:** Resolved for SRS baseline as derived scope; not source-numbered client requirements.
 ## REQ-GAP-004 - Promotions and Social Media Content Management
 
 **Source status:** Module is explicitly named. The project brief separately describes AI-assisted promotional video generation, including administrator preview/approval and authorised/copyright-safe assets, but the module is not integrated into the numbered functional-requirement list.
 
-**Decision needed:** Convert the confirmed promotional-content expectations into explicit functional requirements and identify what is required for the final client demo.
+**Resolution:** Development-team-derived minimum scope is defined by `DER-PROMO-001`, `DER-SOCIAL-001`, `DER-SOCIAL-002`, and decisions `D-078` through `D-080`.
 
-**Status:** Open
-
+**Status:** Resolved for SRS baseline as derived scope; not source-numbered client requirements.
 ## REQ-GAP-005 - Duplicate source requirement number 78
 
 **Source status:** The supplied functional-requirement list uses source number 78 for both `Customer feedback collection` and `Total sales dashboard`.
