@@ -31,4 +31,4 @@ The UI scope includes:
 
 ## UI Requirements
 
-_To be completed from the approved use cases and canonical requirements._
+_To be completed from the approved use cases and canonical requirements.
