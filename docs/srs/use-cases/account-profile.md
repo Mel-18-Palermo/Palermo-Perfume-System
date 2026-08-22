@@ -80,7 +80,7 @@ Customer activates the verification credential/link delivered by the email servi
 
 **Preconditions**
 - A customer account exists.
-- The account is in a state permitted to authenticate.
+- The account is `ACTIVE`.
 
 **Trigger**
 Customer submits login credentials.
@@ -88,19 +88,19 @@ Customer submits login credentials.
 **Main Success Flow**
 1. Customer enters email and password.
 2. System validates the credentials.
-3. System confirms the account is in a state permitted to authenticate.
+3. System confirms the account is `ACTIVE`.
 4. System establishes an authenticated session per approved session-management rules.
 5. Customer gains access to protected customer functions.
 
 **Alternate / Exception Flows**
 - **A1 — Invalid credentials:** Authentication fails; no session is created; no sensitive detail is exposed.
-- **A2 — Account not permitted to authenticate:** Access is denied.
+- **A2 — Account not `ACTIVE` (e.g. `PENDING_VERIFICATION` or `DEACTIVATED`):** Access is denied.
 
 **Postconditions**
 - Success: an authenticated customer session exists; no administrator privileges are granted.
 - Failure: no session is created.
 
-**Flags:** Whether a `PENDING_VERIFICATION` account may log in before verification is an open decision in the source document (referenced there as `REQ-AUTH-002`) — carried forward as an open question, not resolved here.
+**Resolution:** Per D-001, login is permitted only for an eligible `ACTIVE` account. A `PENDING_VERIFICATION` account cannot log in until email verification (UC-AUTH-002) completes and the account is automatically activated. This resolves `REQ-AUTH-002` for the SRS baseline.
 
 ---
 
@@ -130,7 +130,7 @@ Customer requests logout.
 
 ## UC-AUTH-005 — Reset Password
 
-**Primary Actor:** Visitor / Customer
+**Primary Actor:** Customer
 **Mapped FR ID(s):** FR-AUTH-005
 
 **Preconditions**
