@@ -371,6 +371,120 @@ The administrator opens the production-batch area and chooses to record a new fi
 - Sellable inventory changes only through the authorised batch-release workflow.
 - Raw-material procurement, formulation, manufacturing scheduling and ERP functionality are outside the approved scope.
 - This use case does not define database schema, APIs or backend implementation.
+
+## Reviews and Fragrance Community Use Cases
+### UC-REV-001 — Submit and View a Perfume Review
+
+**Primary actor:** Customer
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-REVIEW-001`, `DER-COMMUNITY-001`
+
+**Related decisions:** `D-073`, `D-074`
+
+**Goal:**  
+Allow an authenticated customer to submit one rating and short text review for a perfume they have purchased and participate in the approved shared public review space.
+
+**Preconditions:**
+
+- The customer is authenticated.
+- The customer has purchased the perfume being reviewed.
+- The customer has not already submitted a review for that purchased perfume.
+
+**Trigger:**  
+The customer opens an eligible purchased perfume and chooses to submit a review.
+
+**Main flow:**
+
+1. The customer accesses the review area for an eligible purchased perfume.
+2. The system verifies that the customer is authenticated and eligible to review the perfume.
+3. The system presents the review submission interface.
+4. The customer provides:
+   - one rating; and
+   - a short text review.
+5. The customer submits the review.
+6. The system validates the review submission.
+7. The system records the review for the applicable perfume.
+8. The review becomes part of the shared public review space, subject to administrative moderation.
+9. Customers and visitors may view reviews that remain publicly available.
+
+**Alternative and exception flows:**
+
+- If the customer has not purchased the perfume, the system does not permit review submission.
+- If the customer has already submitted a review for that purchased perfume, the system does not permit a second review.
+- If required review information is missing or invalid, the system does not accept the submission and indicates that correction is required.
+- A review may later be hidden or removed through authorised administrative moderation.
+
+**Postconditions:**
+
+- A valid customer review has been recorded and may be publicly visible subject to moderation, or
+- no review has been created if the submission was not eligible or valid.
+
+**Business and scope rules:**
+
+- A customer may submit one rating and short text review per purchased perfume.
+- Public reviews constitute the baseline Palermo fragrance-community capability.
+- The approved community scope does not include replies, likes, follows, direct messages or community feeds.
+- Palermo does not provide a separate social-network platform.
+- Review visibility remains subject to authorised administrative moderation.
+
+### UC-REV-002 — Moderate Public Reviews
+
+**Primary actor:** Administrator
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-REVIEW-001`
+
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-073`
+
+**Goal:**  
+Allow an authorised administrator to review and moderate publicly submitted perfume reviews in accordance with the approved review scope.
+
+**Preconditions:**
+
+- The administrator is authenticated.
+- The administrator has the required server-authorised permission to moderate reviews.
+- One or more customer reviews exist where applicable.
+
+**Trigger:**  
+The administrator opens the review-moderation area or selects a review requiring moderation.
+
+**Main flow:**
+
+1. The administrator accesses the review-moderation area.
+2. The system verifies that the administrator is authorised to moderate reviews.
+3. The system displays reviews that the administrator is permitted to inspect.
+4. The administrator selects a review.
+5. The system displays the review information, including the applicable rating, short text review and related perfume.
+6. The administrator assesses the review for moderation.
+7. The administrator chooses an approved moderation action, such as:
+   - leaving the review publicly visible;
+   - hiding the review; or
+   - removing the review.
+8. The system applies the authorised moderation action.
+9. The system records the privileged moderation action in the audit history where applicable.
+10. The system confirms the moderation result.
+
+**Alternative and exception flows:**
+
+- If the administrator lacks permission to moderate reviews, the system denies the action.
+- If the selected review is no longer available, the system indicates that the review cannot be moderated.
+- If the requested moderation action is invalid or unauthorised, the system does not apply the change.
+
+**Postconditions:**
+
+- The selected review remains visible, is hidden or is removed according to the authorised moderation action.
+- The applicable moderation action is auditable where required.
+
+**Business and scope rules:**
+
+- Review moderation is limited to the approved public-review capability.
+- Administrators may hide or remove inappropriate reviews.
+- The system does not introduce replies, likes, follows, direct messages or community-feed moderation.
+- The moderation workflow does not create a separate social-network capability.
+- This use case defines required behaviour only and does not specify backend moderation implementation.
 ## Traceability
 
 _To be completed after the approved use cases are defined._
