@@ -40,7 +40,7 @@ Derived requirements remain identified as `DER-*` requirements and are not prese
 
 **Related decisions:** `D-057`, `D-058`, `D-060`, `D-061`, `D-062`, `D-066`
 
-**Goal:**  
+**Goal:**
 Allow an authorised administrator to view Palermo business and operational reporting information through the administrative dashboard.
 
 **Preconditions:**
@@ -49,7 +49,7 @@ Allow an authorised administrator to view Palermo business and operational repor
 - The administrator has the required server-authorised permission to access administrative reporting.
 - Authoritative Palermo application data is available for the requested reporting period.
 
-**Trigger:**  
+**Trigger:**
 The administrator opens the dashboard or selects an available administrative report.
 
 **Main flow:**
@@ -97,7 +97,7 @@ The administrator opens the dashboard or selects an available administrative rep
 
 **Related decisions:** `D-057`, `D-058`, `D-059`, `D-063`
 
-**Goal:**  
+**Goal:**
 Allow an appropriately authorised administrator to manage administrative accounts and their approved role-based access while enforcing least-privilege access control.
 
 **Preconditions:**
@@ -106,7 +106,7 @@ Allow an appropriately authorised administrator to manage administrative account
 - The administrator has the required server-authorised permission to manage administrative accounts or access assignments.
 - The applicable administrative account exists when an existing account is being modified.
 
-**Trigger:**  
+**Trigger:**
 The administrator opens the administrative account and access-management area and selects an account-management or access-control action.
 
 **Main flow:**
@@ -153,7 +153,7 @@ The administrator opens the administrative account and access-management area an
 
 **Related decisions:** `D-057`, `D-058`, `D-063`, `D-064`
 
-**Goal:**  
+**Goal:**
 Allow an authorised administrator to view, search and filter approved administrative audit-history information without modifying historical audit records.
 
 **Preconditions:**
@@ -162,7 +162,7 @@ Allow an authorised administrator to view, search and filter approved administra
 - The administrator has the required server-authorised permission to access audit-history information.
 - Audit records exist where applicable.
 
-**Trigger:**  
+**Trigger:**
 The administrator opens the audit-log management area.
 
 **Main flow:**
@@ -209,7 +209,7 @@ The administrator opens the audit-log management area.
 
 **Related decisions:** `D-057`, `D-058`, `D-063`, `D-065`
 
-**Goal:**  
+**Goal:**
 Allow an authorised administrator to invoke an approved data backup operation and view backup status and metadata.
 
 **Preconditions:**
@@ -218,7 +218,7 @@ Allow an authorised administrator to invoke an approved data backup operation an
 - The administrator has the required server-authorised permission to manage backup operations.
 - The approved backup capability is available.
 
-**Trigger:**  
+**Trigger:**
 The administrator opens the backup-management area or chooses to create an approved backup.
 
 **Main flow:**
@@ -263,7 +263,7 @@ The administrator opens the backup-management area or chooses to create an appro
 
 **Related decisions:** `D-057`, `D-058`, `D-067`, `D-068`, `D-071`, `D-072`
 
-**Goal:**  
+**Goal:**
 Allow an authorised administrator to view sellable perfume-variant inventory information, identify low-stock variants and inspect attributable stock-movement information.
 
 **Preconditions:**
@@ -272,7 +272,7 @@ Allow an authorised administrator to view sellable perfume-variant inventory inf
 - The administrator has the required server-authorised permission to access inventory information.
 - Sellable perfume variants exist where applicable.
 
-**Trigger:**  
+**Trigger:**
 The administrator opens the inventory-management area or selects a perfume variant to inspect.
 
 **Main flow:**
@@ -326,7 +326,7 @@ The administrator opens the inventory-management area or selects a perfume varia
 
 **Related decisions:** `D-057`, `D-058`, `D-069`, `D-070`
 
-**Goal:**  
+**Goal:**
 Allow an authorised administrator to record a finished-perfume production batch for a sellable variant and release that batch into sellable inventory through the approved workflow.
 
 **Preconditions:**
@@ -335,7 +335,7 @@ Allow an authorised administrator to record a finished-perfume production batch 
 - The administrator has the required server-authorised permission to manage production batches.
 - The applicable sellable perfume variant exists.
 
-**Trigger:**  
+**Trigger:**
 The administrator opens the production-batch area and chooses to record a new finished-perfume batch or release an existing recorded batch.
 
 **Main flow:**
@@ -383,7 +383,7 @@ The administrator opens the production-batch area and chooses to record a new fi
 
 **Related decisions:** `D-073`, `D-074`
 
-**Goal:**  
+**Goal:**
 Allow an authenticated customer to submit one rating and short text review for a perfume they have purchased and participate in the approved shared public review space.
 
 **Preconditions:**
@@ -392,7 +392,7 @@ Allow an authenticated customer to submit one rating and short text review for a
 - The customer has purchased the perfume being reviewed.
 - The customer has not already submitted a review for that purchased perfume.
 
-**Trigger:**  
+**Trigger:**
 The customer opens an eligible purchased perfume and chooses to submit a review.
 
 **Main flow:**
@@ -439,7 +439,7 @@ The customer opens an eligible purchased perfume and chooses to submit a review.
 
 **Related decisions:** `D-057`, `D-058`, `D-063`, `D-073`
 
-**Goal:**  
+**Goal:**
 Allow an authorised administrator to review and moderate publicly submitted perfume reviews in accordance with the approved review scope.
 
 **Preconditions:**
@@ -448,7 +448,7 @@ Allow an authorised administrator to review and moderate publicly submitted perf
 - The administrator has the required server-authorised permission to moderate reviews.
 - One or more customer reviews exist where applicable.
 
-**Trigger:**  
+**Trigger:**
 The administrator opens the review-moderation area or selects a review requiring moderation.
 
 **Main flow:**
@@ -497,7 +497,7 @@ The administrator opens the review-moderation area or selects a review requiring
 
 **Related decisions:** `D-075`
 
-**Goal:**  
+**Goal:**
 Allow an authenticated customer to view loyalty points earned from qualifying completed orders and redeem available points according to administrator-configured rules.
 
 **Preconditions:**
@@ -506,7 +506,7 @@ Allow an authenticated customer to view loyalty points earned from qualifying co
 - The customer has an active Palermo customer account.
 - Loyalty-point rules are configured where applicable.
 
-**Trigger:**  
+**Trigger:**
 The customer opens the loyalty area or chooses to use available loyalty points.
 
 **Main flow:**
@@ -548,7 +548,7 @@ The customer opens the loyalty area or chooses to use available loyalty points.
 
 **Related decisions:** `D-076`
 
-**Goal:**  
+**Goal:**
 Allow an authenticated customer to opt in to or opt out of the basic Palermo subscription record.
 
 **Preconditions:**
@@ -556,7 +556,7 @@ Allow an authenticated customer to opt in to or opt out of the basic Palermo sub
 - The customer is authenticated.
 - The customer has an active Palermo customer account.
 
-**Trigger:**  
+**Trigger:**
 The customer opens the subscription area or chooses to change their subscription preference.
 
 **Main flow:**
@@ -596,7 +596,7 @@ The customer opens the subscription area or chooses to change their subscription
 
 **Related decisions:** `D-077`
 
-**Goal:**  
+**Goal:**
 Allow an authenticated customer to access their unique referral code or link and receive an approved loyalty reward after a qualifying successful referral.
 
 **Preconditions:**
@@ -605,7 +605,7 @@ Allow an authenticated customer to access their unique referral code or link and
 - The customer has an active Palermo customer account.
 - Referral rules are configured where applicable.
 
-**Trigger:**  
+**Trigger:**
 The customer opens the referral area or chooses to access their referral code or link.
 
 **Main flow:**
@@ -637,7 +637,231 @@ The customer opens the referral area or chooses to access their referral code or
 - The system does not introduce a multi-level referral or affiliate programme.
 - This use case does not define referral persistence, reward-processing implementation or APIs.
 
+## Promotions and Promotional Content Use Cases
+### UC-PROMO-001 — Manage Promotion Codes
 
+**Primary actor:** Administrator
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-PROMO-001`
+
+**Related decisions:** `D-037`, `D-057`, `D-058`, `D-063`, `D-078`
+
+**Goal:**
+Allow an authorised administrator to create and manage basic promotion codes while ensuring eligibility and discount calculations are validated by the system.
+
+**Preconditions:**
+
+- The administrator is authenticated.
+- The administrator has the required server-authorised permission to manage promotions.
+
+**Trigger:**
+The administrator opens the promotion-management area or chooses to create or modify a promotion code.
+
+**Main flow:**
+
+1. The administrator accesses the promotion-management area.
+2. The system verifies that the administrator is authorised to manage promotions.
+3. The system displays existing promotion codes and available management actions.
+4. The administrator chooses to create a new promotion or modify an existing promotion.
+5. The administrator provides or updates the applicable promotion information, including:
+   - promotion code;
+   - discount definition;
+   - active status;
+   - applicable start and end dates; and
+   - approved eligibility rules.
+6. The system validates the promotion information.
+7. The system saves the valid promotion configuration.
+8. The system confirms the result to the administrator.
+9. The privileged promotion-management action is recorded in the audit history where applicable.
+
+**Alternative and exception flows:**
+
+- If the administrator lacks permission to manage promotions, the system denies the action.
+- If required promotion information is missing or invalid, the system does not save the promotion and indicates that correction is required.
+- If an existing promotion is deactivated, it is no longer considered active for new eligibility checks.
+- Client-side presentation of a promotion does not determine final eligibility or discount value.
+
+**Postconditions:**
+
+- A valid promotion has been created or updated, or
+- no promotion change has occurred when the request was invalid or unauthorised.
+
+**Business and scope rules:**
+
+- Promotion eligibility and discount calculations are server validated.
+- Promotion eligibility and discount values are revalidated when an order is placed.
+- The final applied discount is snapshotted as part of the order outcome.
+- Promotion management is limited to basic approved promotion-code rules.
+- Unsupported campaign-management or advanced marketing-automation functionality is outside the approved scope.
+- This use case does not define APIs, database schema or backend validation implementation.
+### UC-SOC-001 — Manage Promotional Content
+
+**Primary actor:** Administrator
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-SOCIAL-001`
+
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-079`
+
+**Goal:**
+Allow an authorised administrator to create and manage approved promotional-content records intended for Palermo marketing use.
+
+**Preconditions:**
+
+- The administrator is authenticated.
+- The administrator has the required server-authorised permission to manage promotional content.
+
+**Trigger:**
+The administrator opens the promotional-content management area or chooses to create or modify a promotional-content record.
+
+**Main flow:**
+
+1. The administrator accesses the promotional-content management area.
+2. The system verifies that the administrator is authorised to manage promotional content.
+3. The system displays existing promotional-content records and permitted actions.
+4. The administrator chooses to create a new record or modify an existing record.
+5. The administrator provides or updates the applicable promotional-content information.
+6. The system validates the provided information.
+7. The system saves the approved promotional-content record.
+8. The system confirms the result to the administrator.
+9. The privileged content-management action is recorded in the audit history where applicable.
+
+**Alternative and exception flows:**
+
+- If the administrator lacks permission to manage promotional content, the system denies the action.
+- If required content information is invalid or incomplete, the system does not save the record and indicates that correction is required.
+- If a content record is no longer approved for use, it can be updated or withdrawn through an authorised management action.
+
+**Postconditions:**
+
+- A promotional-content record has been created or updated, or
+- no change has occurred when the request was invalid or unauthorised.
+
+**Business and scope rules:**
+
+- Promotional-content management is limited to Palermo marketing content records.
+- Palermo is not a social-media scheduling platform.
+- Automatic posting, publishing queues and social-network account integrations are outside the approved scope.
+- This use case does not define external social-media APIs or scheduling functionality.
+### UC-SOC-002 — Generate, Preview and Approve AI Promotional Video
+
+**Primary actor:** Administrator
+
+**Supporting external system:** AI service/API
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-SOCIAL-002`
+
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-080`
+
+**Goal:**
+Allow an authorised administrator to request AI-assisted promotional-video generation, preview the generated result and explicitly approve or reject it before it can be treated as approved promotional content.
+
+**Preconditions:**
+
+- The administrator is authenticated.
+- The administrator has the required server-authorised permission to manage AI-assisted promotional content.
+- The required approved and copyright-safe source assets are available.
+- The approved AI service/API is available where applicable.
+
+**Trigger:**
+The administrator chooses to generate an AI-assisted promotional video.
+
+**Main flow:**
+
+1. The administrator accesses the AI promotional-video area.
+2. The system verifies that the administrator is authorised to use the feature.
+3. The administrator selects or provides the approved promotional inputs and copyright-safe assets required for generation.
+4. The system validates that the required generation inputs are available.
+5. The system submits the approved generation request to the AI service/API.
+6. The AI service/API returns a generated promotional-video result.
+7. The system presents the generated video to the administrator as a preview.
+8. The administrator reviews the preview.
+9. The administrator chooses to approve or reject the generated video.
+10. If approved, the system records the video as approved promotional content.
+11. If rejected, the system records the rejection and does not treat the video as approved content.
+12. The approval or rejection action is recorded in the audit history where applicable.
+13. The system confirms the final result to the administrator.
+
+**Alternative and exception flows:**
+
+- If the administrator lacks permission to use the feature, the system denies access.
+- If required generation inputs or approved assets are missing, the system does not submit the generation request.
+- If the AI service/API fails or does not return a usable result, the system reports the unsuccessful generation attempt.
+- If the administrator rejects the generated video, the video is not approved for promotional use.
+- No generated video is automatically posted to an external social-media platform.
+
+**Postconditions:**
+
+- An AI-generated promotional video has been explicitly approved and recorded as approved promotional content, or
+- the generated video remains unapproved or rejected and is not treated as approved promotional content.
+
+**Business and scope rules:**
+
+- AI-generated promotional video requires explicit preview and administrator approval or rejection.
+- Only approved and copyright-safe assets may be used.
+- Generated content must not be automatically posted to social media.
+- Approval does not itself perform external publishing or scheduling.
+- This use case does not define AI-provider implementation details, external social-media APIs or automated publishing workflows.
 ## Traceability
 
-_To be completed after the approved use cases are defined._
+### Requirement-to-Use-Case Traceability
+
+| Requirement                     | Approved Use Case(s)       |
+| ------------------------------- | -------------------------- |
+| `FR-ADMIN-001` – `FR-ADMIN-009` | `UC-ADM-001`               |
+| `FR-ADMIN-010` – `FR-ADMIN-011` | `UC-ADM-002`               |
+| `FR-ADMIN-012`                  | `UC-ADM-003`               |
+| `FR-ADMIN-013`                  | `UC-ADM-004`               |
+| `DER-INVENTORY-001`             | `UC-INV-001`               |
+| `DER-INVENTORY-002`             | `UC-INV-001`               |
+| `DER-INVENTORY-003`             | `UC-INV-002`               |
+| `DER-INVENTORY-004`             | `UC-INV-002`               |
+| `DER-INVENTORY-005`             | `UC-INV-001`               |
+| `DER-INVENTORY-006`             | `UC-INV-001`               |
+| `DER-REVIEW-001`                | `UC-REV-001`, `UC-REV-002` |
+| `DER-COMMUNITY-001`             | `UC-REV-001`               |
+| `DER-LOYALTY-001`               | `UC-LOY-001`               |
+| `DER-SUBSCRIPTION-001`          | `UC-SUB-001`               |
+| `DER-REFERRAL-001`              | `UC-REF-001`               |
+| `DER-PROMO-001`                 | `UC-PROMO-001`             |
+| `DER-SOCIAL-001`                | `UC-SOC-001`               |
+| `DER-SOCIAL-002`                | `UC-SOC-002`               |
+
+### Decision Traceability
+
+| Decision | Applied Use Case(s)                                                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `D-037`  | `UC-PROMO-001`                                                                                                                               |
+| `D-057`  | `UC-ADM-001`, `UC-ADM-002`, `UC-ADM-003`, `UC-ADM-004`, `UC-INV-001`, `UC-INV-002`, `UC-REV-002`, `UC-PROMO-001`, `UC-SOC-001`, `UC-SOC-002` |
+| `D-058`  | `UC-ADM-001`, `UC-ADM-002`, `UC-ADM-003`, `UC-ADM-004`, `UC-INV-001`, `UC-INV-002`, `UC-REV-002`, `UC-PROMO-001`, `UC-SOC-001`, `UC-SOC-002` |
+| `D-059`  | `UC-ADM-002`                                                                                                                                 |
+| `D-060`  | `UC-ADM-001`                                                                                                                                 |
+| `D-061`  | `UC-ADM-001`                                                                                                                                 |
+| `D-062`  | `UC-ADM-001`                                                                                                                                 |
+| `D-063`  | `UC-ADM-002`, `UC-ADM-003`, `UC-ADM-004`, `UC-REV-002`, `UC-PROMO-001`, `UC-SOC-001`, `UC-SOC-002`                                           |
+| `D-064`  | `UC-ADM-003`                                                                                                                                 |
+| `D-065`  | `UC-ADM-004`                                                                                                                                 |
+| `D-066`  | `UC-ADM-001`                                                                                                                                 |
+| `D-067`  | `UC-INV-001`                                                                                                                                 |
+| `D-068`  | `UC-INV-001`                                                                                                                                 |
+| `D-069`  | `UC-INV-002`                                                                                                                                 |
+| `D-070`  | `UC-INV-002`                                                                                                                                 |
+| `D-071`  | `UC-INV-001`                                                                                                                                 |
+| `D-072`  | `UC-INV-001`                                                                                                                                 |
+| `D-073`  | `UC-REV-001`, `UC-REV-002`                                                                                                                   |
+| `D-074`  | `UC-REV-001`                                                                                                                                 |
+| `D-075`  | `UC-LOY-001`                                                                                                                                 |
+| `D-076`  | `UC-SUB-001`                                                                                                                                 |
+| `D-077`  | `UC-REF-001`                                                                                                                                 |
+| `D-078`  | `UC-PROMO-001`                                                                                                                               |
+| `D-079`  | `UC-SOC-001`                                                                                                                                 |
+| `D-080`  | `UC-SOC-002`                                                                                                                                 |
+
+### Derived Requirement Provenance
+
+All requirements identified with the `DER-*` prefix in this document are approved development-team-derived SRS requirements. They supplement the source-numbered Palermo functional requirements and are not presented as original client-numbered functional requirements.
