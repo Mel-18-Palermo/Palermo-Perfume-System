@@ -251,6 +251,126 @@ The administrator opens the backup-management area or chooses to create an appro
 - Backup invocation and status are auditable.
 - Backup management includes approved backup creation, status/metadata visibility and support for a documented restore procedure.
 - This use case does not define backup storage architecture, database schema or backend implementation.
+
+## Inventory and Production Batch Use Cases
+### UC-INV-001 — View Variant Inventory and Stock Movement Information
+
+**Primary actor:** Administrator
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-INVENTORY-001`, `DER-INVENTORY-002`, `DER-INVENTORY-005`, `DER-INVENTORY-006`
+
+**Related decisions:** `D-057`, `D-058`, `D-067`, `D-068`, `D-071`, `D-072`
+
+**Goal:**  
+Allow an authorised administrator to view sellable perfume-variant inventory information, identify low-stock variants and inspect attributable stock-movement information.
+
+**Preconditions:**
+
+- The administrator is authenticated.
+- The administrator has the required server-authorised permission to access inventory information.
+- Sellable perfume variants exist where applicable.
+
+**Trigger:**  
+The administrator opens the inventory-management area or selects a perfume variant to inspect.
+
+**Main flow:**
+
+1. The administrator accesses the inventory area.
+2. The system verifies that the administrator is authorised to view inventory information.
+3. The system displays inventory at the sellable perfume-variant level.
+4. For each permitted variant, the system displays applicable stock information, including:
+   - on-hand quantity;
+   - reserved or committed quantity;
+   - available quantity; and
+   - low-stock status where applicable.
+5. The administrator selects a perfume variant to inspect.
+6. The system displays attributable inventory-movement information associated with the selected variant.
+7. The movement information includes the applicable:
+   - quantity change;
+   - source or reason;
+   - reference; and
+   - timestamp.
+8. The administrator may view variants that are at or below their configured low-stock threshold.
+9. The administrator may return to the inventory overview or inspect another variant.
+
+**Alternative and exception flows:**
+
+- If the administrator lacks permission to access inventory information, the system denies access.
+- If no movement history exists for the selected variant, the system indicates that no movement records are available.
+- If a variant is not at or below its configured low-stock threshold, it is not identified as low stock.
+
+**Postconditions:**
+
+- The administrator has viewed authorised variant-level stock or inventory-movement information.
+- Viewing inventory information does not itself change stock quantities.
+
+**Business and scope rules:**
+
+- Inventory is tracked at the sellable perfume-variant level.
+- Available stock accounts for reserved or committed quantities.
+- Every inventory quantity change must be attributable through an inventory movement.
+- Inventory reservation and commitment controls must prevent allocation beyond available stock.
+- Failed or expired reservations must be released safely.
+- Automatic purchasing, replenishment or production ordering is outside the approved scope.
+- This use case does not define database schema, persistence controls, APIs or backend implementation.
+
+### UC-INV-002 — Record and Release Finished-Perfume Production Batch
+
+**Primary actor:** Administrator
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-INVENTORY-003`, `DER-INVENTORY-004`
+
+**Related decisions:** `D-057`, `D-058`, `D-069`, `D-070`
+
+**Goal:**  
+Allow an authorised administrator to record a finished-perfume production batch for a sellable variant and release that batch into sellable inventory through the approved workflow.
+
+**Preconditions:**
+
+- The administrator is authenticated.
+- The administrator has the required server-authorised permission to manage production batches.
+- The applicable sellable perfume variant exists.
+
+**Trigger:**  
+The administrator opens the production-batch area and chooses to record a new finished-perfume batch or release an existing recorded batch.
+
+**Main flow:**
+
+1. The administrator accesses the production-batch management area.
+2. The system verifies that the administrator is authorised to manage production batches.
+3. The administrator selects the applicable sellable perfume variant.
+4. The administrator enters the required finished-perfume batch information.
+5. The system validates the provided batch information.
+6. The system records the production batch without changing sellable inventory.
+7. When the batch is ready for release, the administrator selects the authorised release action.
+8. The system verifies that the administrator is authorised to release the batch.
+9. The system releases the batch into sellable inventory.
+10. The corresponding inventory movement is recorded exactly once.
+11. The system confirms the release result and updated inventory status.
+
+**Alternative and exception flows:**
+
+- If the administrator lacks permission to record or release a batch, the system denies the requested action.
+- If required batch information is invalid or incomplete, the system does not record the batch and indicates that correction is required.
+- If a recorded batch has not been released, it does not increase sellable inventory.
+- If the batch has already been released, the system must not apply the same inventory movement again.
+
+**Postconditions:**
+
+- A finished-perfume production batch has been recorded, or
+- an authorised recorded batch has been released and the corresponding inventory movement has been applied exactly once.
+
+**Business and scope rules:**
+
+- Production-batch management is limited to finished-perfume batches associated with sellable variants.
+- Recording a production batch does not itself alter sellable inventory.
+- Sellable inventory changes only through the authorised batch-release workflow.
+- Raw-material procurement, formulation, manufacturing scheduling and ERP functionality are outside the approved scope.
+- This use case does not define database schema, APIs or backend implementation.
 ## Traceability
 
 _To be completed after the approved use cases are defined._
