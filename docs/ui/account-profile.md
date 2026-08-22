@@ -33,10 +33,10 @@ This document describes the minimum screens/states needed to support UC-AUTH-001
 - Empty form
 - Authenticating
 - Error — invalid credentials
-- Error — account not permitted to authenticate
+- Error — account not `ACTIVE` (e.g. `PENDING_VERIFICATION` or `DEACTIVATED`)
 - Authenticated — redirect to account home
 
-**Flag:** Whether a `PENDING_VERIFICATION` account can attempt login before verification is an open decision in the source document — the UI should not assume a resolution.
+**Resolution:** Per D-001, login is permitted only for an eligible `ACTIVE` account. A `PENDING_VERIFICATION` account must complete email verification first; the UI must surface the "account not `ACTIVE`" error state rather than allowing login.
 
 ---
 
