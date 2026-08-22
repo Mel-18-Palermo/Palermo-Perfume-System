@@ -485,6 +485,159 @@ The administrator opens the review-moderation area or selects a review requiring
 - The system does not introduce replies, likes, follows, direct messages or community-feed moderation.
 - The moderation workflow does not create a separate social-network capability.
 - This use case defines required behaviour only and does not specify backend moderation implementation.
+
+## Loyalty, Subscription and Referral Use Cases
+### UC-LOY-001 — View and Redeem Loyalty Points
+
+**Primary actor:** Customer
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-LOYALTY-001`
+
+**Related decisions:** `D-075`
+
+**Goal:**  
+Allow an authenticated customer to view loyalty points earned from qualifying completed orders and redeem available points according to administrator-configured rules.
+
+**Preconditions:**
+
+- The customer is authenticated.
+- The customer has an active Palermo customer account.
+- Loyalty-point rules are configured where applicable.
+
+**Trigger:**  
+The customer opens the loyalty area or chooses to use available loyalty points.
+
+**Main flow:**
+
+1. The customer accesses the loyalty area.
+2. The system displays the customer's current loyalty-point balance.
+3. The system displays any applicable redemption information according to the configured loyalty rules.
+4. The customer chooses to redeem available points where eligible.
+5. The system validates the requested redemption against the configured rules and available point balance.
+6. The system applies the valid redemption.
+7. The system updates the customer's loyalty-point balance.
+8. The system confirms the result to the customer.
+
+**Alternative and exception flows:**
+
+- If the customer does not have enough points for the requested redemption, the system does not apply it.
+- If the requested redemption does not satisfy the configured loyalty rules, the system rejects the request.
+- If no loyalty points are available, the system displays the applicable zero or unavailable balance state.
+
+**Postconditions:**
+
+- A valid loyalty redemption has been applied and the customer's balance updated, or
+- no change has occurred when the redemption was not valid or eligible.
+
+**Business and scope rules:**
+
+- Loyalty points are awarded for qualifying completed orders.
+- Redemption follows administrator-configured rules.
+- The loyalty capability uses simple points only.
+- Loyalty tiers, VIP levels or membership-status systems are outside the approved scope.
+- This use case does not define the underlying points-calculation or persistence implementation.
+### UC-SUB-001 — Manage Subscription Opt-In and Opt-Out
+
+**Primary actor:** Customer
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-SUBSCRIPTION-001`
+
+**Related decisions:** `D-076`
+
+**Goal:**  
+Allow an authenticated customer to opt in to or opt out of the basic Palermo subscription record.
+
+**Preconditions:**
+
+- The customer is authenticated.
+- The customer has an active Palermo customer account.
+
+**Trigger:**  
+The customer opens the subscription area or chooses to change their subscription preference.
+
+**Main flow:**
+
+1. The customer accesses the subscription area.
+2. The system displays the customer's current subscription status.
+3. The customer chooses to opt in or opt out.
+4. The system presents the selected change for confirmation where applicable.
+5. The customer confirms the change.
+6. The system updates the customer's subscription record.
+7. The system displays the updated subscription status.
+
+**Alternative and exception flows:**
+
+- If the requested status is already active, the system indicates that no change is required.
+- If the subscription change cannot be completed, the system retains the existing status and indicates that the update was unsuccessful.
+- If the customer cancels before confirming the change, the existing subscription status remains unchanged.
+
+**Postconditions:**
+
+- The customer's subscription record reflects the confirmed opt-in or opt-out selection, or
+- the existing subscription status remains unchanged if the request was cancelled or unsuccessful.
+
+**Business and scope rules:**
+
+- Subscription management is limited to a basic opt-in/opt-out record.
+- Recurring billing is outside the approved scope.
+- Automatic recurring perfume orders or deliveries are outside the approved scope.
+- This use case does not define payment processing, billing logic or backend implementation.
+### UC-REF-001 — View and Use Referral Code or Link
+
+**Primary actor:** Customer
+
+**Requirement provenance:** Approved development-team-derived SRS requirements
+
+**Related requirements:** `DER-REFERRAL-001`
+
+**Related decisions:** `D-077`
+
+**Goal:**  
+Allow an authenticated customer to access their unique referral code or link and receive an approved loyalty reward after a qualifying successful referral.
+
+**Preconditions:**
+
+- The customer is authenticated.
+- The customer has an active Palermo customer account.
+- Referral rules are configured where applicable.
+
+**Trigger:**  
+The customer opens the referral area or chooses to access their referral code or link.
+
+**Main flow:**
+
+1. The customer accesses the referral area.
+2. The system displays the customer's unique referral code or link.
+3. The customer may copy or share the referral code or link using an available method.
+4. A referred person may use the referral code or link as part of the applicable Palermo customer journey.
+5. The system determines whether the referral satisfies the configured qualifying conditions.
+6. If the referral qualifies, the configured loyalty reward is awarded to the eligible customer.
+7. The system updates the applicable loyalty balance or referral status.
+8. The system displays the resulting referral or reward status where applicable.
+
+**Alternative and exception flows:**
+
+- If the referral does not satisfy the configured qualifying conditions, no reward is awarded.
+- If the referral code or link is invalid, the system does not treat the referral as qualifying.
+- If a reward has already been awarded for the same qualifying referral, the system does not award it again.
+
+**Postconditions:**
+
+- A qualifying referral may result in the configured loyalty reward, or
+- no reward is issued where the referral is invalid, ineligible or already rewarded.
+
+**Business and scope rules:**
+
+- Each authenticated customer receives a unique referral code or link.
+- Referral rewards are limited to configured approved loyalty rewards.
+- The system does not introduce a multi-level referral or affiliate programme.
+- This use case does not define referral persistence, reward-processing implementation or APIs.
+
+
 ## Traceability
 
 _To be completed after the approved use cases are defined._
