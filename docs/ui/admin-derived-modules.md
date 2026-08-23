@@ -467,3 +467,128 @@ The review-moderation interface shall provide:
 * Moderation is limited to the approved public-review capability.
 * Replies, likes, follows, direct messages and community-feed moderation are outside scope.
 * This specification does not define backend moderation implementation, database schema or APIs.
+## Loyalty, Subscription and Referral UI Requirements
+
+### UI-LOY-001 — Loyalty Points and Redemption
+
+**Related use case:** `UC-LOY-001`
+
+**Related requirements:** `DER-LOYALTY-001`
+
+**Related decisions:** `D-075`
+
+**Primary user:** Customer
+
+#### Purpose
+
+Provide an authenticated customer with an interface for viewing available loyalty points and requesting redemption according to approved loyalty rules.
+
+#### Required UI elements
+
+The loyalty interface shall provide:
+
+* the customer's current loyalty-point balance;
+* applicable redemption information;
+* available redemption actions where eligible;
+* validation feedback when a redemption cannot be applied;
+* confirmation after a successful redemption; and
+* an appropriate state when no loyalty points are available.
+
+#### Interaction requirements
+
+1. The customer shall be able to open the loyalty area after authentication.
+2. The interface shall display the customer's current loyalty-point balance.
+3. The interface shall display applicable redemption information according to configured rules.
+4. The customer shall be able to request redemption when sufficient eligible points are available.
+5. The interface shall not indicate successful redemption until the request has been validated.
+6. If the customer does not have sufficient points or does not meet the configured rules, the interface shall clearly indicate that redemption is unavailable.
+7. After a successful redemption, the interface shall display the updated loyalty balance.
+
+#### Scope constraints
+
+* Loyalty is limited to simple points earned from qualifying completed orders.
+* Loyalty tiers, VIP levels and membership-status systems shall not be presented.
+* This specification does not define loyalty calculation, database schema, APIs or backend implementation.
+
+### UI-SUB-001 — Subscription Opt-In and Opt-Out
+
+**Related use case:** `UC-SUB-001`
+
+**Related requirements:** `DER-SUBSCRIPTION-001`
+
+**Related decisions:** `D-076`
+
+**Primary user:** Customer
+
+#### Purpose
+
+Provide an authenticated customer with an interface for viewing and changing their basic Palermo subscription status.
+
+#### Required UI elements
+
+The subscription interface shall provide:
+
+* the customer's current subscription status;
+* an opt-in action when the customer is not subscribed;
+* an opt-out action when the customer is subscribed;
+* confirmation where appropriate before changing subscription status;
+* success feedback after a completed change; and
+* an error state when the requested change cannot be completed.
+
+#### Interaction requirements
+
+1. The customer shall be able to view their current subscription status.
+2. The customer shall be able to request opt-in or opt-out according to their current status.
+3. The interface shall request confirmation where appropriate.
+4. After a successful change, the interface shall display the updated status.
+5. If the requested status is already active, the interface shall indicate that no change is required.
+6. If the request fails, the previous subscription status shall remain displayed.
+
+#### Scope constraints
+
+* Subscription capability is limited to a basic opt-in/opt-out record.
+* Recurring billing shall not be presented.
+* Automatic recurring perfume orders or deliveries shall not be presented.
+* This specification does not define payment processing, recurring-order logic, database schema or APIs.
+
+### UI-REF-001 — Referral Code, Link and Reward Status
+
+**Related use case:** `UC-REF-001`
+
+**Related requirements:** `DER-REFERRAL-001`
+
+**Related decisions:** `D-077`
+
+**Primary user:** Customer
+
+#### Purpose
+
+Provide an authenticated customer with an interface for viewing and using their unique referral code or link and viewing applicable referral-reward status.
+
+#### Required UI elements
+
+The referral interface shall provide:
+
+* the customer's unique referral code or link;
+* an action for copying the referral code or link;
+* an available sharing action where supported;
+* referral-status information where applicable;
+* qualifying reward information; and
+* feedback when a referral is invalid, ineligible or has already been rewarded.
+
+#### Interaction requirements
+
+1. The customer shall be able to open the referral area after authentication.
+2. The interface shall display the customer's unique referral code or link.
+3. The customer shall be able to copy the referral code or link.
+4. Where a sharing option is provided, it shall share the referral information without introducing a Palermo social-network feature.
+5. The interface may display whether a referral has satisfied the configured qualifying conditions.
+6. Where a qualifying referral results in a loyalty reward, the interface shall display the applicable resulting status.
+7. The interface shall not indicate duplicate rewards for the same qualifying referral.
+
+#### Scope constraints
+
+* Referral functionality is limited to a unique customer referral code or link and an approved qualifying reward.
+* Referral rewards are limited to configured loyalty rewards.
+* Multi-level referral systems and affiliate-programme functionality are outside scope.
+* This specification does not define referral persistence, reward-processing implementation, APIs or database schema.
