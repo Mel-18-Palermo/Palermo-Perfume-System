@@ -86,7 +86,7 @@ Where applicable, the interface shall provide:
 * AI-generated values shall not be presented as authoritative Palermo business metrics.
 
 #### Scope constraints
-
+* The UI shall not present refund or adjustment treatment in reporting metrics unless the corresponding workflows and metric definitions are explicitly approved.
 * Dashboard and reporting interfaces are read-mostly.
 * Business mutations shall occur through separate authorised administrative workflows.
 * Reporting shall use explicit reporting periods and approved metric definitions.
@@ -351,6 +351,7 @@ The production-batch interface shall provide, where authorised:
 #### Access and security requirements
 
 * Production-batch recording and release shall require authenticated administrator identity and appropriate server-authorised permission.
+* Production-batch recording and release actions shall be auditable.
 * Batch release shall remain an authorised business-changing workflow.
 * UI controls alone shall not determine whether release is permitted.
 
@@ -459,7 +460,7 @@ The review-moderation interface shall provide:
 #### Access and security requirements
 
 * Review moderation shall require authenticated administrator identity and appropriate server-authorised permission.
-* Moderation actions shall be auditable where applicable.
+* Review moderation actions shall be auditable.
 * UI controls shall not be treated as the authorisation boundary.
 
 #### Scope constraints
@@ -633,7 +634,7 @@ The promotion-management interface shall provide:
 5. The interface shall display the applicable dates, status and eligibility information for each promotion.
 6. Client-side display of a promotion shall not be presented as proof of final eligibility.
 7. The interface shall not indicate that a discount is final until the system has performed the required validation.
-8. Authorised promotion-management actions shall be auditable where applicable.
+8. Authorised promotion-management actions shall be auditable.
 
 #### Access and security requirements
 
@@ -682,11 +683,11 @@ The promotional-content interface shall provide:
 3. Required information shall be validated before the interface indicates successful saving.
 4. The interface shall display the current state of the promotional-content record where applicable.
 5. The administrator shall be able to withdraw or update content that is no longer approved for use where permitted.
-6. Authorised content-management actions shall be auditable where applicable.
 
 #### Access and security requirements
 
 - Promotional-content management shall require authenticated administrator identity and appropriate server-authorised permission.
+- Authorised promotional-content management actions shall be auditable.
 - UI visibility shall not be treated as the authorisation boundary.
 
 #### Scope constraints
@@ -735,12 +736,13 @@ The AI promotional-video interface shall provide:
 6. The administrator shall be able to approve or reject the preview.
 7. A rejected result shall remain unapproved.
 8. An approved result may be recorded as approved promotional content.
-9. Approval or rejection shall be auditable where applicable.
+9. After approval or rejection, the interface shall display the resulting approval state.
 10. The interface shall not automatically post generated content to an external social-media platform.
 
 #### Access and security requirements
 
 - AI promotional-video functionality shall require authenticated administrator identity and appropriate server-authorised permission.
+- AI promotional-video approval and rejection actions shall be auditable.
 - Only approved and copyright-safe assets shall be used.
 - UI visibility shall not be treated as the authorisation boundary.
 

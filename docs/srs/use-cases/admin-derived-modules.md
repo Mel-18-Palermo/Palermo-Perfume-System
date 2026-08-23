@@ -164,7 +164,7 @@ The administrator opens the administrative account and access-management area an
 - Successful privileged changes are represented in the audit history.
 
 **Business and scope rules:**
-
+- Refund or adjustment treatment must not be introduced into reporting metrics unless the corresponding workflows and metric definitions are explicitly approved.
 - Administrative access is server-authorised and deny-by-default.
 - Least-privilege RBAC applies to administrative capability.
 - Organisational staff job titles or unsupported administrative roles must not be invented.
@@ -270,8 +270,7 @@ The administrator opens the backup-management area or chooses to create an appro
 **Postconditions:**
 
 - An approved backup operation has been initiated and its status or metadata recorded, or the request has ended without creating a backup.
-- The privileged backup action is represented in the audit history where applicable.
-
+- The privileged backup action is represented in the audit history.
 **Business and scope rules:**
 
 - Backup operations are restricted to appropriately authorised administrators.
@@ -377,7 +376,8 @@ The administrator opens the production-batch area and chooses to record a new fi
 8. The system verifies that the administrator is authorised to release the batch.
 9. The system releases the batch into sellable inventory.
 10. The corresponding inventory movement is recorded exactly once.
-11. The system confirms the release result and updated inventory status.
+11. The system records the privileged production-batch recording or release action in the audit history.
+12. The system confirms the release result and updated inventory status.
 
 **Alternative and exception flows:**
 
@@ -491,7 +491,7 @@ The administrator opens the review-moderation area or selects a review requiring
    - hiding the review; or
    - removing the review.
 8. The system applies the authorised moderation action.
-9. The system records the privileged moderation action in the audit history where applicable.
+9. The system records the privileged moderation action in the audit history.
 10. The system confirms the moderation result.
 
 **Alternative and exception flows:**
@@ -503,7 +503,7 @@ The administrator opens the review-moderation area or selects a review requiring
 **Postconditions:**
 
 - The selected review remains visible, is hidden or is removed according to the authorised moderation action.
-- The applicable moderation action is auditable where required.
+- Review moderation actions are auditable.
 
 **Business and scope rules:**
 
@@ -701,7 +701,7 @@ The administrator opens the promotion-management area or chooses to create or mo
 6. The system validates the promotion information.
 7. The system saves the valid promotion configuration.
 8. The system confirms the result to the administrator.
-9. The privileged promotion-management action is recorded in the audit history where applicable.
+9. The system records the privileged promotion-management action in the audit history.
 
 **Alternative and exception flows:**
 
@@ -754,7 +754,7 @@ The administrator opens the promotional-content management area or chooses to cr
 6. The system validates the provided information.
 7. The system saves the approved promotional-content record.
 8. The system confirms the result to the administrator.
-9. The privileged content-management action is recorded in the audit history where applicable.
+9. The system records the privileged content-management action in the audit history.
 
 **Alternative and exception flows:**
 
@@ -811,7 +811,7 @@ The administrator chooses to generate an AI-assisted promotional video.
 9. The administrator chooses to approve or reject the generated video.
 10. If approved, the system records the video as approved promotional content.
 11. If rejected, the system records the rejection and does not treat the video as approved content.
-12. The approval or rejection action is recorded in the audit history where applicable.
+12. The system records the administrator's approval or rejection action in the audit history.
 13. The system confirms the final result to the administrator.
 
 **Alternative and exception flows:**
