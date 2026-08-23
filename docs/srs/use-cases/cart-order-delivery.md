@@ -204,3 +204,135 @@ sequenceDiagram
     P-->>C: Retry payment on the same order, no duplicate order created
   end
 ```
+
+---
+
+## 5. Cart use cases
+
+### UC-CART-001 — Add Sellable Variant to Cart
+
+**Actor** Visitor, Customer · **Req** `FR-CART-001` · **Decisions** `D-011`, `D-014`, `D-027`, `D-034`, `D-036` · **Rules** `BR-COD-001`, `BR-COD-002`, `BR-COD-004`, `BR-COD-005`
+**Goal** Add a quantity of one sellable variant, with any eligible customisations, to the actor's cart.
+**Preconditions** The actor has a cart context (temporary for a Visitor, account cart for a Customer); the variant exists and is sellable.
+**Trigger** The actor confirms an add-to-cart action from a product, comparison, sample-set, or recommendation surface.
+
+**Main flow**
+1. Actor selects variant, quantity, and any permitted customisations.
+2. Server validates that the variant is sellable and not archived, the quantity is a positive integer within the per-line limit, and each customisation is eligible for that variant.
+3. Server identifies the line by variant + customisation set and creates a new line or increases the matching one.
+4. Server recalculates totals and returns cart contents, totals, and current availability. No stock is reserved.
+
+**Alternatives** **A1** matching line found → quantity increased, no second line. **A2** customisation set differs → separate line created. **A3** Visitor → line held on the temporary cart, later claimed by `UC-CART-006`.
+
+**Exceptions** **E1** variant unsellable/archived → rejected, nothing added. **E2** invalid quantity → rejected, cart unchanged. **E3** ineligible customisation → rejected, offending selection identified. **E4** quantity above availability → availability reported, excess not added, nothing reserved (`BR-COD-002`). **E5** duplicate submission → quantity added once (`BR-COD-009`).
+
+**Postconditions** *Success:* line present with server-calculated totals and no reservation. *Failure:* cart unchanged, actor told what to correct.
+
+---
+
+### UC-CART-002 — Update Cart Contents
+
+**Actor** Visitor, Customer · **Req** `FR-CART-002` · **Decisions** `D-034`, `D-035`, `D-036` · **Rules** `BR-COD-001`, `BR-COD-002`, `BR-COD-004`, `BR-COD-005`
+**Goal** Change a cart line's quantity, or remove a line, and obtain recalculated totals.
+**Preconditions** Cart has at least one line; the targeted line belongs to the actor's own cart.
+**Trigger** The actor changes a quantity or activates remove.
+
+**Main flow**
+1. Actor submits a new quantity or a removal for an identified line.
+2. Server verifies line ownership and validates the quantity as a positive integer within the per-line limit.
+3. Server applies the change, then revalidates all remaining lines against current price and availability.
+4. Server recalculates totals including any applied discount (`UC-CART-004`) and returns the updated cart.
+
+**Alternatives** **A1** quantity zero, where permitted → treated as removal. **A2** last line removed → cart empty, applied code cleared, totals zero. **A3** price changed since the line was added → current price used, actor informed.
+
+**Exceptions** **E1** line not found or not owned → rejected without disclosing existence elsewhere. **E2** invalid quantity → rejected, previous quantity retained. **E3** quantity now above availability → availability reported, excess not applied. **E4** line became unsellable → flagged unavailable, excluded from the payable total, checkout blocked until resolved. **E5** duplicate or stale submission → does not compound; the last validated state is authoritative (`BR-COD-009`).
+
+**Postconditions** *Success:* change applied with recalculated server totals, no reservation. *Failure:* previous validated state retained.
+
+---
+
+### UC-CART-003 — Review Cart Totals
+
+**Actor** Visitor, Customer · **Req** `FR-CART-003` · **Decisions** `D-034`, `D-035`, `D-037`, `D-045` · **Rules** `BR-COD-001`, `BR-COD-002`, `BR-COD-005`, `BR-COD-006`
+**Goal** Obtain a server-calculated breakdown: line subtotals, applied discount, payable total.
+**Preconditions** The actor has a cart context.
+**Trigger** The cart or mini-cart is opened, or any cart-mutating use case completes.
+
+**Main flow**
+1. Server loads the cart lines and resolves the current catalogue price for each variant.
+2. Server calculates each line subtotal (current unit price × quantity, including any priced customisation) and the item subtotal.
+3. Server applies any valid promotional discount from `UC-CART-004` and calculates the payable total.
+4. Server returns the breakdown with per-line availability and price-change indicators.
+
+**Alternatives** **A1** empty cart → zero totals, no discount. **A2** unavailable line present → shown but excluded from the payable total; checkout blocked until resolved. **A3** delivery charge not yet known → item total shown excluding delivery; the charge is added in `UC-DELIVERY-001` and finalised at placement.
+
+**Exceptions** **E1** applied code no longer valid → discount dropped, total recalculated, actor informed. **E2** calculation cannot complete → no partial or client-computed total is shown; a retriable unavailable state is reported.
+
+**Postconditions** *Success:* a server-authoritative total matching what checkout will use at that moment. *Failure:* no total presented as authoritative.
+
+**Note** Cart totals are live and indicative; the binding values are the placement snapshots (`BR-COD-005`). Tax/GST treatment is not defined by this work package.
+
+---
+
+### UC-CART-004 — Apply or Remove Promotional Code
+
+**Actor** Visitor, Customer · **Req** `FR-CART-004` · **Decisions** `D-037`, `D-078` · **Rules** `BR-COD-001`, `BR-COD-005`, `BR-COD-006`, `BR-COD-018` · **Assumption** `ASM-COD-001`
+**Goal** Apply a server-validated promotional discount to the cart, or remove an applied code.
+**Preconditions** Cart contains at least one sellable line.
+**Trigger** The actor submits or removes a code.
+
+**Main flow**
+1. Actor enters a code; server normalises and resolves it against configured promotions.
+2. Server validates that the promotion is active, in date, and satisfied by the cart contents and any configured eligibility rules.
+3. Server calculates the discount, records the code as applied, and recalculates totals (`UC-CART-003`).
+4. Server confirms the applied code and discount amount.
+
+**Alternatives** **A1** remove → code cleared, totals recalculated. **A2** replace → a new code replaces the existing one; only one code applies at a time. **A3** cart changed after application → code re-evaluated and removed if it no longer qualifies, with the actor informed. **A4** revalidation at placement → `UC-ORDER-001` revalidates before snapshotting; an invalidated code is rejected there.
+
+**Exceptions** **E1** unknown code → reported invalid, no hint about similar codes. **E2** expired or inactive → reported no longer available. **E3** eligibility not met → reported without exposing rule configuration. **E4** code requires customer identity and the actor is a Visitor → not applied, sign-in invited (`ASM-COD-001`). **E5** repeated submission → discounts do not stack; applied exactly once (`BR-COD-009`).
+
+**Postconditions** *Success:* one valid code applied with a server-calculated discount in the total. *Failure:* no discount applied, total unchanged.
+
+---
+
+### UC-CART-005 — Manage Wishlist
+
+**Actor** Customer · **Req** `FR-CART-005` · **Decisions** `D-011`, `D-013`, `D-014` · **Rules** `BR-COD-002`, `BR-COD-017`
+**Goal** Save a perfume for later, view saved items, remove one, or move one to the cart.
+**Preconditions** Authenticated `ACTIVE` customer account.
+**Trigger** The actor saves an item, opens the wishlist, or acts on an entry.
+
+**Main flow**
+1. Actor activates save on a perfume or variant; server verifies the account and the item.
+2. Server records the item on the customer's own wishlist, once, and confirms the saved state.
+3. On opening the wishlist, server returns saved items with current availability and price.
+4. Actor may remove an entry or move it to the cart, invoking `UC-CART-001`.
+
+**Alternatives** **A1** already saved → single entry retained, reported as already saved. **A2** move to cart → entry optionally removed on a successful add; retained if the add fails. **A3** Visitor attempt → sign-in prompted; the intent may be replayed after authentication.
+
+**Exceptions** **E1** item archived/unavailable → entry retained but marked unavailable and not movable to cart. **E2** entry not owned → rejected server-side (`BR-COD-017`). **E3** capacity limit reached → limit reported, item not saved.
+
+**Postconditions** *Success:* wishlist reflects the change; no stock reserved. *Failure:* wishlist unchanged.
+
+---
+
+### UC-CART-006 — Claim Temporary Visitor Cart
+
+**Actor** Visitor becoming an authenticated Customer · **Level** Supporting · **Req** `FR-CART-001`–`FR-CART-003` · **Decisions** `D-011`, `D-034` · **Rules** `BR-COD-001`, `BR-COD-002`, `BR-COD-004`, `BR-COD-005`, `BR-COD-009` · **Assumption** `ASM-COD-003`
+**Goal** Carry a temporary visitor cart into the authenticated customer's account cart.
+**Preconditions** A non-empty temporary cart exists; authentication succeeds for an `ACTIVE` account.
+**Trigger** Successful sign-in, or first sign-in after registration, while a non-empty temporary cart exists.
+
+**Main flow**
+1. Server detects the non-empty visitor cart and loads the customer's existing account cart, if any.
+2. Lines are matched on variant + customisation set; matches are combined subject to the per-line limit, non-matches are added.
+3. Server revalidates every resulting line against current price and availability.
+4. Server recalculates totals, re-evaluates any applied code, discards the temporary cart, and confirms the merged cart.
+
+**Alternatives** **A1** empty account cart → all visitor lines transfer unchanged. **A2** empty visitor cart → no action. **A3** combined quantity above the per-line limit → line capped, customer told which line. **A4** code carried from the visitor cart → re-evaluated against the merged cart and authenticated identity; removed with an explanation if it no longer qualifies.
+
+**Exceptions** **E1** line no longer sellable → transferred as unavailable, excluded from totals, blocks checkout until removed. **E2** merge interrupted or retried → applied once, no duplicated lines or quantities (`BR-COD-009`).
+
+**Postconditions** *Success:* one account cart, no temporary cart, totals recalculated. *Failure:* account cart retains its previous validated state; customer told visitor items could not be transferred.
+
+---
