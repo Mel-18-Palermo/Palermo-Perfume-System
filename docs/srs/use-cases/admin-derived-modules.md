@@ -113,6 +113,7 @@ The administrator opens the dashboard or selects an available administrative rep
 **Business and scope rules:**
 
 - Reporting interfaces are read-mostly.
+- Refund or adjustment treatment must not be introduced into reporting metrics unless the corresponding workflows and metric definitions are explicitly approved.
 - Business-changing actions must use separate authorised administrative workflows rather than report visualisations.
 - Reporting metrics use explicit reporting periods and documented definitions.
 - Access remains subject to server-enforced, deny-by-default, least-privilege RBAC.
@@ -178,7 +179,7 @@ The administrator opens the administrative account and access-management area an
 - Successful privileged changes are represented in the audit history.
 
 **Business and scope rules:**
-- Refund or adjustment treatment must not be introduced into reporting metrics unless the corresponding workflows and metric definitions are explicitly approved.
+
 - Administrative access is server-authorised and deny-by-default.
 - Least-privilege RBAC applies to administrative capability.
 - Organisational staff job titles or unsupported administrative roles must not be invented.
@@ -299,7 +300,7 @@ The administrator opens the backup-management area or chooses to create an appro
 
 **Requirement provenance:** Approved development-team-derived SRS requirements
 
-**Related requirements:** `DER-INVENTORY-001`, `DER-INVENTORY-002`, `DER-INVENTORY-005`, `DER-INVENTORY-006`
+**Related requirements:** `DER-INVENTORY-001`, `DER-INVENTORY-002`, `DER-INVENTORY-005`
 
 **Related decisions:** `D-057`, `D-058`, `D-067`, `D-068`, `D-071`, `D-072`
 
@@ -364,7 +365,7 @@ The administrator opens the inventory-management area or selects a perfume varia
 
 **Related requirements:** `DER-INVENTORY-003`, `DER-INVENTORY-004`
 
-**Related decisions:** `D-057`, `D-058`, `D-069`, `D-070`
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-069`, `D-070`
 
 **Goal:**
 Allow an authorised administrator to record a finished-perfume production batch for a sellable variant and release that batch into sellable inventory through the approved workflow.
@@ -412,6 +413,24 @@ The administrator opens the production-batch area and chooses to record a new fi
 - Sellable inventory changes only through the authorised batch-release workflow.
 - Raw-material procurement, formulation, manufacturing scheduling and ERP functionality are outside the approved scope.
 - This use case does not define database schema, APIs or backend implementation.
+
+#### INV-SYS-001 — Inventory Reservation and Commitment Invariant
+
+**Requirement provenance:** Approved development-team-derived SRS requirement
+
+**Related requirement:** `DER-INVENTORY-006`
+
+**Related decision:** `D-072`
+
+This supporting system behaviour defines the required reservation and commitment behaviour used by applicable order-processing workflows.
+
+- Reservation and commitment operations shall prevent reserved or committed quantities from exceeding inventory available for allocation.
+- A reservation, commitment or release shall behave atomically from the SRS perspective: the requested state change is completed as one consistent business operation or is not partially applied.
+- Failed or expired reservations shall be released safely.
+- The same reservation or commitment shall not be released more than once for the same release event.
+- Concurrent or overlapping requests shall not result in over-allocation of the same available inventory.
+- This requirement has no direct Administrator UI responsibility.
+- This specification defines required system behaviour only and does not prescribe database transactions, locking mechanisms, database schema, APIs or persistence implementation.
 
 ## Reviews and Fragrance Community Use Cases
 ### UC-REV-001 — Submit and View a Perfume Review
@@ -528,7 +547,7 @@ The administrator opens the review-moderation area or selects a review requiring
 - This use case defines required behaviour only and does not specify backend moderation implementation.
 
 ## Loyalty, Subscription and Referral Use Cases
-### UC-LOY-001 — View and Redeem Loyalty Points
+### UC-LOY-001 — Earn, View and Redeem Loyalty Points
 
 **Primary actor:** Customer
 
@@ -539,7 +558,7 @@ The administrator opens the review-moderation area or selects a review requiring
 **Related decisions:** `D-075`
 
 **Goal:**
-Allow an authenticated customer to view loyalty points earned from qualifying completed orders and redeem available points according to administrator-configured rules.
+Allow loyalty points to be awarded when a qualifying customer order reaches the approved completed state, and allow the authenticated customer to view and redeem available points according to configured loyalty rules.
 
 **Preconditions:**
 
@@ -549,6 +568,20 @@ Allow an authenticated customer to view loyalty points earned from qualifying co
 
 **Trigger:**
 The customer opens the loyalty area or chooses to use available loyalty points.
+#### System-triggered earning flow
+
+1. A qualifying customer order reaches the approved completed state.
+2. The system determines whether the completed order qualifies for loyalty points under the approved configured rules.
+3. If the order qualifies, the system awards the applicable loyalty points to the customer's account.
+4. The system updates the customer's loyalty-point balance.
+5. The award is associated with the qualifying completed order so that the same qualifying order is not rewarded more than once.
+6. The updated loyalty-point balance becomes available to the customer through the loyalty interface.
+
+**Alternative and exception behaviour:**
+
+- If the completed order does not satisfy the configured qualification rules, no loyalty points are awarded.
+- If the qualifying order has already produced its approved loyalty award, the system does not award the same points again.
+- The numerical loyalty-points formula is not defined by this use case.
 
 **Main flow:**
 
@@ -906,9 +939,9 @@ flowchart TD
 | `D-058`  | `UC-ADM-001`, `UC-ADM-002`, `UC-ADM-003`, `UC-ADM-004`, `UC-INV-001`, `UC-INV-002`, `UC-REV-002`, `UC-PROMO-001`, `UC-SOC-001`, `UC-SOC-002` |
 | `D-059`  | `UC-ADM-002`                                                                                                                                 |
 | `D-060`  | `UC-ADM-001`                                                                                                                                 |
-| `D-061`  | `UC-ADM-001`                                                                                                                                 |
+| `D-061`  | `UC-ADM-001`                                                                                                                  |
 | `D-062`  | `UC-ADM-001`                                                                                                                                 |
-| `D-063`  | `UC-ADM-002`, `UC-ADM-003`, `UC-ADM-004`, `UC-REV-002`, `UC-PROMO-001`, `UC-SOC-001`, `UC-SOC-002`                                           |
+| `D-063` | `UC-ADM-002`, `UC-ADM-003`, `UC-ADM-004`, `UC-INV-002`, `UC-REV-002`, `UC-PROMO-001`, `UC-SOC-001`, `UC-SOC-002` |
 | `D-064`  | `UC-ADM-003`                                                                                                                                 |
 | `D-065`  | `UC-ADM-004`                                                                                                                                 |
 | `D-066`  | `UC-ADM-001`                                                                                                                                 |

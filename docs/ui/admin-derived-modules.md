@@ -253,7 +253,7 @@ The backup-management interface shall provide, where authorised:
 
 **Related use case:** `UC-INV-001`
 
-**Related requirements:** `DER-INVENTORY-001`, `DER-INVENTORY-002`, `DER-INVENTORY-005`, `DER-INVENTORY-006`
+**Related requirements:** `DER-INVENTORY-001`, `DER-INVENTORY-002`, `DER-INVENTORY-005`
 
 **Related decisions:** `D-057`, `D-058`, `D-067`, `D-068`, `D-071`, `D-072`
 
@@ -302,6 +302,8 @@ The inventory interface shall provide:
 
 * Inventory is tracked at sellable perfume-variant level.
 * Available stock accounts for reserved or committed quantities.
+* `DER-INVENTORY-006` defines supporting reservation, commitment and release behaviour rather than a direct Administrator UI responsibility.
+* The interface may display the resulting reserved, committed and available quantities, but it does not define how atomic inventory operations are implemented.
 * Automatic purchasing, replenishment or production ordering is outside the approved scope.
 * This specification does not define inventory persistence, database schema, APIs or backend reservation controls.
 
@@ -311,7 +313,7 @@ The inventory interface shall provide:
 
 **Related requirements:** `DER-INVENTORY-003`, `DER-INVENTORY-004`
 
-**Related decisions:** `D-057`, `D-058`, `D-069`, `D-070`
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-069`, `D-070`
 
 **Primary user:** Administrator
 
@@ -509,6 +511,8 @@ The loyalty interface shall provide:
 
 * Loyalty is limited to simple points earned from qualifying completed orders.
 * Loyalty tiers, VIP levels and membership-status systems shall not be presented.
+* Loyalty-point awards triggered by qualifying completed orders require no direct Customer or Administrator UI action.
+* After an approved loyalty-point award is completed, the loyalty interface shall display the updated customer balance.
 * This specification does not define loyalty calculation, database schema, APIs or backend implementation.
 
 ### UI-SUB-001 — Subscription Opt-In and Opt-Out
@@ -776,7 +780,7 @@ The AI promotional-video interface shall provide:
 | `DER-INVENTORY-003` | `UI-INV-002` |
 | `DER-INVENTORY-004` | `UI-INV-002` |
 | `DER-INVENTORY-005` | `UI-INV-001` |
-| `DER-INVENTORY-006` | `UI-INV-001` |
+| `DER-INVENTORY-006` | No direct Administrator UI responsibility; resulting inventory state may be reflected in `UI-INV-001`. See `INV-SYS-001`. |
 | `DER-REVIEW-001` | `UI-REV-001`, `UI-REV-002` |
 | `DER-COMMUNITY-001` | `UI-REV-001` |
 | `DER-LOYALTY-001` | `UI-LOY-001` |
