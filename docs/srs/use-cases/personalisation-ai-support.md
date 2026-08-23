@@ -36,6 +36,8 @@ flowchart TD
     UC7 --> AuditDB[(Feedback & Audit Store)]
 ```
 
+---
+
 ## UC-PERS-01: Customise Perfume Item (Label, Engraving, Gift Message, and Packaging)
 
 - **Primary Actor:** Visitor / Customer
@@ -112,7 +114,6 @@ flowchart TD
   1. System marks the variant as unavailable and prompts the actor to choose an alternate sample.
 - **4a. Actor attempts to add an incomplete bundle to the cart:**
   1. System disables the cart action and displays the remaining selection count required.
-
 ---
 
 ## UC-PERS-04: Complete Fragrance Discovery Quiz and Receive Recommendations
@@ -129,29 +130,30 @@ flowchart TD
   3. AI-curated perfume recommendations with explanations are displayed, with all product data validated against Palermo master catalogue records.
 
 ### Sequence Diagram: Quiz & AI Recommendation Lifecycle
+
 ```mermaid
 sequenceDiagram
     autonumber
     actor Customer as Visitor / Customer
-    participant UI as Web Frontend (Next.js)
-    participant Server as Palermo Server
-    participant DB as Supabase PostgreSQL
-    participant AI as AI Service / API
+    participant UI as Customer UI
+    participant App as Palermo Application
+    participant DB as Authoritative Catalogue Service
+    participant AI as AI service/API
 
-    Customer->>UI: Submit completed Quiz answers
-    UI->>Server: POST /api/quiz/recommendations (Quiz Answers)
-    Server->>DB: Query active perfumes matching quiz traits
-    DB-->>Server: Return candidate perfumes (IDs, Notes, Family)
-    Server->>AI: Send minimised prompt (Quiz Context + Candidate IDs)
+    Customer->>UI: Submit completed quiz answers
+    UI->>App: Submit quiz answers
+    App->>DB: Query active perfumes matching quiz traits
+    DB-->>App: Return candidate perfumes (traits, notes, family)
+    App->>AI: Send minimised prompt (quiz context + candidate IDs)
     alt AI Service Available & Output Valid (Normal Flow)
-        AI-->>Server: Return ranked candidate IDs + rationale text
-        Server->>DB: Validate IDs, live prices, and stock against Palermo master data
-        DB-->>Server: Verified canonical catalogue records
-        Server-->>UI: Verified catalogue records + AI rationale
+        AI-->>App: Return ranked candidate IDs + rationale text
+        App->>DB: Validate IDs, live prices, and stock against master catalogue
+        DB-->>App: Return verified canonical records
+        App-->>UI: Verified catalogue records + AI rationale
         UI-->>Customer: Display AI-curated recommendations
     else AI Failure, Timeout, Safety Rejection, or Invalid Output (D-033)
-        Server-->>UI: Fallback: Return deterministic catalogue matches
-        UI-->>Customer: Render deterministic matches + fallback notice (Commerce fully functional)
+        App-->>UI: Fallback: Return deterministic catalogue matches
+        UI-->>Customer: Render deterministic matches + fallback notice
     end
 ```
 
@@ -199,7 +201,7 @@ sequenceDiagram
 ### Extensions (Alternative / Failure Flows)
 - **2a. Actor asks for return/refund authorisation:**
   1. System identifies policy enquiry intent.
-  2. System explains published return policy terms and provides direct navigation to the formal return submission workflow.
+  2. System explains published return policy terms and provides direct links to the official return policy and approved support/contact channels.
   3. System explicitly states the AI assistant cannot authorize refunds or alter order states.
 - **2b. Actor input triggers safety rejection, contains malicious content, or falls outside supported domains (D-055):**
   1. System returns a standard boundary safety message stating the assistant only assists with Palermo fragrances, catalogue queries, and store policies.
@@ -207,7 +209,6 @@ sequenceDiagram
 - **4a. AI service experiences timeout, network failure, or invalid response format (D-055):**
   1. System renders an error notice: "Our virtual assistant is temporarily unavailable. Please browse our FAQ or contact customer support."
   2. Core catalogue browsing and checkout remain fully available.
-
 ---
 
 ## UC-SUPP-02: Authenticated Order and Delivery Enquiry
@@ -222,33 +223,34 @@ sequenceDiagram
   1. Authorised, ownership-verified order or delivery status is retrieved and explained.
 
 ### Sequence Diagram: Authenticated Order Status Enquiry
+
 ```mermaid
 sequenceDiagram
     autonumber
     actor Customer as Authenticated Customer
-    participant Chat as AI Chat Interface
-    participant Server as Palermo Server (Tool Gateway)
-    participant DB as Supabase PostgreSQL
-    participant AI as AI Service / API
+    participant UI as Customer UI
+    participant App as Palermo Application
+    participant DB as Authoritative Order Service
+    participant AI as AI service/API
 
-    Customer->>Chat: Ask order status
-    Chat->>Server: POST /api/support/message (Query, Session)
-    Server->>Server: Validate Customer Auth Session & Parse Intent
-    Server->>DB: Query order by ID and customer ID
+    Customer->>UI: Ask order status
+    UI->>App: Forward order status enquiry
+    App->>App: Validate customer auth session & parse intent
+    App->>DB: Query order by ID and authenticated customer ID
     alt Order Exists and Ownership Confirmed
-        DB-->>Server: Authoritative order snapshot
-        Server->>AI: Send factual order context
-        AI-->>Server: Conversational status response
-        Server-->>Chat: Order response card & tracking link
-        Chat-->>Customer: Display order details
+        DB-->>App: Return authoritative order snapshot
+        App->>AI: Send factual order context
+        AI-->>App: Return conversational status response
+        App-->>UI: Order response card & tracking link
+        UI-->>Customer: Display order details
     else Order Not Found or Mismatch
-        DB-->>Server: Empty result / mismatch
-        Server-->>Chat: Display account order mismatch notice
-        Chat-->>Customer: Display error notice
+        DB-->>App: Return empty result / mismatch
+        App-->>UI: Display account order mismatch notice
+        UI-->>Customer: Display error notice
     end
     opt AI Failure, Safety Rejection, or Invalid Output (D-055)
-        Server-->>Chat: Fallback to direct raw data card
-        Chat-->>Customer: Display authoritative order status & tracking link
+        App-->>UI: Fallback to direct raw data card
+        UI-->>Customer: Display authoritative order status & tracking link
     end
 ```
 
