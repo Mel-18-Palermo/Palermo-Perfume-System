@@ -359,3 +359,111 @@ The production-batch interface shall provide, where authorised:
 * Production-batch UI is limited to finished-perfume batches linked to sellable variants.
 * Raw-material procurement, formulation, manufacturing scheduling and ERP interfaces are outside scope.
 * This specification does not define database schema, APIs, transaction handling or backend inventory implementation.
+
+## Reviews and Fragrance Community UI Requirements
+
+### UI-REV-001 — Customer Review Submission and Public Review Space
+
+**Related use case:** `UC-REV-001`
+
+**Related requirements:** `DER-REVIEW-001`, `DER-COMMUNITY-001`
+
+**Related decisions:** `D-073`, `D-074`
+
+**Primary user:** Customer
+
+#### Purpose
+
+Provide an authenticated customer with an interface for submitting one rating and short text review for an eligible purchased perfume, while supporting the approved shared public review space.
+
+#### Required UI elements
+
+The review interface shall provide, where applicable:
+
+* an indication that the perfume is eligible for review;
+* a rating input;
+* a short-text review input;
+* a review-submission action;
+* validation feedback for missing or invalid review information;
+* a message when the customer is not eligible to submit a review;
+* a message when the customer has already submitted a review for the purchased perfume;
+* public display of approved or currently visible reviews; and
+* an empty state when no public reviews are available.
+
+#### Interaction requirements
+
+1. The customer shall be able to access the review-submission interface only for an eligible purchased perfume.
+2. The interface shall allow one rating and one short text review to be submitted.
+3. The interface shall validate required review information before indicating successful submission.
+4. If the customer has not purchased the perfume, review submission shall not be available.
+5. If the customer has already submitted a review for that purchased perfume, the interface shall not provide a second submission workflow.
+6. After a successful submission, the interface shall confirm that the review has been received.
+7. Publicly available reviews shall be presented as part of the shared Palermo fragrance-review space.
+8. Reviews that have been hidden or removed through authorised moderation shall no longer be presented as publicly visible.
+
+#### Access and scope requirements
+
+* Review submission shall require authenticated customer identity and confirmed purchase eligibility.
+* Public review viewing may be available to Customers and Visitors where permitted.
+* The community interface shall be limited to the shared public review capability.
+* Replies, likes, follows, direct messages and community feeds shall not be presented.
+* The UI shall not introduce a separate social-network experience.
+
+#### Scope constraints
+
+* One rating and short text review is supported per purchased perfume.
+* Review visibility remains subject to authorised moderation.
+* This specification does not define review persistence, moderation algorithms, database schema or APIs.
+
+### UI-REV-002 — Administrative Review Moderation
+
+**Related use case:** `UC-REV-002`
+
+**Related requirements:** `DER-REVIEW-001`
+
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-073`
+
+**Primary user:** Administrator
+
+#### Purpose
+
+Provide an authorised administrator with an interface for inspecting and moderating customer perfume reviews.
+
+#### Required UI elements
+
+The review-moderation interface shall provide:
+
+* a list of reviews available for authorised moderation;
+* the applicable perfume;
+* customer rating;
+* short text review;
+* current review visibility or moderation state where applicable;
+* an action to leave the review visible;
+* an action to hide the review;
+* an action to remove the review;
+* confirmation for destructive moderation actions where appropriate;
+* moderation-result feedback; and
+* an access-denied state when the administrator lacks permission.
+
+#### Interaction requirements
+
+1. The administrator shall be able to access the review-moderation interface only when appropriately authorised.
+2. The administrator shall be able to select a review for inspection.
+3. The interface shall display the permitted review information required for moderation.
+4. The administrator shall be able to choose an approved moderation action.
+5. Hiding or removing a review shall require confirmation where appropriate.
+6. After a successful moderation action, the interface shall display the updated review state.
+7. If the selected review is no longer available, the interface shall indicate that moderation cannot be completed.
+8. The interface shall not provide unsupported community-management controls.
+
+#### Access and security requirements
+
+* Review moderation shall require authenticated administrator identity and appropriate server-authorised permission.
+* Moderation actions shall be auditable where applicable.
+* UI controls shall not be treated as the authorisation boundary.
+
+#### Scope constraints
+
+* Moderation is limited to the approved public-review capability.
+* Replies, likes, follows, direct messages and community-feed moderation are outside scope.
+* This specification does not define backend moderation implementation, database schema or APIs.
