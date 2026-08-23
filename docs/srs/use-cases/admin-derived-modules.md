@@ -562,12 +562,21 @@ Allow loyalty points to be awarded when a qualifying customer order reaches the 
 
 **Preconditions:**
 
-- The customer is authenticated.
-- The customer has an active Palermo customer account.
-- Loyalty-point rules are configured where applicable.
+For system-triggered earning:
 
-**Trigger:**
-The customer opens the loyalty area or chooses to use available loyalty points.
+- A customer account is associated with the qualifying order.
+- The applicable loyalty qualification rules are configured.
+- The order reaches the approved completed state.
+
+For customer viewing or redemption:
+
+- The customer is authenticated.
+- The customer's loyalty-point balance is available.
+- Applicable redemption rules are configured where redemption is requested.
+**Triggers:**
+
+- **Earning:** A qualifying customer order reaches the approved completed state.
+- **Viewing or redemption:** An authenticated customer opens the loyalty area or requests an approved redemption action.
 #### System-triggered earning flow
 
 1. A qualifying customer order reaches the approved completed state.
@@ -921,7 +930,7 @@ flowchart TD
 | `DER-INVENTORY-003` | `UC-INV-002` |
 | `DER-INVENTORY-004` | `UC-INV-002` |
 | `DER-INVENTORY-005` | `UC-INV-001` |
-| `DER-INVENTORY-006` | `UC-INV-001` |
+| `DER-INVENTORY-006` | `INV-SYS-001` |
 | `DER-REVIEW-001` | `UC-REV-001`, `UC-REV-002` |
 | `DER-COMMUNITY-001` | `UC-REV-001` |
 | `DER-LOYALTY-001` | `UC-LOY-001` |
@@ -949,8 +958,8 @@ flowchart TD
 | `D-068`  | `UC-INV-001`                                                                                                                                 |
 | `D-069`  | `UC-INV-002`                                                                                                                                 |
 | `D-070`  | `UC-INV-002`                                                                                                                                 |
-| `D-071`  | `UC-INV-001`                                                                                                                                 |
-| `D-072`  | `UC-INV-001`                                                                                                                                 |
+| `D-071`  | `UC-INV-001`
+| `D-072` | `INV-SYS-001` |
 | `D-073`  | `UC-REV-001`, `UC-REV-002`                                                                                                                   |
 | `D-074`  | `UC-REV-001`                                                                                                                                 |
 | `D-075`  | `UC-LOY-001`                                                                                                                                 |
