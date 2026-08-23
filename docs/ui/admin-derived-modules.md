@@ -592,3 +592,217 @@ The referral interface shall provide:
 * Referral rewards are limited to configured loyalty rewards.
 * Multi-level referral systems and affiliate-programme functionality are outside scope.
 * This specification does not define referral persistence, reward-processing implementation, APIs or database schema.
+## Promotions and Promotional Content UI Requirements
+
+### UI-PROMO-001 — Promotion Code Management
+
+**Related use case:** `UC-PROMO-001`
+
+**Related requirements:** `DER-PROMO-001`
+
+**Related decisions:** `D-037`, `D-057`, `D-058`, `D-063`, `D-078`
+
+**Primary user:** Administrator
+
+#### Purpose
+
+Provide an authorised administrator with an interface for creating and managing approved promotion codes and their basic rules.
+
+#### Required UI elements
+
+The promotion-management interface shall provide:
+
+- a list of existing promotion codes;
+- promotion code value;
+- discount definition;
+- active or inactive status;
+- applicable start and end dates;
+- approved eligibility-rule controls;
+- an action for creating a promotion;
+- an action for modifying an existing promotion;
+- validation feedback for invalid or incomplete information;
+- success feedback after an authorised change; and
+- an access-denied state when the administrator lacks permission.
+
+#### Interaction requirements
+
+1. The administrator shall be able to access promotion management only when appropriately authorised.
+2. The administrator shall be able to create or modify an approved promotion code.
+3. Required promotion information shall be validated before the interface indicates successful creation or update.
+4. The administrator shall be able to activate or deactivate a promotion where permitted.
+5. The interface shall display the applicable dates, status and eligibility information for each promotion.
+6. Client-side display of a promotion shall not be presented as proof of final eligibility.
+7. The interface shall not indicate that a discount is final until the system has performed the required validation.
+8. Authorised promotion-management actions shall be auditable where applicable.
+
+#### Access and security requirements
+
+- Promotion management shall require authenticated administrator identity and appropriate server-authorised permission.
+- UI controls shall not be treated as the authorisation boundary.
+- Promotion eligibility and discount calculation shall remain server validated.
+
+#### Scope constraints
+
+- Promotion management is limited to basic promotion-code rules.
+- Promotion eligibility and discount values are revalidated when an order is placed.
+- Applied discounts are snapshotted as part of the order outcome.
+- Advanced campaign automation is outside scope.
+- This specification does not define backend validation logic, database schema, APIs or application code.
+### UI-SOC-001 — Promotional Content Management
+
+**Related use case:** `UC-SOC-001`
+
+**Related requirements:** `DER-SOCIAL-001`
+
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-079`
+
+**Primary user:** Administrator
+
+#### Purpose
+
+Provide an authorised administrator with an interface for creating and managing approved Palermo promotional-content records.
+
+#### Required UI elements
+
+The promotional-content interface shall provide:
+
+- a list of promotional-content records;
+- permitted content information;
+- an action for creating a promotional-content record;
+- an action for modifying an existing record;
+- applicable content status information;
+- validation feedback for incomplete or invalid content information;
+- success feedback after an authorised change; and
+- an access-denied state when permission is missing.
+
+#### Interaction requirements
+
+1. The administrator shall be able to open promotional-content management only when appropriately authorised.
+2. The administrator shall be able to create or modify an approved promotional-content record.
+3. Required information shall be validated before the interface indicates successful saving.
+4. The interface shall display the current state of the promotional-content record where applicable.
+5. The administrator shall be able to withdraw or update content that is no longer approved for use where permitted.
+6. Authorised content-management actions shall be auditable where applicable.
+
+#### Access and security requirements
+
+- Promotional-content management shall require authenticated administrator identity and appropriate server-authorised permission.
+- UI visibility shall not be treated as the authorisation boundary.
+
+#### Scope constraints
+
+- Palermo is not a full social-media scheduling platform.
+- Automatic posting queues, social-account integrations and scheduled publishing are outside scope.
+- This specification does not define external social-media APIs or backend publishing functionality.
+### UI-SOC-002 — AI Promotional Video Generation and Approval
+
+**Related use case:** `UC-SOC-002`
+
+**Related requirements:** `DER-SOCIAL-002`
+
+**Related decisions:** `D-057`, `D-058`, `D-063`, `D-080`
+
+**Primary user:** Administrator
+
+**Supporting external system:** AI service/API
+
+#### Purpose
+
+Provide an authorised administrator with an interface for requesting AI-assisted promotional-video generation, previewing the generated result and explicitly approving or rejecting it.
+
+#### Required UI elements
+
+The AI promotional-video interface shall provide:
+
+- controls for selecting or supplying approved generation inputs;
+- selection or identification of approved and copyright-safe assets;
+- an action for requesting video generation;
+- generation-status feedback;
+- an error state when generation fails;
+- a video preview area for the generated result;
+- an explicit approve action;
+- an explicit reject action;
+- confirmation of the final approval or rejection state; and
+- an access-denied state when the administrator lacks permission.
+
+#### Interaction requirements
+
+1. The administrator shall be able to access AI promotional-video generation only when appropriately authorised.
+2. The interface shall require the approved generation inputs before a request can be submitted.
+3. The interface shall indicate generation progress or status where applicable.
+4. After generation, the result shall be presented as a preview.
+5. The generated video shall not be treated as approved before explicit administrator approval.
+6. The administrator shall be able to approve or reject the preview.
+7. A rejected result shall remain unapproved.
+8. An approved result may be recorded as approved promotional content.
+9. Approval or rejection shall be auditable where applicable.
+10. The interface shall not automatically post generated content to an external social-media platform.
+
+#### Access and security requirements
+
+- AI promotional-video functionality shall require authenticated administrator identity and appropriate server-authorised permission.
+- Only approved and copyright-safe assets shall be used.
+- UI visibility shall not be treated as the authorisation boundary.
+
+#### Scope constraints
+
+- The approved flow is generate → preview → administrator approve/reject.
+- Automatic social-media posting is outside scope.
+- External social-media scheduling is outside scope.
+- This specification does not define AI-provider implementation, APIs, model configuration or backend integration.
+## UI Traceability
+
+### Requirement-to-UI Traceability
+
+| Requirement | UI Specification |
+|---|---|
+| `FR-ADMIN-001` | `UI-ADM-001` |
+| `FR-ADMIN-002` | `UI-ADM-001` |
+| `FR-ADMIN-003` | `UI-ADM-001` |
+| `FR-ADMIN-004` | `UI-ADM-001` |
+| `FR-ADMIN-005` | `UI-ADM-001` |
+| `FR-ADMIN-006` | `UI-ADM-001` |
+| `FR-ADMIN-007` | `UI-ADM-001` |
+| `FR-ADMIN-008` | `UI-ADM-001` |
+| `FR-ADMIN-009` | `UI-ADM-001` |
+| `FR-ADMIN-010` | `UI-ADM-002` |
+| `FR-ADMIN-011` | `UI-ADM-002` |
+| `FR-ADMIN-012` | `UI-ADM-003` |
+| `FR-ADMIN-013` | `UI-ADM-004` |
+| `DER-INVENTORY-001` | `UI-INV-001` |
+| `DER-INVENTORY-002` | `UI-INV-001` |
+| `DER-INVENTORY-003` | `UI-INV-002` |
+| `DER-INVENTORY-004` | `UI-INV-002` |
+| `DER-INVENTORY-005` | `UI-INV-001` |
+| `DER-INVENTORY-006` | `UI-INV-001` |
+| `DER-REVIEW-001` | `UI-REV-001`, `UI-REV-002` |
+| `DER-COMMUNITY-001` | `UI-REV-001` |
+| `DER-LOYALTY-001` | `UI-LOY-001` |
+| `DER-SUBSCRIPTION-001` | `UI-SUB-001` |
+| `DER-REFERRAL-001` | `UI-REF-001` |
+| `DER-PROMO-001` | `UI-PROMO-001` |
+| `DER-SOCIAL-001` | `UI-SOC-001` |
+| `DER-SOCIAL-002` | `UI-SOC-002` |
+
+### Use-Case-to-UI Traceability
+
+| Use Case | UI Specification |
+|---|---|
+| `UC-ADM-001` | `UI-ADM-001` |
+| `UC-ADM-002` | `UI-ADM-002` |
+| `UC-ADM-003` | `UI-ADM-003` |
+| `UC-ADM-004` | `UI-ADM-004` |
+| `UC-INV-001` | `UI-INV-001` |
+| `UC-INV-002` | `UI-INV-002` |
+| `UC-REV-001` | `UI-REV-001` |
+| `UC-REV-002` | `UI-REV-002` |
+| `UC-LOY-001` | `UI-LOY-001` |
+| `UC-SUB-001` | `UI-SUB-001` |
+| `UC-REF-001` | `UI-REF-001` |
+| `UC-PROMO-001` | `UI-PROMO-001` |
+| `UC-SOC-001` | `UI-SOC-001` |
+| `UC-SOC-002` | `UI-SOC-002` |
+
+### Derived Requirement Provenance
+
+All `DER-*` requirements referenced in this UI specification are approved development-team-derived SRS requirements. They remain distinguishable from the original source-numbered Palermo functional requirements.
