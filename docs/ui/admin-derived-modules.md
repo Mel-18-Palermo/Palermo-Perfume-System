@@ -246,3 +246,116 @@ The backup-management interface shall provide, where authorised:
 * The interface covers approved backup invocation and status/metadata visibility.
 * A documented restore procedure may be supported, but this specification does not define restore architecture.
 * This UI specification does not define storage architecture, database schema, APIs or backend implementation.
+
+## Inventory and Production Batch UI Requirements
+
+### UI-INV-001 — Variant Inventory and Stock Movement
+
+**Related use case:** `UC-INV-001`
+
+**Related requirements:** `DER-INVENTORY-001`, `DER-INVENTORY-002`, `DER-INVENTORY-005`, `DER-INVENTORY-006`
+
+**Related decisions:** `D-057`, `D-058`, `D-067`, `D-068`, `D-071`, `D-072`
+
+**Primary user:** Administrator
+
+#### Purpose
+
+Provide an authorised administrator with an interface for viewing sellable perfume-variant stock, identifying low-stock variants and inspecting attributable inventory movements.
+
+#### Required UI elements
+
+The inventory interface shall provide:
+
+* a list of sellable perfume variants;
+* on-hand quantity;
+* reserved or committed quantity;
+* available quantity;
+* low-stock status where applicable;
+* an action for viewing a selected variant;
+* inventory-movement history for the selected variant;
+* movement quantity change;
+* source or reason;
+* reference information;
+* timestamp information;
+* an empty state when no movement records exist; and
+* an access-denied state when the administrator lacks permission.
+
+#### Interaction requirements
+
+1. The administrator shall be able to open the inventory interface only when appropriately authorised.
+2. The interface shall present stock at the sellable perfume-variant level.
+3. The administrator shall be able to select a variant to inspect its stock and movement information.
+4. The interface shall clearly distinguish on-hand, reserved or committed, and available quantities.
+5. Variants at or below the configured low-stock threshold shall be visibly identified.
+6. Selecting a variant shall display attributable inventory movements where available.
+7. If no movement records exist, the interface shall display an appropriate empty state.
+8. Viewing inventory information shall not directly modify stock quantities.
+
+#### Access and security requirements
+
+* Inventory information shall require authenticated administrator identity and appropriate server-authorised permission.
+* UI visibility shall not be treated as the authorisation boundary.
+* Inventory-management actions shall remain subject to approved access controls.
+
+#### Scope constraints
+
+* Inventory is tracked at sellable perfume-variant level.
+* Available stock accounts for reserved or committed quantities.
+* Automatic purchasing, replenishment or production ordering is outside the approved scope.
+* This specification does not define inventory persistence, database schema, APIs or backend reservation controls.
+
+### UI-INV-002 — Production Batch Recording and Release
+
+**Related use case:** `UC-INV-002`
+
+**Related requirements:** `DER-INVENTORY-003`, `DER-INVENTORY-004`
+
+**Related decisions:** `D-057`, `D-058`, `D-069`, `D-070`
+
+**Primary user:** Administrator
+
+#### Purpose
+
+Provide an authorised administrator with an interface for recording finished-perfume production batches and releasing approved batches into sellable inventory.
+
+#### Required UI elements
+
+The production-batch interface shall provide, where authorised:
+
+* a list or view of recorded finished-perfume batches;
+* selection of the applicable sellable perfume variant;
+* fields for required finished-perfume batch information;
+* an action for recording a batch;
+* clear recorded and released status indicators;
+* an authorised batch-release action;
+* confirmation for batch release where appropriate;
+* validation feedback for incomplete or invalid batch information;
+* success feedback after recording or releasing a batch;
+* an error state when the requested action cannot be completed; and
+* an access-denied state when permission is missing.
+
+#### Interaction requirements
+
+1. The administrator shall be able to open the production-batch interface only when appropriately authorised.
+2. The administrator shall be able to select a sellable perfume variant when recording a batch.
+3. Required batch information shall be validated before the interface indicates successful recording.
+4. Recording a batch shall not display an increase in sellable inventory.
+5. A separately authorised release action shall be required before the batch affects sellable inventory.
+6. The interface shall clearly distinguish a recorded batch from a released batch.
+7. Before release, the interface shall request confirmation where appropriate.
+8. After successful release, the interface shall display the resulting release status and updated inventory information.
+9. A previously released batch shall not be presented as eligible for release again.
+10. If the requested action fails, the interface shall clearly indicate that the inventory change was not completed.
+
+#### Access and security requirements
+
+* Production-batch recording and release shall require authenticated administrator identity and appropriate server-authorised permission.
+* Batch release shall remain an authorised business-changing workflow.
+* UI controls alone shall not determine whether release is permitted.
+
+#### Scope constraints
+
+* Production-batch UI is limited to finished-perfume batches linked to sellable variants.
+* Raw-material procurement, formulation, manufacturing scheduling and ERP interfaces are outside scope.
+* This specification does not define database schema, APIs, transaction handling or backend inventory implementation.
