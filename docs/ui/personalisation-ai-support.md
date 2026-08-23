@@ -89,7 +89,7 @@ Located within the Perfume Product Detail Page (PDP) as an expandable modular pa
 - **Order Status Card (Authenticated Customers Only, D-049, D-050):**
   - Renders an inline factual summary card containing authoritative Order ID, fulfilment status badge, estimated delivery timeframe, and direct courier tracking link.
 - **Store Policy Summary Card:**
-  - Displays concise policy points with interactive links to official policy pages.
+  - Displays concise policy points with interactive links to official policy and contact pages.
   - Explicit disclaimer banner: *"AI assistant cannot authorise returns, cancel orders, or process financial refunds."*
 
 ### C. Feedback Collection Component
