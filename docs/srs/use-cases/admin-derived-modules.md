@@ -116,6 +116,20 @@ The administrator opens the dashboard or selects an available administrative rep
 - Business-changing actions must use separate authorised administrative workflows rather than report visualisations.
 - Reporting metrics use explicit reporting periods and documented definitions.
 - Access remains subject to server-enforced, deny-by-default, least-privilege RBAC.
+#### Administrative Reporting Flow
+
+```mermaid
+flowchart TD
+    A[Administrator opens reporting area] --> B[System verifies authentication]
+    B --> C{Authorised for requested report?}
+    C -- No --> D[Access denied]
+    C -- Yes --> E[Administrator selects reporting period]
+    E --> F[System retrieves authoritative Palermo application data]
+    F --> G[System displays read-mostly dashboard or report]
+    G --> H[Preference and quiz information is aggregated where appropriate]
+    H --> I[Administrator may change reporting period]
+    I --> F
+```
 ### UC-ADM-002 — Manage Administrative Accounts and Access
 
 **Primary actor:** Administrator
@@ -834,6 +848,22 @@ The administrator chooses to generate an AI-assisted promotional video.
 - Generated content must not be automatically posted to social media.
 - Approval does not itself perform external publishing or scheduling.
 - This use case does not define AI-provider implementation details, external social-media APIs or automated publishing workflows.
+#### AI Promotional Video Approval Flow
+
+```mermaid
+flowchart TD
+    A[Authorised Administrator] --> B[Provide approved generation inputs]
+    B --> C[Request AI promotional-video generation]
+    C --> D{Generation successful?}
+    D -- No --> E[Display generation failure]
+    D -- Yes --> F[Display generated video preview]
+    F --> G{Administrator decision}
+    G -- Reject --> H[Record rejected state]
+    G -- Approve --> I[Record approved promotional content]
+    H --> J[Record decision in audit history]
+    I --> J
+    J --> K[No automatic social-media posting]
+```
 ## Traceability
 
 ### Requirement-to-Use-Case Traceability
