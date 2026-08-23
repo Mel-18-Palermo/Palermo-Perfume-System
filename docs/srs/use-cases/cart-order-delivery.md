@@ -336,3 +336,254 @@ sequenceDiagram
 **Postconditions** *Success:* one account cart, no temporary cart, totals recalculated. *Failure:* account cart retains its previous validated state; customer told visitor items could not be transferred.
 
 ---
+
+## 6. Order and payment use cases
+
+### UC-ORDER-001 — Place Order
+
+**Actor** Customer · **Req** `FR-ORDER-001` · **Decisions** `D-004`, `D-011`, `D-035`–`D-038`, `D-040`, `D-043`, `D-044`, `D-045` · **Rules** `BR-COD-001`, `BR-COD-003`, `BR-COD-005`–`BR-COD-007`, `BR-COD-009`, `BR-COD-012`, `BR-COD-013`, `BR-COD-016` · **Includes** `UC-DELIVERY-001` · **Precedes** `UC-ORDER-002`
+**Goal** Convert the validated cart into an immutable order record ready for payment.
+**Preconditions** Authenticated `ACTIVE` account (`BR-COD-003`); cart has at least one sellable line; delivery and billing addresses exist or are supplied in checkout (`D-004`).
+**Trigger** The customer confirms placement on the checkout review step.
+
+**Main flow**
+1. Server verifies the `ACTIVE` account and cart ownership.
+2. Server revalidates every line (exists, sellable, not archived, sufficient stock) and resolves current prices.
+3. Server revalidates the applied promotional code and recalculates the discount (`BR-COD-006`).
+4. Server confirms the delivery and billing addresses, and the delivery method and charge from `UC-DELIVERY-001`.
+5. Server calculates the final payable total and reserves stock within a bounded window using atomic controls (`BR-COD-016`).
+6. Server creates one order carrying immutable snapshots of lines (variant, quantity, unit price, customisations), applied code and discount, delivery method and charge, both addresses, and the payable total.
+7. Server sets fulfilment state *placed* and payment state *not paid*, independently (`BR-COD-007`), binds a persistent transaction identity (`BR-COD-009`), detaches the cart, and hands off to `UC-ORDER-002`.
+
+**Alternatives** **A1** address supplied in checkout → the order stores an immutable snapshot of the address used (`D-004`). **A2** billing reuses delivery → the same values are snapshotted for both roles. **A3** code removed at revalidation → customer returned to review with the recalculated total and an explanation, and may confirm again.
+
+**Exceptions** **E1** not authenticated or account not `ACTIVE` → refused, sent to authentication, no order created, no guest checkout (`BR-COD-003`). **E2** empty cart → refused. **E3** line no longer sellable → refused, line identified, customer returns to the cart. **E4** insufficient stock → refused, availability reported, nothing reserved. **E5** price changed since review → refused, recalculated total shown, explicit re-confirmation required before an order exists. **E6** no delivery method or method deactivated → refused, customer returns to `UC-DELIVERY-001`. **E7** missing required address → refused until a valid delivery address and a billing address (or explicit reuse) are present. **E8** duplicate placement submission → resolves to the single existing order; no second order, reservation, or stock deduction (`BR-COD-009`). **E9** placement not atomic → nothing partial persists (no order, no reservation, no cart clearance); retry offered.
+
+**Postconditions** *Success:* one order with immutable pricing, discount, delivery, and address snapshots; stock reserved within a bounded window; fulfilment *placed*, payment *not paid*; no payment taken. *Failure:* no order, no reservation, cart still available for correction.
+
+---
+
+### UC-ORDER-002 — Pay for Order
+
+**Actor** Customer · **Supporting** Stripe sandbox · **Req** `FR-ORDER-002` · **Decisions** `D-036`, `D-038`–`D-041`, `D-043`, `D-093` · **Rules** `BR-COD-007`–`BR-COD-010`, `BR-COD-016`–`BR-COD-018` · **Triggers** `UC-ORDER-003`, `UC-DELIVERY-002`
+**Goal** Pay for a placed order via the Stripe sandbox and record a server-verified payment state on that order.
+**Preconditions** A placed order owned by the authenticated customer (`BR-COD-017`); payment state *not paid* or *payment failed*; reservation window still valid.
+**Trigger** The customer starts or retries payment.
+
+**Main flow**
+1. Server verifies the `ACTIVE` account, order ownership, payability, and a valid reservation window.
+2. Server creates or reuses a Stripe sandbox payment intent for the snapshotted total, carrying a persistent transaction identity (`BR-COD-009`), and sets payment state *in progress* leaving fulfilment state unchanged (`BR-COD-007`).
+3. Customer enters card details directly into the Stripe sandbox payment element; Palermo never receives, stores, or logs them (`BR-COD-008`).
+4. Server verifies the provider result server-side rather than trusting the browser response (`BR-COD-008`).
+5. On verified success, in one atomic idempotent operation: payment state *successful*, reserved stock committed once, payment reference and status recorded, invoice generated once (`UC-ORDER-003`).
+6. Server creates the single shipment and requests a tracking reference from the simulated provider (`UC-DELIVERY-002`, `BR-COD-012`), then confirms the outcome to the customer.
+
+**Alternatives** **A1** asynchronous provider confirmation → order shows *payment in progress* until the verified result is recorded; the customer is not asked to pay again while a result is pending. **A2** customer returns before the result is known → pending state shown, no second attempt created. **A3** retry after failure → a new attempt is recorded against the same order; no new order.
+
+**Exceptions** **E1** declined/rejected → payment state *failed*, order and snapshots intact, reservation held until the bounded window expires then released (`BR-COD-016`), retry offered with a user-safe message (`BR-COD-018`). **E2** payment abandoned → state remains *not paid* or *in progress*, reservation released on expiry, no invoice. **E3** provider unavailable or timeout → nothing recorded as successful; retry offered, no provider internals disclosed. **E4** duplicate or replayed callback → exactly one confirmed payment, one stock commitment, one invoice, one shipment (`BR-COD-009`). **E5** reservation expired before success → availability revalidated before commit; if unavailable the order is not committed as fulfilled, the customer is informed, and the outcome follows the approved payment-exception process — no refund behaviour is defined here (`D-042` boundary). **E6** payment succeeds but downstream steps fail → the verified payment state is never lost; invoice and shipment creation retry idempotently to at most one each. **E7** order not owned → refused server-side (`BR-COD-017`).
+
+**Postconditions** *Success:* payment state *successful* with a stored reference; stock committed once; exactly one invoice and one shipment; no raw card data stored anywhere in Palermo. *Failure:* order persists with an unsuccessful payment state, no invoice, no shipment; retry available on the same order.
+
+---
+
+### UC-ORDER-003 — Access Digital Invoice
+
+**Actor** Customer · **Req** `FR-ORDER-003` · **Decisions** `D-004`, `D-035`, `D-039`, `D-041`, `D-100` · **Rules** `BR-COD-005`, `BR-COD-009`, `BR-COD-010`, `BR-COD-017`
+**Goal** Obtain the invoice for an order whose payment succeeded.
+**Preconditions** Order owned by the authenticated customer; payment state *successful*.
+**Trigger** Successful payment generates the invoice; the customer later opens or downloads it.
+
+**Main flow**
+1. On verified successful payment, server generates exactly one invoice (`BR-COD-010`).
+2. The invoice is composed from immutable snapshots: lines and unit prices, discount, delivery method and charge, payable total, billing address, payment reference and status.
+3. Server records the invoice against the order with its identifier and issue time.
+4. Customer requests it; server verifies ownership and returns the stored invoice.
+
+**Alternatives** **A1** repeat access → the same document is returned unchanged. **A2** later profile/address edits → an issued invoice is unaffected (`D-004`, `BR-COD-005`). **A3** cancellation requested after payment → the invoice is retained as a historical record (`BR-COD-011`).
+
+**Exceptions** **E1** payment not successful → no invoice exists and the action is unavailable (`BR-COD-010`). **E2** duplicate generation attempt → no second invoice (`BR-COD-009`). **E3** order not owned → refused server-side (`BR-COD-017`). **E4** document temporarily unavailable → retriable error; never regenerated with recalculated values.
+
+**Postconditions** *Success:* exactly one immutable invoice, retrievable by its owning customer. *Failure:* no invoice created, no partial invoice presented.
+
+**Note** The invoice carries the payment reference and status only — never raw card data (`BR-COD-008`). Tax/GST presentation is not defined here.
+
+---
+
+### UC-ORDER-004 — View Order History and Status
+
+**Actor** Customer · **Req** `FR-ORDER-001`, `FR-ORDER-003`, `FR-ORDER-004`, `FR-DELIVERY-002` · **Decisions** `D-038`, `D-042`, `D-044`, `D-046`, `D-049`, `D-099` · **Rules** `BR-COD-007`, `BR-COD-012`, `BR-COD-017`
+**Goal** Review own orders, their independent fulfilment and payment states, and the actions currently available.
+**Preconditions** Authenticated `ACTIVE` customer account.
+**Trigger** The customer opens order history or a single order.
+
+**Main flow**
+1. Server verifies the account and returns only orders owned by that customer (`BR-COD-017`).
+2. Each order returns reference, placement time, snapshotted total, and fulfilment state and payment state as separate values (`BR-COD-007`).
+3. On opening one order, server returns its immutable snapshots (lines, customisations, unit prices, discount, delivery method and charge, both addresses, total).
+4. Server returns the order's single shipment with tracking reference and current status where one exists (`UC-DELIVERY-002`), and any recorded cancellation request and outcome (`UC-ORDER-005`).
+5. Server offers only the currently permitted actions: retry payment, view invoice, track shipment, request cancellation.
+
+**Alternatives** **A1** no orders → empty history with guidance to the catalogue. **A2** awaiting payment → unsuccessful payment state with a retry action; no invoice action. **A3** paid, not dispatched → invoice and cancellation-request actions offered; tracking shows a pre-dispatch status. **A4** delivered → shipment shows `DELIVERED` with confirmation source and time; no cancellation action.
+
+**Exceptions** **E1** order not owned → refused server-side without revealing existence (`BR-COD-017`). **E2** shipment information unavailable → order and snapshots still shown; tracking reports a retriable error and no status is fabricated (`BR-COD-014`).
+
+**Postconditions** *Success:* accurate ownership-scoped view with fulfilment and payment states shown separately. *Failure:* no other customer's data is exposed.
+
+---
+
+### UC-ORDER-005 — Request Order Cancellation
+
+**Actor** Customer · **Req** `FR-ORDER-004` · **Decisions** `D-042`, `D-043`, `D-044`, `D-047` · **Rules** `BR-COD-009`, `BR-COD-011`, `BR-COD-012`, `BR-COD-017`, `BR-COD-018` · **Assumption** `ASM-COD-004`
+**Goal** Record a cancellation request against an eligible pre-shipment order.
+**Preconditions** Order owned by the authenticated customer; its single shipment is not dispatched; no request already open.
+**Trigger** The customer submits a cancellation request from order detail.
+
+**Main flow**
+1. Server verifies ownership and re-evaluates eligibility at submission time.
+2. Customer optionally supplies a reason from an approved list or free text.
+3. Server records one request against the order with submission time, requesting customer, and reason.
+4. Server sets fulfilment state *cancellation requested*, leaving payment state unchanged (`BR-COD-007`), and confirms that a request is recorded and awaiting a decision.
+5. The request is made available to the administrative handling workflow defined outside this work package.
+
+**Alternatives** **A1** unpaid order → request recorded; payment state unchanged, no invoice exists. **A2** paid order → request recorded; the invoice is retained and no refund, credit, or remedy is created or implied (`BR-COD-011`). **A3** outcome recorded → fulfilment state moves to *cancelled* or returns to its previous value, visible in `UC-ORDER-004`.
+
+**Exceptions** **E1** already dispatched → refused as no longer pre-shipment; customer directed to support. **E2** already delivered or cancelled → action unavailable, nothing recorded. **E3** duplicate submission → exactly one open request (`BR-COD-009`). **E4** order not owned → refused server-side (`BR-COD-017`). **E5** eligibility changes between display and submission → re-evaluated at submission; refused with the current status if dispatched in the interim.
+
+**Postconditions** *Success:* exactly one recorded request; order, snapshots, and any invoice preserved; nothing deleted (`BR-COD-011`). *Failure:* no request recorded, order unchanged.
+
+**Boundary** This use case records a request only. It does not decide it, does not cancel a dispatched shipment, and defines no refund behaviour — all outside `D-042`.
+
+---
+
+## 7. Delivery use cases
+
+### UC-DELIVERY-001 — Select Delivery Method
+
+**Actor** Customer · **Req** `FR-DELIVERY-001` · **Decisions** `D-004`, `D-035`, `D-045` · **Rules** `BR-COD-001`, `BR-COD-005`, `BR-COD-013` · **Included by** `UC-ORDER-001`
+**Goal** Choose one active configured delivery method and see its charge and displayed delivery information in the total.
+**Preconditions** Authenticated `ACTIVE` customer in checkout; cart has at least one sellable line; at least one delivery method is configured and active.
+**Trigger** The customer reaches the delivery step, or changes the method before placing the order.
+
+**Main flow**
+1. Server loads the delivery methods currently active and applicable to the order, each with its name, server-calculated charge, and displayed delivery information.
+2. Customer selects one method; server records the selection against the checkout in progress.
+3. Server recalculates the payable total including the delivery charge (`BR-COD-001`) and returns it for the review step.
+4. At placement the method, charge, and displayed delivery information are snapshotted onto the order (`BR-COD-013`).
+
+**Alternatives** **A1** single applicable method → preselected with its charge shown, still reviewable before placement. **A2** selection changed → replaces the previous one and recalculates; exactly one method applies per order. **A3** delivery address changed → applicability and charges re-evaluated before placement.
+
+**Exceptions** **E1** no applicable active method → checkout cannot proceed; delivery reported unavailable and no order is placed. **E2** selected method deactivated before placement → selection cleared, re-selection required, placement refused (`UC-ORDER-001` E6). **E3** client-submitted delivery charge → ignored; only the server-calculated charge is used (`BR-COD-001`). **E4** method list unavailable → retriable error; placement never proceeds with an unpriced method.
+
+**Postconditions** *Success:* exactly one active method selected, its server-calculated charge in the payable total, ready to snapshot at placement. *Failure:* no method selected and placement remains blocked.
+
+**Boundary** Displayed delivery information is configured descriptive information, not a carrier commitment; no carrier API is involved (`BR-COD-014`).
+
+---
+
+### UC-DELIVERY-002 — Track Shipment
+
+**Actor** Customer · **Supporting** Simulated delivery provider · **Req** `FR-DELIVERY-002` · **Decisions** `D-044`, `D-046`, `D-093` · **Rules** `BR-COD-012`, `BR-COD-014`, `BR-COD-017`, `BR-COD-018`
+**Goal** See the tracking reference and status history for the single shipment of a paid order.
+**Preconditions** Order owned by the authenticated customer; a shipment record exists.
+**Trigger** The customer opens tracking, or a provider status update arrives.
+
+**Main flow**
+1. On successful payment, server creates exactly one shipment for the order (`BR-COD-012`) and requests a tracking reference from the simulated provider through the provider abstraction (`BR-COD-014`).
+2. Provider returns a demo tracking reference and an initial controlled status; server stores both with time and source.
+3. Customer opens tracking; server verifies ownership and returns the reference, current status, and ordered status history with times.
+4. Subsequent controlled provider updates are recorded against the same shipment and become visible.
+
+**Alternatives** **A1** shipment not yet created → the order states that tracking becomes available after successful payment; no reference is invented. **A2** no change since last view → current status and recorded time shown unchanged. **A3** terminal status reached → `DELIVERED` presented under `UC-DELIVERY-003`; no further updates expected.
+
+**Exceptions** **E1** provider unavailable at reference request → shipment still exists, tracking shown as pending, request retried idempotently to at most one reference (`BR-COD-009`). **E2** duplicate or replayed status update → no duplicate history entries, status never moves backwards. **E3** out-of-order update → an update older than the recorded current status does not overwrite it. **E4** order not owned → refused server-side (`BR-COD-017`). **E5** tracking temporarily unavailable → retriable user-safe message; no status fabricated and no external carrier contacted (`BR-COD-014`, `BR-COD-018`).
+
+**Postconditions** *Success:* reference, current status, and history visible for the customer's own order only. *Failure:* no fabricated tracking data shown.
+
+**Boundary** Tracking data is generated by the internal simulated provider for demonstration and testing; it does not represent real courier movement.
+
+---
+
+### UC-DELIVERY-003 — Record and Present Delivery Confirmation
+
+**Actor** Simulated delivery provider · **Secondary** Customer · **Req** `FR-DELIVERY-003` · **Decisions** `D-044`, `D-046`, `D-047` · **Rules** `BR-COD-009`, `BR-COD-012`, `BR-COD-014`, `BR-COD-015`, `BR-COD-017`
+**Goal** Record a delivery confirmation, transition the eligible shipment to `DELIVERED`, and present it to the owning customer.
+**Preconditions** A shipment record exists; it is eligible for confirmation and not already `DELIVERED`.
+**Trigger** The simulated provider emits a delivery-confirmation event.
+
+**Main flow**
+1. The provider abstraction receives the event; server verifies it refers to an existing shipment of an existing order and that the shipment is eligible and not already `DELIVERED`.
+2. Server transitions the shipment to `DELIVERED` exactly once (`BR-COD-015`) and records confirmation source and time.
+3. Server updates the order's fulfilment state to *delivered*, leaving payment state unchanged (`BR-COD-007`).
+4. The confirmation becomes visible to the owning customer in `UC-ORDER-004` and `UC-DELIVERY-002`.
+
+**Alternatives** **A1** confirmed before the customer views the order → `DELIVERED` and its confirmation time shown on the next view. **A2** notification configured → confirmation may trigger an email notification; content is specified outside this work package.
+
+**Exceptions** **E1** duplicate or replayed confirmation → transitioned once; no second confirmation, timestamp, or notification (`BR-COD-009`). **E2** unknown shipment or order → event rejected, nothing recorded. **E3** already `DELIVERED` → existing confirmation source and time preserved, never overwritten. **E4** shipment not eligible → transition refused, recorded status unchanged. **E5** processing fails partway → atomic: either `DELIVERED` with source and time, or nothing changes and the event is retried idempotently.
+
+**Postconditions** *Success:* shipment `DELIVERED` exactly once with source and time preserved; order fulfilment reflects delivery; payment state untouched. *Failure:* previous recorded status retained, no confirmation metadata written.
+
+**Boundary** Confirmation comes from the simulated provider; manual database editing is not the normal workflow (`D-047`), and no customer-side proof-of-delivery capture is defined here.
+
+---
+
+## 8. Traceability
+
+| Requirement | Source # | Use case | UI screens | Decisions |
+|---|---:|---|---|---|
+| `FR-CART-001` | 59 | `UC-CART-001`, `UC-CART-006` | `SCR-CART-001`, `SCR-CART-002` | `D-011`, `D-034`, `D-036` |
+| `FR-CART-002` | 60 | `UC-CART-002`, `UC-CART-006` | `SCR-CART-002` | `D-034`, `D-035`, `D-036` |
+| `FR-CART-003` | 61 | `UC-CART-003`, `UC-CART-006` | `SCR-CART-002`, `SCR-CHK-004` | `D-034`, `D-035` |
+| `FR-CART-004` | 62 | `UC-CART-004` | `SCR-CART-002`, `SCR-CHK-004` | `D-037` |
+| `FR-CART-005` | 63 | `UC-CART-005` | `SCR-CART-003` | `D-011` |
+| `FR-ORDER-001` | 64 | `UC-ORDER-001`, `UC-ORDER-004` | `SCR-CHK-001`–`SCR-CHK-004`, `SCR-ORD-001` | `D-011`, `D-035`–`D-038`, `D-040`, `D-043`, `D-045` |
+| `FR-ORDER-002` | 65 | `UC-ORDER-002` | `SCR-PAY-001`–`SCR-PAY-003` | `D-038`–`D-040`, `D-043` |
+| `FR-ORDER-003` | 66 | `UC-ORDER-003`, `UC-ORDER-004` | `SCR-ORD-001`–`SCR-ORD-003` | `D-041` |
+| `FR-ORDER-004` | 67 | `UC-ORDER-005`, `UC-ORDER-004` | `SCR-ORD-003`, `SCR-ORD-004` | `D-042`, `D-043` |
+| `FR-DELIVERY-001` | 68 | `UC-DELIVERY-001` | `SCR-CHK-003` | `D-045` |
+| `FR-DELIVERY-002` | 69 | `UC-DELIVERY-002`, `UC-ORDER-004` | `SCR-DEL-001` | `D-044`, `D-046` |
+| `FR-DELIVERY-003` | 70 | `UC-DELIVERY-003` | `SCR-DEL-001`, `SCR-DEL-002` | `D-044`, `D-046`, `D-047` |
+
+Screen identifiers are defined in `docs/ui/cart-order-delivery.md`. Data entities and test cases are TBD in the data-design and test-planning phases.
+
+### 8.1 Decision coverage
+
+| Decision | Applied in |
+|---|---|
+| `D-011` | §1.1, `BR-COD-003`, `UC-CART-005`, `UC-CART-006`, `UC-ORDER-001` |
+| `D-034` | `BR-COD-001`, `BR-COD-004`, `UC-CART-001`–`UC-CART-003` |
+| `D-035` | `BR-COD-005`, `UC-CART-003`, `UC-ORDER-001`, `UC-ORDER-003` |
+| `D-036` | `BR-COD-002`, `BR-COD-016`, `UC-CART-001`, `UC-ORDER-001`, `UC-ORDER-002` |
+| `D-037` | `BR-COD-006`, `UC-CART-004`, `UC-ORDER-001` |
+| `D-038` | `BR-COD-007`, `UC-ORDER-001`, `UC-ORDER-002`, `UC-ORDER-004`, `UC-ORDER-005` |
+| `D-039` | `BR-COD-008`, `UC-ORDER-002`, `UC-ORDER-003` |
+| `D-040` | `BR-COD-009`, `UC-ORDER-001`, `UC-ORDER-002` |
+| `D-041` | `BR-COD-010`, `UC-ORDER-002`, `UC-ORDER-003` |
+| `D-042` | `BR-COD-011`, `UC-ORDER-005` |
+| `D-043` | `BR-COD-009`, all mutating use cases |
+| `D-044` | `BR-COD-012`, `UC-ORDER-005`, `UC-DELIVERY-002`, `UC-DELIVERY-003` |
+| `D-045` | `BR-COD-013`, `UC-DELIVERY-001`, `UC-ORDER-001` |
+| `D-046` | `BR-COD-014`, `UC-DELIVERY-002`, `UC-DELIVERY-003` |
+| `D-047` | `BR-COD-015`, `UC-DELIVERY-003` |
+
+### 8.2 Non-functional references
+
+`NFR-TXN-001` duplicate prevention and transaction consistency (`BR-COD-009`) · `NFR-INTEGRITY-001` immutable snapshots and stock accounting (`BR-COD-005`, `BR-COD-016`) · `NFR-CONCUR-001` concurrent checkout against shared stock (`BR-COD-016`) · `NFR-SEC-001`, `NFR-ENC-001`, `NFR-PRIV-001` payment-reference handling, no raw card data (`BR-COD-008`) · `NFR-AUTHZ-001` ownership scoping (`BR-COD-017`) · `NFR-VALID-001` quantity, code, address, and method validation at the trust boundary · `NFR-ERROR-001` user-safe failure messaging (`BR-COD-018`) · `NFR-INTOP-001` Stripe sandbox and simulated provider behind internal adapters (`D-093`) · `NFR-AUDIT-001`, `NFR-LOG-001` payment, cancellation, and delivery events logged without secrets or card data.
+
+---
+
+## 9. Assumptions requiring confirmation
+
+| ID | Assumption | Why it is not already decided |
+|---|---|---|
+| `ASM-COD-001` | A Visitor may enter a promotional code on a temporary cart; the server evaluates it, re-evaluates after authentication, and revalidates at placement. Codes whose eligibility depends on customer identity or history are not applied to a visitor cart and prompt sign-in. | `D-037` requires server validation and `D-078` allows eligibility rules, but neither states whether a code may apply before authentication. |
+| `ASM-COD-002` | Canonical enumerated values for order fulfilment, payment, and shipment states are set in data design. This document uses only the state concepts required by `D-038`, `D-042`, `D-044`, `D-047`. | No decision defines an order-state enumeration. |
+| `ASM-COD-003` | A non-empty temporary visitor cart merges into the account cart on sign-in, combining lines matching on variant + customisation set. | `D-011` permits the temporary cart but not what happens at authentication. |
+| `ASM-COD-004` | A recorded cancellation request is decided by an administrative workflow in the admin work package; this package records the request and displays its outcome only. | `D-042` defines the request, not the deciding workflow. |
+
+---
+
+## 10. Explicitly out of scope
+
+Refunds, credits, chargebacks, returns, exchanges, or any financial remedy (`D-042`, `D-053`) · split shipments or partial fulfilment (`D-044`) · real carrier/courier API integration (`D-046`) · additional payment methods, wallets, cash on delivery, instalments, or recurring billing (`D-039`, `D-076`) · tax, GST, VAT, duty, or customs rules · guest checkout (`D-011`) · new order-, payment-, or shipment-state enumerations (`ASM-COD-002`) · database schema, API contracts, and backend transaction implementation · administrative order handling, promotion configuration, and inventory administration · customisation option design (`D-027`, `D-028`) · application code of any kind.
+
+---
