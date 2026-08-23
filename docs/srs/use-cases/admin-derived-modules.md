@@ -5,6 +5,33 @@
 This document defines the approved SRS use cases for the Palermo administrative, reporting, inventory, production-batch, review/community, loyalty, subscription, referral, promotion and promotional-content functions included in Issue #166.
 
 Derived requirements remain identified as `DER-*` requirements and are not presented as source-numbered Palermo functional requirements.
+## Canonical References
+
+This specification is derived from and must remain consistent with the following canonical SRS sources:
+
+* `docs/requirements/functional-requirements.md`
+* `docs/requirements/derived-requirements.md`
+* `docs/requirements/decision-register.md`
+* `docs/requirements/actor-registry.md`
+
+Where a conflict exists, the approved canonical requirement and decision sources take precedence.
+
+## Scope Boundaries
+
+This work package defines SRS use-case requirements only. It does not define:
+
+* application code;
+* database schemas;
+* APIs;
+* backend security implementation;
+* ERP or raw-material manufacturing functionality;
+* recurring billing or automatic recurring perfume orders;
+* social-network functionality;
+* automated or scheduled social-media posting; or
+* unsupported analytics or reporting capabilities.
+
+Derived requirements identified with the `DER-*` prefix are approved development-team-derived SRS requirements and must remain distinguishable from original source-numbered Palermo functional requirements.
+
 
 ## Actors
 
@@ -811,27 +838,35 @@ The administrator chooses to generate an AI-assisted promotional video.
 
 ### Requirement-to-Use-Case Traceability
 
-| Requirement                     | Approved Use Case(s)       |
-| ------------------------------- | -------------------------- |
-| `FR-ADMIN-001` – `FR-ADMIN-009` | `UC-ADM-001`               |
-| `FR-ADMIN-010` – `FR-ADMIN-011` | `UC-ADM-002`               |
-| `FR-ADMIN-012`                  | `UC-ADM-003`               |
-| `FR-ADMIN-013`                  | `UC-ADM-004`               |
-| `DER-INVENTORY-001`             | `UC-INV-001`               |
-| `DER-INVENTORY-002`             | `UC-INV-001`               |
-| `DER-INVENTORY-003`             | `UC-INV-002`               |
-| `DER-INVENTORY-004`             | `UC-INV-002`               |
-| `DER-INVENTORY-005`             | `UC-INV-001`               |
-| `DER-INVENTORY-006`             | `UC-INV-001`               |
-| `DER-REVIEW-001`                | `UC-REV-001`, `UC-REV-002` |
-| `DER-COMMUNITY-001`             | `UC-REV-001`               |
-| `DER-LOYALTY-001`               | `UC-LOY-001`               |
-| `DER-SUBSCRIPTION-001`          | `UC-SUB-001`               |
-| `DER-REFERRAL-001`              | `UC-REF-001`               |
-| `DER-PROMO-001`                 | `UC-PROMO-001`             |
-| `DER-SOCIAL-001`                | `UC-SOC-001`               |
-| `DER-SOCIAL-002`                | `UC-SOC-002`               |
-
+| Requirement | Approved Use Case(s) |
+|---|---|
+| `FR-ADMIN-001` | `UC-ADM-001` |
+| `FR-ADMIN-002` | `UC-ADM-001` |
+| `FR-ADMIN-003` | `UC-ADM-001` |
+| `FR-ADMIN-004` | `UC-ADM-001` |
+| `FR-ADMIN-005` | `UC-ADM-001` |
+| `FR-ADMIN-006` | `UC-ADM-001` |
+| `FR-ADMIN-007` | `UC-ADM-001` |
+| `FR-ADMIN-008` | `UC-ADM-001` |
+| `FR-ADMIN-009` | `UC-ADM-001` |
+| `FR-ADMIN-010` | `UC-ADM-002` |
+| `FR-ADMIN-011` | `UC-ADM-002` |
+| `FR-ADMIN-012` | `UC-ADM-003` |
+| `FR-ADMIN-013` | `UC-ADM-004` |
+| `DER-INVENTORY-001` | `UC-INV-001` |
+| `DER-INVENTORY-002` | `UC-INV-001` |
+| `DER-INVENTORY-003` | `UC-INV-002` |
+| `DER-INVENTORY-004` | `UC-INV-002` |
+| `DER-INVENTORY-005` | `UC-INV-001` |
+| `DER-INVENTORY-006` | `UC-INV-001` |
+| `DER-REVIEW-001` | `UC-REV-001`, `UC-REV-002` |
+| `DER-COMMUNITY-001` | `UC-REV-001` |
+| `DER-LOYALTY-001` | `UC-LOY-001` |
+| `DER-SUBSCRIPTION-001` | `UC-SUB-001` |
+| `DER-REFERRAL-001` | `UC-REF-001` |
+| `DER-PROMO-001` | `UC-PROMO-001` |
+| `DER-SOCIAL-001` | `UC-SOC-001` |
+| `DER-SOCIAL-002` | `UC-SOC-002` |
 ### Decision Traceability
 
 | Decision | Applied Use Case(s)                                                                                                                          |
