@@ -1,0 +1,20 @@
+Data category,Retention trigger,Project baseline retention,End-of-period treatment,Notes
+Visitor temporary cart/session,Last activity,30 days,Delete session-linked cart/session state,No guest checkout; opaque session key.
+Visitor quiz/recommendation data,Quiz/recommendation completion or last activity,90 days,Delete or de-identify session-linked records,Longer account-linked retention applies only after explicit/account association.
+Customer account/contact,Account deactivation,90 days review window,Delete/anonymise editable contact/profile data where not required by retained records,Deactivation itself remains immediate account/login state change; it is not deletion.
+Current customer addresses,Account deactivation or replacement,90 days after deactivation; replaced current-address rows retained only as needed for controlled recovery/audit,Delete current editable address data when no longer required,Order address snapshots follow order retention separately.
+Fragrance preferences / identity,Account deactivation,90 days,Delete/anonymise preferences and generated identity where no approved retention purpose remains,Sensitivity is non-medical and optional.
+Account-linked quiz/recommendation history,Recommendation creation,12 months,Delete or de-identify,Purpose is personalisation/service evaluation; AI provider-side retention must be reviewed separately.
+Orders / order items / address-price-delivery snapshots,Order completion/cancellation closure,24 months,Delete/anonymise where compatible with confirmed business/legal requirements,Project baseline only; client/legal review may require a different production period.
+Payment provider references/status,Payment finalisation,24 months,Delete with related transaction record where permitted,Never includes raw PAN/CVV.
+Invoices,Issue date,24 months,Delete/anonymise where compatible with confirmed business/legal requirements,Project baseline only; not a claimed statutory accounting period.
+Shipment/tracking,Delivery/closure,12 months,Delete tracking/confirmation data unless still required by retained order record,One baseline shipment per order.
+Support conversations/messages,Conversation closure,180 days,Delete or de-identify,Retain explicit feedback separately under feedback schedule.
+Feedback,Submission,12 months,Delete or de-identify,Only explicit submitted feedback is an official feedback record.
+Public reviews,Removal or account deactivation,While published; 90 days after removal/deactivation review,Delete or de-identify customer linkage where appropriate,Historical purchase eligibility evidence may remain in retained order data.
+Loyalty/subscription/referral,Account deactivation,90 days,Delete/de-identify participation state where no retained transaction purpose remains,No recurring-payment subscription baseline.
+Administrator account metadata,Admin-account deactivation,12 months,Delete/de-identify account metadata except retained audit linkage,Audit event integrity is preserved separately.
+Audit events,Event time,24 months,Delete according to controlled audit-retention process,Append-oriented; ordinary admins cannot alter historical content.
+Application/security/integration logs,Event time,90 days,Rolling deletion,"Must exclude passwords, auth tokens, PAN/CVV and unnecessary personal data."
+Database backups,Backup creation,30 days rolling,Expire/delete backup according to provider retention controls,Restored data remains subject to active retention/deletion rules.
+Backup metadata,Backup completion,12 months,Delete metadata after retention period,Contains status/reference/requester where applicable.

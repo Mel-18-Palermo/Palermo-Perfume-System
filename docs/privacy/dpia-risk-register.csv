@@ -1,0 +1,16 @@
+ID,Risk,Initial likelihood,Initial impact,Initial risk,Controls/mitigations,Residual risk
+PRIV-01,Unauthorised customer accesses another customer's account/order/support data,Medium,High,High,Server-side authentication and ownership checks; UUID identifiers; negative-path tests; no AI bypass,Low
+PRIV-02,Administrator privilege escalation or excessive privileged access,Medium,High,High,Separate admin identity; deny-by-default RBAC; least privilege; privileged-action audit,Low-Medium
+PRIV-03,Excessive customer context disclosed to AI provider,Medium,High,High,Purpose-specific context builder; bounded server-side tools; no unrestricted DB access; minimisation tests,Medium
+PRIV-04,AI output invents or exposes unsupported customer/business facts,Medium,Medium,Medium,Palermo data remains authoritative; validate output; AI failure isolation; own-data tools enforce ownership,Low-Medium
+PRIV-05,Raw payment credentials stored/logged by Palermo,Low,High,High,Stripe provider-controlled UI; only provider reference/status persisted; logging prohibition; test fixtures never use real PAN/CVV,Low
+PRIV-06,Optional fragrance sensitivity is treated as medical/health data,Medium,Medium,Medium,Explicit non-medical scope; optional field; UI wording and validation; no health inference,Low
+PRIV-07,Free-text support/review content contains unexpected personal/sensitive information,Medium,Medium,Medium,Purpose notice; minimise prompts/context; bounded retention; moderation/support access controls,Medium
+PRIV-08,"Logs expose secrets, tokens or personal data",Medium,High,High,Structured logging policy; prohibited-value checks; correlation IDs instead of secrets; restricted log access,Low
+PRIV-09,Public reviews expose direct account identifiers,Medium,Medium,Medium,Do not publish email/internal UUID; minimise public reviewer label; moderation controls,Low
+PRIV-10,Backups preserve deleted data beyond active-store removal,High,Medium,High,30-day rolling backup retention; restricted restore; restore runbook reapplies retention/deletion controls,Medium
+PRIV-11,Customer interprets account deactivation as deletion,Medium,Medium,Medium,Explicit UI/policy distinction; retention schedule; deactivation invalidates session but does not claim erasure,Low
+PRIV-12,Visitor session identifiers become linkable personal profiles,Low,Medium,Medium,Opaque identifiers; bounded 30/90-day retention; no direct identity requirement for visitor flows,Low
+PRIV-13,Analytics/reporting unnecessarily identifies customers,Medium,Medium,Medium,Aggregate preference/quiz reporting where identity unnecessary; RBAC on admin reporting,Low
+PRIV-14,Provider region/contract/data-use terms are unsuitable for production,Medium,High,High,Production provider review required before launch; capstone/demo uses seeded non-real data; adapters allow provider substitution,Medium
+PRIV-15,Development/test environment contains real customer information,Low,High,High,D-106/D-111 seeded non-real demo data; no production secrets in CI fixtures,Low

@@ -1,0 +1,20 @@
+Palermo DPIA package notes
+
+This package implements D-097 through D-102 without introducing a new D-number.
+
+It deliberately distinguishes:
+- project/SRS privacy controls from unperformed legal/compliance review;
+- account deactivation from data deletion;
+- active-store retention from rolling backup retention;
+- Palermo-controlled data from external-provider processing.
+
+Retention periods are project baseline controls intended to make the SRS testable and
+bounded. They are not represented as statutory accounting, taxation or legal retention
+periods. A production provider/legal review is explicitly required before launch if the
+client needs different periods.
+
+Files:
+- docs/privacy/dpia.md
+- docs/privacy/retention-schedule.csv
+- docs/privacy/dpia-risk-register.csv
+- docs/privacy/dpia-notes.txt
