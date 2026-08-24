@@ -1,0 +1,37 @@
+flowchart LR
+    %% Palermo Perfume System — Context Diagram / DFD Level 0
+    %% One system process only; no internal data stores or implementation components are shown.
+
+    Visitor["Visitor"]
+    Customer["Customer"]
+    Admin["Administrator"]
+
+    Email["Email delivery service"]
+    Stripe["Stripe sandbox / payment service"]
+    AI["AI service / API"]
+
+    Palermo(("0. Palermo Perfume System"))
+
+    %% Visitor data flows
+    Visitor -->|"Registration details; catalogue/search/filter requests; temporary cart actions; quiz responses; public support enquiries; explicit feedback"| Palermo
+    Palermo -->|"Registration/verification status; catalogue and virtual-fragrance information; cart totals; quiz/recommendation results; public support responses"| Visitor
+
+    %% Customer data flows
+    Customer -->|"Authentication data; profile/address/preferences; cart and checkout data; order/cancellation requests; delivery enquiries; reviews; loyalty/subscription/referral actions; support enquiries"| Palermo
+    Palermo -->|"Account/profile information; catalogue/recommendations; validated cart/checkout results; order/payment status; invoice; tracking/delivery confirmation; loyalty/referral/support information"| Customer
+
+    %% Administrator data flows
+    Admin -->|"Catalogue and classification changes; inventory/batch actions; promotion/content actions; review moderation; RBAC/admin changes; report/audit/backup requests"| Palermo
+    Palermo -->|"Management confirmations; inventory/batch status; dashboard/report data; moderation status; audit history; backup status/metadata"| Admin
+
+    %% Email service boundary
+    Palermo -->|"Verification and password-reset message requests"| Email
+    Email -->|"Delivery result/status"| Palermo
+
+    %% Payment service boundary
+    Palermo -->|"Payment initiation/reference and server-side verification request"| Stripe
+    Stripe -->|"Verified payment result and provider reference"| Palermo
+
+    %% AI service boundary
+    Palermo -->|"Minimised approved catalogue/profile/quiz/support/promotional context"| AI
+    AI -->|"Recommendation/support/promotional-generation output"| Palermo
