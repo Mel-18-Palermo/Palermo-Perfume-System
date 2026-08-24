@@ -1,0 +1,76 @@
+Palermo NFR Validation Profile
+
+Purpose
+-------
+Defines the shared test assumptions used by the measurable NFR acceptance criteria.
+
+Environment
+-----------
+- Use the deployed staging/test environment representing the final implementation.
+- Use seeded demo data approved for the capstone; no production personal data is required.
+- Record application version/commit, browser versions and test timestamp for each validation run.
+- Run load/performance tests when no intentional deployment or database migration is occurring.
+
+Dataset profiles
+----------------
+Baseline seed:
+- The controlled project demo dataset used for normal acceptance testing.
+
+5x seed:
+- At least five times the baseline record volume for the major catalogue/order-facing
+  entities needed by the relevant test.
+- The 5x profile exists to demonstrate growth behaviour; it is not a production forecast.
+
+Concurrency profile
+-------------------
+- 20 concurrent virtual users.
+- Mixed scenario should include catalogue/discovery reads, cart changes and a bounded
+  number of authenticated checkout flows.
+- A test payment provider/sandbox must be used.
+
+Timing interpretation
+---------------------
+- p95 means the 95th percentile across the recorded samples for the specified operation.
+- Performance runs should be repeated three times when practical and the run evidence kept.
+- Third-party AI/payment/email provider latency is reported separately where the relevant
+  criterion explicitly excludes it.
+- Database timing excludes unrelated external-provider latency.
+
+Key customer pages for performance/accessibility/responsive checks
+------------------------------------------------------------------
+At minimum:
+- catalogue/discovery
+- product detail / virtual-fragrance presentation
+- cart
+- checkout entry/validation
+- account/profile
+- order/tracking view
+
+Key administrator surfaces
+--------------------------
+At minimum:
+- admin authentication/entry
+- product/catalogue management
+- inventory/batch view
+- promotion/content management
+- review moderation
+- dashboard/reporting
+
+Security / privacy interpretation
+---------------------------------
+- Never use real card PAN/CVV in test fixtures.
+- Never intentionally log passwords, session/auth tokens, PAN or CVV.
+- AI test fixtures must use minimised approved context.
+- Security scan thresholds refer to unresolved findings attributable to the project,
+  not accepted false positives documented with evidence.
+
+Evidence
+--------
+Store or link:
+- test output
+- timing summaries
+- screenshots where visual/manual validation is required
+- browser/tool versions
+- restore/DR timing notes
+- security/accessibility scan reports
+- reviewer sign-off where human approval is part of the criterion
