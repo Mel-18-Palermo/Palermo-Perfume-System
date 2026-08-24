@@ -1,0 +1,67 @@
+Palermo logical class diagram — report-facing SRS artefact
+
+Purpose
+-------
+This class diagram complements the ERD rather than duplicating it. The ERD defines the
+logical persistence model; this diagram shows the principal domain objects, aggregate
+relationships, representative behaviour and application-service/provider boundaries.
+
+Scope
+-----
+The diagram is logical SRS/design material, not a literal TypeScript or Prisma class list.
+Exact implementation class names, repository patterns, DTOs, route handlers and framework
+components remain implementation details.
+
+Main modelling choices
+----------------------
+- Customer, Perfume, Cart, Order and SupportConversation are shown as aggregate roots or
+  domain owners where useful for explaining behaviour.
+- Immutable order snapshots remain represented by Order and OrderItem attributes.
+- Payment, Order and Shipment remain separate concepts.
+- InventoryBalance and InventoryReservation explicitly separate current inventory state
+  from bounded checkout reservations.
+- ProductionBatch release is modelled as behaviour that creates an attributable inventory
+  movement exactly once.
+- AIRecommendationRun represents persisted recommendation execution/result metadata;
+  RecommendationService and AIProvider show the behavioural boundary around the external AI.
+- PaymentGateway, AIProvider and DeliveryProvider are interfaces so external integrations are
+  isolated behind adapters.
+- StripePaymentAdapter implements PaymentGateway.
+- AIServiceAdapter implements AIProvider.
+- InternalDeliverySimulator implements DeliveryProvider and remains internal to Palermo.
+
+Deliberate simplifications
+--------------------------
+The report-facing diagram omits many join/helper classes that already exist in the detailed
+ERD, including collection membership, note-assignment rows, suitability joins, role-permission
+joins, loyalty ledger rows, referral records, feedback rows and promotional-video records.
+Those are persistence details already covered by the detailed ERD/data dictionary and would
+make the report class diagram unreadable.
+
+The class diagram therefore must not be interpreted as replacing the 53-entity logical ERD.
+
+Primary traceability
+--------------------
+Architecture:
+- D-081, D-082, D-093
+
+Identity/profile:
+- D-001 through D-007
+
+Catalogue:
+- D-013 through D-028
+
+Commerce/payment/delivery:
+- D-034 through D-047
+
+Support/AI:
+- D-032, D-033, D-048 through D-056
+
+Administration:
+- D-057 through D-066
+
+Inventory:
+- D-067 through D-072
+
+Participation:
+- D-073 through D-077
