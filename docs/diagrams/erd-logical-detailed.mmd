@@ -1,0 +1,488 @@
+erDiagram
+    CUSTOMER {
+        uuid id PK
+        string name
+        string email UK
+        string account_status
+        datetime email_verified_at
+        datetime created_at
+        datetime deactivated_at
+    }
+    ADDRESS {
+        uuid id PK
+        uuid customer_id FK
+        string address_type
+        string recipient_name
+        string line1
+        string line2
+        string suburb
+        string state
+        string postcode
+        string country
+        datetime updated_at
+    }
+    FRAGRANCE_PREFERENCE_PROFILE {
+        uuid id PK
+        uuid customer_id FK,UK
+        string preferred_intensity
+        string sensitivity_avoidance
+        datetime updated_at
+    }
+    PROFILE_FAVOURITE_NOTE {
+        uuid profile_id PK,FK
+        uuid note_id PK,FK
+    }
+    FRAGRANCE_IDENTITY {
+        uuid id PK
+        uuid profile_id FK,UK
+        uuid primary_family_id FK
+        string explanation
+        string status
+        datetime generated_at
+    }
+
+    ADMIN_ACCOUNT {
+        uuid id PK
+        string email UK
+        string status
+        uuid role_id FK
+        datetime created_at
+    }
+    ADMIN_ROLE {
+        uuid id PK
+        string name UK
+        string status
+    }
+    PERMISSION {
+        uuid id PK
+        string code UK
+        string description
+    }
+    ROLE_PERMISSION {
+        uuid role_id PK,FK
+        uuid permission_id PK,FK
+    }
+    AUDIT_EVENT {
+        uuid id PK
+        uuid admin_account_id FK
+        string actor_type
+        string action
+        string target_type
+        string target_id
+        string outcome
+        string correlation_id
+        datetime created_at
+    }
+    BACKUP_RECORD {
+        uuid id PK
+        uuid requested_by_admin_id FK
+        string trigger_source
+        string status
+        string provider_reference
+        datetime requested_at
+        datetime completed_at
+    }
+
+    FRAGRANCE_FAMILY {
+        uuid id PK
+        string name UK
+        string description
+        string status
+    }
+    FRAGRANCE_NOTE {
+        uuid id PK
+        string name UK
+        string description
+        string status
+    }
+    PERFUME {
+        uuid id PK
+        uuid fragrance_family_id FK
+        string name
+        string description
+        string status
+        datetime created_at
+        datetime archived_at
+    }
+    PERFUME_IMAGE {
+        uuid id PK
+        uuid perfume_id FK
+        string image_reference
+        int sort_order
+        string status
+    }
+    PERFUME_NOTE_ASSIGNMENT {
+        uuid perfume_id PK,FK
+        uuid note_id PK,FK
+        string note_layer PK
+    }
+    PERFUME_VARIANT {
+        uuid id PK
+        uuid perfume_id FK
+        string bottle_size
+        string concentration
+        string sku UK
+        decimal price
+        string availability_status
+    }
+    COLLECTION {
+        uuid id PK
+        string name
+        string collection_type
+        string status
+    }
+    COLLECTION_PERFUME {
+        uuid collection_id PK,FK
+        uuid perfume_id PK,FK
+    }
+    SUITABILITY_TAG {
+        uuid id PK
+        string category
+        string value
+        string status
+    }
+    PERFUME_SUITABILITY {
+        uuid perfume_id PK,FK
+        uuid suitability_tag_id PK,FK
+    }
+    VARIANT_CUSTOMISATION_CAPABILITY {
+        uuid variant_id PK,FK
+        string capability PK
+        boolean enabled
+    }
+
+    DISCOVERY_QUIZ_ATTEMPT {
+        uuid id PK
+        uuid customer_id FK
+        string visitor_session_key
+        string status
+        datetime started_at
+        datetime completed_at
+    }
+    QUIZ_QUESTION {
+        uuid id PK
+        string prompt
+        int sort_order
+        string status
+    }
+    QUIZ_OPTION {
+        uuid id PK
+        uuid question_id FK
+        string label
+        string value
+        int sort_order
+    }
+    QUIZ_RESPONSE {
+        uuid id PK
+        uuid attempt_id FK
+        uuid question_id FK
+        uuid option_id FK
+    }
+    AI_RECOMMENDATION_RUN {
+        uuid id PK
+        uuid customer_id FK
+        uuid quiz_attempt_id FK
+        uuid profile_id FK
+        string status
+        string provider_reference
+        datetime created_at
+    }
+    AI_RECOMMENDATION_ITEM {
+        uuid recommendation_run_id PK,FK
+        uuid perfume_id PK,FK
+        int rank
+        string explanation
+    }
+
+    CART {
+        uuid id PK
+        uuid customer_id FK
+        string visitor_session_key
+        uuid promotion_id FK
+        string status
+        datetime updated_at
+    }
+    CART_ITEM {
+        uuid id PK
+        uuid cart_id FK
+        uuid perfume_variant_id FK
+        int quantity
+        string personalised_label
+        string engraving_name
+        string gift_message
+        string gift_packaging
+    }
+    WISHLIST_ITEM {
+        uuid customer_id PK,FK
+        uuid perfume_id PK,FK
+        datetime created_at
+    }
+    PROMOTION {
+        uuid id PK
+        string code UK
+        string discount_type
+        decimal discount_value
+        string eligibility_rules
+        datetime active_from
+        datetime active_until
+        string status
+    }
+
+    ORDER {
+        uuid id PK
+        uuid customer_id FK
+        uuid promotion_id FK
+        uuid delivery_method_id FK
+        string order_status
+        decimal subtotal
+        decimal discount_total
+        decimal delivery_charge_snapshot
+        decimal total
+        string delivery_method_snapshot
+        string delivery_address_snapshot
+        string billing_address_snapshot
+        datetime placed_at
+    }
+    ORDER_ITEM {
+        uuid id PK
+        uuid order_id FK
+        uuid perfume_variant_id FK
+        string sku_snapshot
+        string product_name_snapshot
+        decimal unit_price_snapshot
+        int quantity
+        string personalised_label
+        string engraving_name
+        string gift_message
+        string gift_packaging
+    }
+    PAYMENT {
+        uuid id PK
+        uuid order_id FK,UK
+        string payment_status
+        string provider
+        string provider_reference
+        datetime updated_at
+    }
+    INVOICE {
+        uuid id PK
+        uuid order_id FK,UK
+        string invoice_number UK
+        decimal total_snapshot
+        string payment_reference_snapshot
+        datetime issued_at
+    }
+    DELIVERY_METHOD {
+        uuid id PK
+        string name
+        decimal charge
+        string display_information
+        string status
+    }
+    SHIPMENT {
+        uuid id PK
+        uuid order_id FK,UK
+        string tracking_reference
+        string shipment_status
+        string confirmation_source
+        datetime delivered_at
+    }
+
+    INVENTORY_BALANCE {
+        uuid perfume_variant_id PK,FK
+        int on_hand
+        int reserved
+        int low_stock_threshold
+        datetime updated_at
+    }
+    INVENTORY_RESERVATION {
+        uuid id PK
+        uuid perfume_variant_id FK
+        uuid order_id FK
+        int quantity
+        string status
+        datetime expires_at
+    }
+    INVENTORY_MOVEMENT {
+        uuid id PK
+        uuid perfume_variant_id FK
+        uuid production_batch_id FK
+        int quantity_delta
+        string reason
+        string reference
+        datetime created_at
+    }
+    PRODUCTION_BATCH {
+        uuid id PK
+        uuid perfume_variant_id FK
+        string batch_code UK
+        int produced_quantity
+        string status
+        datetime production_date
+        datetime released_at
+    }
+
+    REVIEW {
+        uuid id PK
+        uuid customer_id FK
+        uuid perfume_id FK
+        uuid verified_order_item_id FK
+        int rating
+        string review_text
+        string moderation_status
+        datetime created_at
+    }
+    LOYALTY_ACCOUNT {
+        uuid customer_id PK,FK
+        int points_balance
+        datetime updated_at
+    }
+    LOYALTY_TRANSACTION {
+        uuid id PK
+        uuid customer_id FK
+        int points_delta
+        string reason
+        string reference
+        datetime created_at
+    }
+    SUBSCRIPTION {
+        uuid customer_id PK,FK
+        boolean opted_in
+        datetime updated_at
+    }
+    REFERRAL_CODE {
+        uuid customer_id PK,FK
+        string code UK
+        datetime created_at
+    }
+    REFERRAL {
+        uuid id PK
+        uuid referral_code_customer_id FK
+        uuid referred_customer_id FK
+        string status
+        datetime qualified_at
+        datetime rewarded_at
+    }
+
+    SUPPORT_CONVERSATION {
+        uuid id PK
+        uuid customer_id FK
+        string visitor_session_key
+        string status
+        datetime started_at
+        datetime closed_at
+    }
+    SUPPORT_MESSAGE {
+        uuid id PK
+        uuid conversation_id FK
+        string sender_type
+        string content
+        string intent
+        datetime created_at
+    }
+    FEEDBACK {
+        uuid id PK
+        uuid conversation_id FK
+        uuid customer_id FK
+        string feedback_text
+        datetime submitted_at
+    }
+
+    PROMOTIONAL_CONTENT {
+        uuid id PK
+        uuid created_by_admin_id FK
+        string content_type
+        string title
+        string content_body
+        string asset_reference
+        string status
+        datetime created_at
+    }
+    AI_VIDEO_GENERATION {
+        uuid id PK
+        uuid promotional_content_id FK
+        string status
+        string provider_reference
+        string output_reference
+        uuid reviewed_by_admin_id FK
+        datetime created_at
+        datetime reviewed_at
+    }
+
+    CUSTOMER ||--o{ ADDRESS : maintains
+    CUSTOMER ||--o| FRAGRANCE_PREFERENCE_PROFILE : has
+    FRAGRANCE_PREFERENCE_PROFILE ||--o{ PROFILE_FAVOURITE_NOTE : selects
+    FRAGRANCE_NOTE ||--o{ PROFILE_FAVOURITE_NOTE : selected_as
+    FRAGRANCE_PREFERENCE_PROFILE ||--o| FRAGRANCE_IDENTITY : generates
+    FRAGRANCE_FAMILY ||--o{ FRAGRANCE_IDENTITY : classifies
+
+    ADMIN_ROLE ||--o{ ADMIN_ACCOUNT : assigned_to
+    ADMIN_ROLE ||--o{ ROLE_PERMISSION : grants
+    PERMISSION ||--o{ ROLE_PERMISSION : included_in
+    ADMIN_ACCOUNT o|--o{ AUDIT_EVENT : may_perform
+    ADMIN_ACCOUNT o|--o{ BACKUP_RECORD : may_request
+
+    FRAGRANCE_FAMILY ||--o{ PERFUME : classifies
+    PERFUME ||--o{ PERFUME_IMAGE : has
+    PERFUME ||--o{ PERFUME_NOTE_ASSIGNMENT : contains
+    FRAGRANCE_NOTE ||--o{ PERFUME_NOTE_ASSIGNMENT : assigned_as
+    PERFUME ||--o{ PERFUME_VARIANT : offers
+    COLLECTION ||--o{ COLLECTION_PERFUME : contains
+    PERFUME ||--o{ COLLECTION_PERFUME : appears_in
+    PERFUME ||--o{ PERFUME_SUITABILITY : tagged_with
+    SUITABILITY_TAG ||--o{ PERFUME_SUITABILITY : applies_to
+    PERFUME_VARIANT ||--o{ VARIANT_CUSTOMISATION_CAPABILITY : permits
+
+    CUSTOMER o|--o{ DISCOVERY_QUIZ_ATTEMPT : may_complete
+    QUIZ_QUESTION ||--o{ QUIZ_OPTION : offers
+    DISCOVERY_QUIZ_ATTEMPT ||--o{ QUIZ_RESPONSE : records
+    QUIZ_QUESTION ||--o{ QUIZ_RESPONSE : answered_for
+    QUIZ_OPTION ||--o{ QUIZ_RESPONSE : selected
+    CUSTOMER o|--o{ AI_RECOMMENDATION_RUN : may_receive
+    DISCOVERY_QUIZ_ATTEMPT o|--o{ AI_RECOMMENDATION_RUN : may_inform
+    FRAGRANCE_PREFERENCE_PROFILE o|--o{ AI_RECOMMENDATION_RUN : may_inform
+    AI_RECOMMENDATION_RUN ||--o{ AI_RECOMMENDATION_ITEM : produces
+    PERFUME ||--o{ AI_RECOMMENDATION_ITEM : recommended
+
+    CUSTOMER o|--o{ CART : may_own
+    PROMOTION o|--o{ CART : may_apply
+    CART ||--o{ CART_ITEM : contains
+    PERFUME_VARIANT ||--o{ CART_ITEM : selected
+    CUSTOMER ||--o{ WISHLIST_ITEM : saves
+    PERFUME ||--o{ WISHLIST_ITEM : wished
+
+    CUSTOMER ||--o{ ORDER : places
+    PROMOTION o|--o{ ORDER : applied_to
+    DELIVERY_METHOD ||--o{ ORDER : selected_for
+    ORDER ||--|{ ORDER_ITEM : contains
+    PERFUME_VARIANT ||--o{ ORDER_ITEM : snapshots
+    ORDER ||--o| PAYMENT : paid_by
+    ORDER ||--o| INVOICE : invoiced_as
+    ORDER ||--o| SHIPMENT : fulfilled_by
+
+    PERFUME_VARIANT ||--|| INVENTORY_BALANCE : has
+    PERFUME_VARIANT ||--o{ INVENTORY_RESERVATION : reserves
+    ORDER ||--o{ INVENTORY_RESERVATION : holds
+    PERFUME_VARIANT ||--o{ INVENTORY_MOVEMENT : changes
+    PERFUME_VARIANT ||--o{ PRODUCTION_BATCH : produced_as
+    PRODUCTION_BATCH o|--o{ INVENTORY_MOVEMENT : may_release_through
+
+    CUSTOMER ||--o{ REVIEW : writes
+    PERFUME ||--o{ REVIEW : receives
+    ORDER_ITEM ||--o| REVIEW : verifies_purchase
+
+    CUSTOMER ||--o| LOYALTY_ACCOUNT : has
+    CUSTOMER ||--o{ LOYALTY_TRANSACTION : earns_or_redeems
+    CUSTOMER ||--o| SUBSCRIPTION : controls
+    CUSTOMER ||--o| REFERRAL_CODE : owns
+    REFERRAL_CODE ||--o{ REFERRAL : used_for
+    CUSTOMER o|--o| REFERRAL : may_be_referred
+
+    CUSTOMER o|--o{ SUPPORT_CONVERSATION : may_start
+    SUPPORT_CONVERSATION ||--o{ SUPPORT_MESSAGE : contains
+    SUPPORT_CONVERSATION ||--o{ FEEDBACK : may_receive
+    CUSTOMER o|--o{ FEEDBACK : may_submit
+
+    ADMIN_ACCOUNT ||--o{ PROMOTIONAL_CONTENT : creates
+    PROMOTIONAL_CONTENT ||--o{ AI_VIDEO_GENERATION : may_generate
+    ADMIN_ACCOUNT o|--o{ AI_VIDEO_GENERATION : may_review
