@@ -1,0 +1,174 @@
+erDiagram
+    CUSTOMER {
+        uuid id PK
+        string email UK
+        string account_status
+    }
+    FRAGRANCE_PREFERENCE_PROFILE {
+        uuid id PK
+        uuid customer_id FK,UK
+        string preferred_intensity
+        string sensitivity_avoidance
+    }
+    FRAGRANCE_IDENTITY {
+        uuid id PK
+        uuid profile_id FK,UK
+        uuid primary_family_id FK
+    }
+    FRAGRANCE_FAMILY {
+        uuid id PK
+        string name UK
+    }
+    FRAGRANCE_NOTE {
+        uuid id PK
+        string name UK
+    }
+    PERFUME_NOTE_ASSIGNMENT {
+        uuid perfume_id PK,FK
+        uuid note_id PK,FK
+        string note_layer PK
+    }
+    PERFUME {
+        uuid id PK
+        uuid fragrance_family_id FK
+        string name
+        string status
+    }
+    PERFUME_VARIANT {
+        uuid id PK
+        uuid perfume_id FK
+        string sku UK
+        decimal price
+        string availability_status
+    }
+    CART {
+        uuid id PK
+        uuid customer_id FK
+        string visitor_session_key
+        uuid promotion_id FK
+    }
+    CART_ITEM {
+        uuid id PK
+        uuid cart_id FK
+        uuid perfume_variant_id FK
+        int quantity
+    }
+    PROMOTION {
+        uuid id PK
+        string code UK
+        decimal discount_value
+        string status
+    }
+    ORDER {
+        uuid id PK
+        uuid customer_id FK
+        string order_status
+        decimal total
+        string delivery_address_snapshot
+        string billing_address_snapshot
+    }
+    ORDER_ITEM {
+        uuid id PK
+        uuid order_id FK
+        uuid perfume_variant_id FK
+        decimal unit_price_snapshot
+        int quantity
+    }
+    PAYMENT {
+        uuid id PK
+        uuid order_id FK,UK
+        string payment_status
+        string provider_reference
+    }
+    INVOICE {
+        uuid id PK
+        uuid order_id FK,UK
+        string invoice_number UK
+    }
+    SHIPMENT {
+        uuid id PK
+        uuid order_id FK,UK
+        string tracking_reference
+        string shipment_status
+    }
+    INVENTORY_BALANCE {
+        uuid perfume_variant_id PK,FK
+        int on_hand
+        int reserved
+    }
+    INVENTORY_RESERVATION {
+        uuid id PK
+        uuid perfume_variant_id FK
+        uuid order_id FK
+        int quantity
+        datetime expires_at
+    }
+    REVIEW {
+        uuid id PK
+        uuid customer_id FK
+        uuid perfume_id FK
+        int rating
+    }
+    LOYALTY_ACCOUNT {
+        uuid customer_id PK,FK
+        int points_balance
+    }
+    SUPPORT_CONVERSATION {
+        uuid id PK
+        uuid customer_id FK
+        string visitor_session_key
+    }
+    ADMIN_ACCOUNT {
+        uuid id PK
+        string email UK
+        uuid role_id FK
+    }
+    ADMIN_ROLE {
+        uuid id PK
+        string name UK
+    }
+    AUDIT_EVENT {
+        uuid id PK
+        uuid admin_account_id FK
+        string action
+        datetime created_at
+    }
+    AI_RECOMMENDATION_RUN {
+        uuid id PK
+        uuid customer_id FK
+        uuid quiz_attempt_id FK
+        string status
+    }
+
+    CUSTOMER ||--o| FRAGRANCE_PREFERENCE_PROFILE : has
+    FRAGRANCE_PREFERENCE_PROFILE ||--o| FRAGRANCE_IDENTITY : generates
+    FRAGRANCE_FAMILY ||--o{ FRAGRANCE_IDENTITY : classifies
+    FRAGRANCE_FAMILY ||--o{ PERFUME : classifies
+    PERFUME ||--o{ PERFUME_NOTE_ASSIGNMENT : contains
+    FRAGRANCE_NOTE ||--o{ PERFUME_NOTE_ASSIGNMENT : assigned_as
+    PERFUME ||--o{ PERFUME_VARIANT : offers
+
+    CUSTOMER o|--o{ CART : may_own
+    PROMOTION o|--o{ CART : may_apply
+    CART ||--o{ CART_ITEM : contains
+    PERFUME_VARIANT ||--o{ CART_ITEM : selected
+
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ ORDER_ITEM : contains
+    PERFUME_VARIANT ||--o{ ORDER_ITEM : snapshots
+    ORDER ||--o| PAYMENT : paid_by
+    ORDER ||--o| INVOICE : invoiced_as
+    ORDER ||--o| SHIPMENT : fulfilled_by
+
+    PERFUME_VARIANT ||--|| INVENTORY_BALANCE : has
+    PERFUME_VARIANT ||--o{ INVENTORY_RESERVATION : reserves
+    ORDER ||--o{ INVENTORY_RESERVATION : holds
+
+    CUSTOMER ||--o{ REVIEW : writes
+    PERFUME ||--o{ REVIEW : receives
+    CUSTOMER ||--o| LOYALTY_ACCOUNT : has
+    CUSTOMER o|--o{ SUPPORT_CONVERSATION : may_start
+    CUSTOMER o|--o{ AI_RECOMMENDATION_RUN : may_receive
+
+    ADMIN_ROLE ||--o{ ADMIN_ACCOUNT : assigned_to
+    ADMIN_ACCOUNT o|--o{ AUDIT_EVENT : may_perform

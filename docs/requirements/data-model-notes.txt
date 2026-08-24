@@ -1,0 +1,59 @@
+Palermo WP-CORE v2 — reviewed logical architecture/data model
+
+Basis
+-----
+Reviewed against the current main-branch decision register (D-001 through D-111),
+actor registry, derived-requirements registry, and the merged domain SRS packages.
+
+Status
+------
+This is a logical SRS/data-design baseline. It is not a Prisma schema. Exact implementation
+indexes, enum values, auth-provider storage, migrations and provider-specific payloads remain
+implementation details unless the SRS explicitly requires them.
+
+Changes from WP-CORE v1
+-----------------------
+1. Added a report-friendly core ERD while retaining a detailed logical ERD for appendix/design use.
+2. Corrected optional Customer relationships for visitor carts, public quiz/support flows and AI runs.
+3. Added one-identity-per-profile uniqueness for Fragrance Identity.
+4. Added composite keys to logical join tables where duplicate relationships must be prevented.
+5. Added promotion eligibility rules and optional cart-level promotion linkage for pre-checkout validation.
+6. Moved delivery-method/charge snapshots onto ORDER to match D-045; SHIPMENT remains the one-per-order fulfilment record.
+7. Added shipment confirmation source to satisfy D-047.
+8. Added low-stock threshold to variant inventory state to support DER-INVENTORY-005 / D-071.
+9. Fixed referral modelling by separating the customer's reusable unique REFERRAL_CODE from individual REFERRAL events.
+10. Added backup trigger source and nullable administrator linkage so scheduled automated backups and authorised manual backups can both be represented.
+11. Added optional admin reviewer/output references for AI promotional-video generation.
+12. Added AI recommendation links to optional profile/quiz context without making AI authoritative for catalogue/business data.
+
+Important logical constraints not fully expressible in Mermaid
+--------------------------------------------------------------
+- ADDRESS: unique (customer_id, address_type) for one current delivery and one current billing address.
+- REVIEW: unique (customer_id, perfume_id) to enforce one review per purchased perfume per customer.
+- INVENTORY_RESERVATION: persistence must prevent duplicate/overlapping reservation effects for the same business transaction.
+- PRODUCTION_BATCH release must create its inventory effect exactly once.
+- CART must represent either visitor_session_key or customer_id according to cart ownership state; both are not independently authoritative.
+- DISCOVERY_QUIZ_ATTEMPT and SUPPORT_CONVERSATION may be visitor-scoped or customer-scoped.
+- AI_VIDEO_GENERATION.reviewed_by_admin_id is null until an Administrator reviews the generated output.
+- BACKUP_RECORD.requested_by_admin_id may be null for scheduled automated backups.
+
+Architecture constraints
+------------------------
+- Modular monolith: Next.js + TypeScript, Prisma, Supabase PostgreSQL.
+- Browser, Palermo server, database and external providers are separate trust boundaries.
+- Stripe, Email and AI are external services.
+- Delivery simulator is internal and must not be shown as an external actor/provider in the baseline.
+- Security-sensitive business state is server authoritative.
+
+Intentionally not frozen
+------------------------
+- Exact enum values for lifecycle/status fields.
+- Exact Prisma model names, indexes and constraint names.
+- Authentication provider/session storage implementation.
+- Tax/GST handling.
+- Exact promotion eligibility expression format.
+- Exact delivery-method names and fees.
+- Exact suitability/mood/occasion/weather vocabularies.
+- Exact AI-provider payload/log retention.
+- Exact backup-provider capability and storage location.
+- Exact data-retention durations, which belong in the DPIA/retention schedule.

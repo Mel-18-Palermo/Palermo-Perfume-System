@@ -1,0 +1,295 @@
+Entity,Attribute,Logical Type,Key / Constraint,Nullable,Definition,Traceability
+CUSTOMER,id,UUID,PK,No,Opaque customer identifier,D-003
+CUSTOMER,name,String,,No,Customer display/account name collected at registration,D-003
+CUSTOMER,email,String,UK,No,Unique customer login identifier,D-003
+CUSTOMER,account_status,Enum,,No,Customer account lifecycle status,"D-001,D-002"
+CUSTOMER,email_verified_at,DateTime,,Yes,Time email verification completed,D-001
+CUSTOMER,created_at,DateTime,,No,Customer record creation time,Traceability
+CUSTOMER,deactivated_at,DateTime,,Yes,Time self-deactivation occurred,D-002
+ADDRESS,id,UUID,PK,No,Address record identifier,D-004
+ADDRESS,customer_id,UUID,FK,No,Owning customer,D-004
+ADDRESS,address_type,Enum,Composite UK with customer_id,No,Current DELIVERY or BILLING address type,D-004
+ADDRESS,recipient_name,String,,No,Recipient name for address use,D-004
+ADDRESS,line1,String,,No,Primary street address line,D-004
+ADDRESS,line2,String,,Yes,Optional secondary street address line,D-004
+ADDRESS,suburb,String,,No,Suburb/locality,D-004
+ADDRESS,state,String,,No,State/region,D-004
+ADDRESS,postcode,String,,No,Postal code,D-004
+ADDRESS,country,String,,No,Country,D-004
+ADDRESS,updated_at,DateTime,,No,Last profile-address update time,D-004
+FRAGRANCE_PREFERENCE_PROFILE,id,UUID,PK,No,Preference-profile identifier,D-005
+FRAGRANCE_PREFERENCE_PROFILE,customer_id,UUID,"FK, UK",No,One preference profile per customer,D-005
+FRAGRANCE_PREFERENCE_PROFILE,preferred_intensity,String,,Yes,Optional preferred perfume intensity,D-005
+FRAGRANCE_PREFERENCE_PROFILE,sensitivity_avoidance,String,,Yes,Optional non-medical fragrance avoidance/preference,D-006
+FRAGRANCE_PREFERENCE_PROFILE,updated_at,DateTime,,No,Last preference update time,D-007
+PROFILE_FAVOURITE_NOTE,profile_id,UUID,"PK, FK",No,Preference profile selecting a note,D-005
+PROFILE_FAVOURITE_NOTE,note_id,UUID,"PK, FK",No,Selected canonical fragrance note,"D-005,D-015"
+FRAGRANCE_IDENTITY,id,UUID,PK,No,Generated Fragrance Identity identifier,D-007
+FRAGRANCE_IDENTITY,profile_id,UUID,"FK, UK",No,Profile from which current identity is generated,D-007
+FRAGRANCE_IDENTITY,primary_family_id,UUID,FK,No,Generated primary canonical fragrance family,"D-007,D-016"
+FRAGRANCE_IDENTITY,explanation,String,,No,Rule-based explanation of generated identity,D-007
+FRAGRANCE_IDENTITY,status,Enum,,No,Current/stale generation status without freezing exact enum names,D-007
+FRAGRANCE_IDENTITY,generated_at,DateTime,,No,Identity generation time,D-007
+ADMIN_ACCOUNT,id,UUID,PK,No,Administrative account identifier,D-057
+ADMIN_ACCOUNT,email,String,UK,No,Administrative login/account email,D-057
+ADMIN_ACCOUNT,status,Enum,,No,Administrative account lifecycle status,D-059
+ADMIN_ACCOUNT,role_id,UUID,FK,No,Assigned server-authorised RBAC role,"D-058,D-059"
+ADMIN_ACCOUNT,created_at,DateTime,,No,Administrative account creation time,D-059
+ADMIN_ROLE,id,UUID,PK,No,RBAC role identifier,D-058
+ADMIN_ROLE,name,String,UK,No,Approved role name; organisational job titles are not invented,D-058
+ADMIN_ROLE,status,Enum,,No,Role availability status,D-058
+PERMISSION,id,UUID,PK,No,Permission identifier,D-058
+PERMISSION,code,String,UK,No,Stable permission code,D-058
+PERMISSION,description,String,,No,Permission purpose/allowed capability,D-058
+ROLE_PERMISSION,role_id,UUID,"PK, FK",No,Role receiving permission,D-058
+ROLE_PERMISSION,permission_id,UUID,"PK, FK",No,Permission granted to role,D-058
+AUDIT_EVENT,id,UUID,PK,No,Audit-event identifier,"D-063,D-064"
+AUDIT_EVENT,admin_account_id,UUID,FK,Yes,Administrator responsible where applicable; system/security events may not have one,D-063
+AUDIT_EVENT,actor_type,String,,No,Type of actor/source responsible for event,D-063
+AUDIT_EVENT,action,String,,No,Audited action,D-063
+AUDIT_EVENT,target_type,String,,Yes,Type of affected resource,D-063
+AUDIT_EVENT,target_id,String,,Yes,Identifier of affected resource,D-063
+AUDIT_EVENT,outcome,String,,No,Success/failure/result classification,D-063
+AUDIT_EVENT,correlation_id,String,,Yes,Request/change correlation identifier where practical,"D-063,D-095"
+AUDIT_EVENT,created_at,DateTime,,No,Audit-event time,D-063
+BACKUP_RECORD,id,UUID,PK,No,Backup operation/record identifier,"D-065,D-090"
+BACKUP_RECORD,requested_by_admin_id,UUID,FK,Yes,Requesting administrator for manual backup; null for scheduled automation,"D-065,D-090"
+BACKUP_RECORD,trigger_source,String,,No,Manual or scheduled backup trigger source,"D-065,D-090"
+BACKUP_RECORD,status,Enum,,No,Backup operation status,D-065
+BACKUP_RECORD,provider_reference,String,,Yes,Provider/storage reference without credentials,D-065
+BACKUP_RECORD,requested_at,DateTime,,No,Backup request/start time,D-065
+BACKUP_RECORD,completed_at,DateTime,,Yes,Backup completion time,D-065
+FRAGRANCE_FAMILY,id,UUID,PK,No,Canonical fragrance-family identifier,D-016
+FRAGRANCE_FAMILY,name,String,UK,No,Canonical family name,D-016
+FRAGRANCE_FAMILY,description,String,,Yes,Family description,D-016
+FRAGRANCE_FAMILY,status,Enum,,No,Controlled vocabulary availability status,D-016
+FRAGRANCE_NOTE,id,UUID,PK,No,Canonical fragrance-note identifier,D-015
+FRAGRANCE_NOTE,name,String,UK,No,Canonical fragrance-note name,D-015
+FRAGRANCE_NOTE,description,String,,Yes,Note description,FR-COLLECTION
+FRAGRANCE_NOTE,status,Enum,,No,Controlled vocabulary availability status,D-015
+PERFUME,id,UUID,PK,No,Parent perfume identifier,D-014
+PERFUME,fragrance_family_id,UUID,FK,No,Exactly one primary canonical fragrance family,D-016
+PERFUME,name,String,,No,Perfume display name,FR-PRODUCT
+PERFUME,description,String,,No,Perfume description,FR-PRODUCT
+PERFUME,status,Enum,,No,Catalogue lifecycle state including logical archive,D-013
+PERFUME,created_at,DateTime,,No,Catalogue creation time,FR-PRODUCT
+PERFUME,archived_at,DateTime,,Yes,Logical archival time,D-013
+PERFUME_IMAGE,id,UUID,PK,No,Perfume image record identifier,FR-PRODUCT
+PERFUME_IMAGE,perfume_id,UUID,FK,No,Parent perfume,FR-PRODUCT
+PERFUME_IMAGE,image_reference,String,,No,Stored/reference location for approved image,FR-PRODUCT
+PERFUME_IMAGE,sort_order,Integer,,No,Display ordering,FR-PRODUCT
+PERFUME_IMAGE,status,Enum,,No,Image availability status,FR-PRODUCT
+PERFUME_NOTE_ASSIGNMENT,perfume_id,UUID,"PK, FK",No,Perfume receiving note assignment,D-015
+PERFUME_NOTE_ASSIGNMENT,note_id,UUID,"PK, FK",No,Canonical note assigned,D-015
+PERFUME_NOTE_ASSIGNMENT,note_layer,Enum,PK,No,"TOP, MIDDLE or BASE relationship role","D-015,D-023"
+PERFUME_VARIANT,id,UUID,PK,No,Sellable perfume-variant identifier,D-014
+PERFUME_VARIANT,perfume_id,UUID,FK,No,Parent perfume,D-014
+PERFUME_VARIANT,bottle_size,String,,No,Sellable bottle size,D-014
+PERFUME_VARIANT,concentration,String,,No,Sellable concentration,D-014
+PERFUME_VARIANT,sku,String,UK,No,Unique sellable SKU,D-014
+PERFUME_VARIANT,price,Decimal,,No,Current server-authoritative price,"D-014,D-035"
+PERFUME_VARIANT,availability_status,Enum,,No,Current sellable availability separate from perfume archival,"D-013,D-014"
+COLLECTION,id,UUID,PK,No,Reusable collection identifier,D-017
+COLLECTION,name,String,,No,Collection name,FR-COLLECTION
+COLLECTION,collection_type,Enum,,No,"GENERAL, SEASONAL or LIMITED_EDITION classification",D-017
+COLLECTION,status,Enum,,No,Collection availability status,D-017
+COLLECTION_PERFUME,collection_id,UUID,"PK, FK",No,Collection membership owner,D-017
+COLLECTION_PERFUME,perfume_id,UUID,"PK, FK",No,Perfume included in collection,D-017
+SUITABILITY_TAG,id,UUID,PK,No,Controlled suitability/filter tag identifier,"D-018,D-019,D-020,D-025"
+SUITABILITY_TAG,category,Enum,,No,"Controlled suitability category such as mood, occasion, weather, daypart or season","D-019,D-020,D-025"
+SUITABILITY_TAG,value,String,,No,Approved controlled tag value,"D-019,D-020,D-025"
+SUITABILITY_TAG,status,Enum,,No,Controlled tag availability status,D-019
+PERFUME_SUITABILITY,perfume_id,UUID,"PK, FK",No,Perfume carrying suitability metadata,"D-018,D-025"
+PERFUME_SUITABILITY,suitability_tag_id,UUID,"PK, FK",No,Controlled suitability tag,"D-018,D-025"
+VARIANT_CUSTOMISATION_CAPABILITY,variant_id,UUID,"PK, FK",No,Variant with configured customisation eligibility,D-028
+VARIANT_CUSTOMISATION_CAPABILITY,capability,String,PK,No,Approved customisation capability,D-028
+VARIANT_CUSTOMISATION_CAPABILITY,enabled,Boolean,,No,Whether the capability is available,D-028
+DISCOVERY_QUIZ_ATTEMPT,id,UUID,PK,No,Discovery-quiz attempt identifier,D-031
+DISCOVERY_QUIZ_ATTEMPT,customer_id,UUID,FK,Yes,Authenticated customer when associated; null for visitor attempt,D-031
+DISCOVERY_QUIZ_ATTEMPT,visitor_session_key,String,,Yes,Temporary visitor identity for public quiz result,D-031
+DISCOVERY_QUIZ_ATTEMPT,status,Enum,,No,Quiz attempt state,D-031
+DISCOVERY_QUIZ_ATTEMPT,started_at,DateTime,,No,Quiz start time,D-031
+DISCOVERY_QUIZ_ATTEMPT,completed_at,DateTime,,Yes,Quiz completion time,D-031
+QUIZ_QUESTION,id,UUID,PK,No,Structured quiz-question identifier,D-031
+QUIZ_QUESTION,prompt,String,,No,Approved structured question prompt,D-031
+QUIZ_QUESTION,sort_order,Integer,,No,Question ordering,D-031
+QUIZ_QUESTION,status,Enum,,No,Question availability status,D-031
+QUIZ_OPTION,id,UUID,PK,No,Structured quiz-option identifier,D-031
+QUIZ_OPTION,question_id,UUID,FK,No,Owning quiz question,D-031
+QUIZ_OPTION,label,String,,No,Displayed answer option label,D-031
+QUIZ_OPTION,value,String,,No,Approved structured option value,D-031
+QUIZ_OPTION,sort_order,Integer,,No,Option ordering,D-031
+QUIZ_RESPONSE,id,UUID,PK,No,Recorded structured quiz response,D-031
+QUIZ_RESPONSE,attempt_id,UUID,FK,No,Quiz attempt,D-031
+QUIZ_RESPONSE,question_id,UUID,FK,No,Question answered,D-031
+QUIZ_RESPONSE,option_id,UUID,FK,No,Approved option selected,D-031
+AI_RECOMMENDATION_RUN,id,UUID,PK,No,AI recommendation execution identifier,"D-032,D-033"
+AI_RECOMMENDATION_RUN,customer_id,UUID,FK,Yes,Authenticated customer context where used,D-032
+AI_RECOMMENDATION_RUN,quiz_attempt_id,UUID,FK,Yes,Structured quiz context where used,D-032
+AI_RECOMMENDATION_RUN,profile_id,UUID,FK,Yes,Approved fragrance-profile context where used,D-032
+AI_RECOMMENDATION_RUN,status,Enum,,No,Recommendation run outcome/status,D-033
+AI_RECOMMENDATION_RUN,provider_reference,String,,Yes,External AI provider reference without making provider output authoritative,D-032
+AI_RECOMMENDATION_RUN,created_at,DateTime,,No,Recommendation run time,D-032
+AI_RECOMMENDATION_ITEM,recommendation_run_id,UUID,"PK, FK",No,Recommendation run producing item,D-032
+AI_RECOMMENDATION_ITEM,perfume_id,UUID,"PK, FK",No,Validated current-catalogue perfume recommendation,D-032
+AI_RECOMMENDATION_ITEM,rank,Integer,,No,Validated recommendation ordering,D-032
+AI_RECOMMENDATION_ITEM,explanation,String,,No,AI-generated explanation constrained to approved facts,"D-032,D-050"
+CART,id,UUID,PK,No,Cart identifier,"D-011,D-034"
+CART,customer_id,UUID,FK,Yes,Owning authenticated customer; null for visitor cart,D-011
+CART,visitor_session_key,String,,Yes,Temporary visitor-cart identity,D-011
+CART,promotion_id,UUID,FK,Yes,Currently applied/revalidated promotion where persisted,D-037
+CART,status,Enum,,No,Cart lifecycle status,Commerce
+CART,updated_at,DateTime,,No,Last cart mutation time,Commerce
+CART_ITEM,id,UUID,PK,No,Cart-line identifier,D-034
+CART_ITEM,cart_id,UUID,FK,No,Owning cart,D-034
+CART_ITEM,perfume_variant_id,UUID,FK,No,Sellable variant,D-034
+CART_ITEM,quantity,Integer,,No,Requested quantity,FR-CART
+CART_ITEM,personalised_label,String,,Yes,Eligible personalised label customisation,"D-027,D-028"
+CART_ITEM,engraving_name,String,,Yes,Eligible engraving customisation,"D-027,D-028"
+CART_ITEM,gift_message,String,,Yes,Eligible gift message,"D-027,D-028"
+CART_ITEM,gift_packaging,String,,Yes,Eligible gift-packaging selection,"D-027,D-028"
+WISHLIST_ITEM,customer_id,UUID,"PK, FK",No,Customer owning wishlist entry,D-011
+WISHLIST_ITEM,perfume_id,UUID,"PK, FK",No,Saved perfume,FR-CART
+WISHLIST_ITEM,created_at,DateTime,,No,Wishlist save time,FR-CART
+PROMOTION,id,UUID,PK,No,Promotion identifier,D-078
+PROMOTION,code,String,UK,No,Promotion code entered by customer,"D-037,D-078"
+PROMOTION,discount_type,String,,No,Approved basic discount type,D-078
+PROMOTION,discount_value,Decimal,,No,Configured discount value,D-078
+PROMOTION,eligibility_rules,Structured value,,No,Basic server-evaluated eligibility rules; exact expression format deferred,"D-037,D-078"
+PROMOTION,active_from,DateTime,,Yes,Optional promotion activation time,D-078
+PROMOTION,active_until,DateTime,,Yes,Optional promotion expiry time,D-078
+PROMOTION,status,Enum,,No,Promotion active/inactive lifecycle status,D-078
+ORDER,id,UUID,PK,No,Customer order identifier,D-038
+ORDER,customer_id,UUID,FK,No,Authenticated customer placing order,D-011
+ORDER,promotion_id,UUID,FK,Yes,Validated promotion applied at placement,D-037
+ORDER,delivery_method_id,UUID,FK,No,Configured delivery method selected at placement,D-045
+ORDER,order_status,Enum,,No,Fulfilment/order state independent of payment state,D-038
+ORDER,subtotal,Decimal,,No,Immutable placed-order subtotal,D-035
+ORDER,discount_total,Decimal,,No,Immutable applied discount snapshot,"D-035,D-037"
+ORDER,delivery_charge_snapshot,Decimal,,No,Immutable selected delivery charge,D-045
+ORDER,total,Decimal,,No,Immutable placed-order total,D-035
+ORDER,delivery_method_snapshot,Structured value,,No,Immutable method/display information snapshot,D-045
+ORDER,delivery_address_snapshot,Structured value,,No,Immutable delivery address snapshot,"D-004,D-035"
+ORDER,billing_address_snapshot,Structured value,,No,Immutable billing address snapshot,"D-004,D-041"
+ORDER,placed_at,DateTime,,No,Order placement time,FR-ORDER
+ORDER_ITEM,id,UUID,PK,No,Placed order-line identifier,D-035
+ORDER_ITEM,order_id,UUID,FK,No,Owning order,D-035
+ORDER_ITEM,perfume_variant_id,UUID,FK,No,Referenced sellable variant for history/inventory linkage,"D-014,D-035"
+ORDER_ITEM,sku_snapshot,String,,No,Immutable SKU snapshot,D-035
+ORDER_ITEM,product_name_snapshot,String,,No,Immutable customer-facing product/variant name snapshot,D-035
+ORDER_ITEM,unit_price_snapshot,Decimal,,No,Immutable placed-order unit price,D-035
+ORDER_ITEM,quantity,Integer,,No,Purchased quantity,D-035
+ORDER_ITEM,personalised_label,String,,Yes,Placed customisation snapshot,D-027
+ORDER_ITEM,engraving_name,String,,Yes,Placed engraving snapshot,D-027
+ORDER_ITEM,gift_message,String,,Yes,Placed gift-message snapshot,D-027
+ORDER_ITEM,gift_packaging,String,,Yes,Placed packaging snapshot,D-027
+PAYMENT,id,UUID,PK,No,Payment record identifier,"D-038,D-039"
+PAYMENT,order_id,UUID,"FK, UK",No,Baseline payment record associated with order,D-038
+PAYMENT,payment_status,Enum,,No,Payment state independent of order state,D-038
+PAYMENT,provider,String,,No,Payment provider identifier; Stripe sandbox baseline,D-039
+PAYMENT,provider_reference,String,,Yes,Provider payment reference only; no PAN/CVV,D-039
+PAYMENT,updated_at,DateTime,,No,Latest verified payment-state update time,"D-039,D-040"
+INVOICE,id,UUID,PK,No,Invoice record identifier,D-041
+INVOICE,order_id,UUID,"FK, UK",No,Successfully paid order represented by invoice,D-041
+INVOICE,invoice_number,String,UK,No,Unique digital invoice number,FR-ORDER
+INVOICE,total_snapshot,Decimal,,No,Invoice total based on immutable order snapshot,D-041
+INVOICE,payment_reference_snapshot,String,,Yes,Payment reference captured for immutable invoice output,D-041
+INVOICE,issued_at,DateTime,,No,Invoice issue time after successful payment,D-041
+DELIVERY_METHOD,id,UUID,PK,No,Configured delivery-method identifier,D-045
+DELIVERY_METHOD,name,String,,No,Displayed configured delivery method,D-045
+DELIVERY_METHOD,charge,Decimal,,No,Current configured delivery charge,D-045
+DELIVERY_METHOD,display_information,String,,Yes,Customer-facing delivery information,D-045
+DELIVERY_METHOD,status,Enum,,No,Delivery method availability status,D-045
+SHIPMENT,id,UUID,PK,No,Shipment/fulfilment record identifier,D-044
+SHIPMENT,order_id,UUID,"FK, UK",No,At most one baseline shipment per order,D-044
+SHIPMENT,tracking_reference,String,,Yes,Simulator-generated tracking reference,D-046
+SHIPMENT,shipment_status,Enum,,No,Controlled shipment status,"D-046,D-047"
+SHIPMENT,confirmation_source,String,,Yes,"Source of delivery confirmation, baseline internal simulator",D-047
+SHIPMENT,delivered_at,DateTime,,Yes,Delivery confirmation time,D-047
+INVENTORY_BALANCE,perfume_variant_id,UUID,"PK, FK",No,One inventory balance per sellable variant,D-067
+INVENTORY_BALANCE,on_hand,Integer,,No,Recorded physical/sellable on-hand quantity,DER-INVENTORY-001
+INVENTORY_BALANCE,reserved,Integer,,No,Quantity reserved by bounded checkout/payment transactions,"D-036,D-067"
+INVENTORY_BALANCE,low_stock_threshold,Integer,,No,Configured threshold used to identify low stock,D-071
+INVENTORY_BALANCE,updated_at,DateTime,,No,Last inventory-balance update time,D-067
+INVENTORY_RESERVATION,id,UUID,PK,No,Bounded stock reservation identifier,"D-036,D-072"
+INVENTORY_RESERVATION,perfume_variant_id,UUID,FK,No,Variant whose units are reserved,D-036
+INVENTORY_RESERVATION,order_id,UUID,FK,No,Checkout/order transaction holding reservation,D-036
+INVENTORY_RESERVATION,quantity,Integer,,No,Reserved quantity,D-036
+INVENTORY_RESERVATION,status,Enum,,No,Active/committed/released/expired logical state without freezing exact enum names,"D-036,D-072"
+INVENTORY_RESERVATION,expires_at,DateTime,,No,Bounded reservation expiry time,D-036
+INVENTORY_MOVEMENT,id,UUID,PK,No,Inventory movement identifier,D-068
+INVENTORY_MOVEMENT,perfume_variant_id,UUID,FK,No,Variant affected,D-068
+INVENTORY_MOVEMENT,production_batch_id,UUID,FK,Yes,Source production batch where movement is a batch release,D-070
+INVENTORY_MOVEMENT,quantity_delta,Integer,,No,Signed quantity change,D-068
+INVENTORY_MOVEMENT,reason,String,,No,Attributable movement reason/source,D-068
+INVENTORY_MOVEMENT,reference,String,,Yes,Related business/source reference,D-068
+INVENTORY_MOVEMENT,created_at,DateTime,,No,Movement time,D-068
+PRODUCTION_BATCH,id,UUID,PK,No,Finished-perfume batch identifier,D-069
+PRODUCTION_BATCH,perfume_variant_id,UUID,FK,No,Sellable variant produced by batch,D-069
+PRODUCTION_BATCH,batch_code,String,UK,No,Unique finished-batch code,D-069
+PRODUCTION_BATCH,produced_quantity,Integer,,No,Finished quantity recorded for batch,D-069
+PRODUCTION_BATCH,status,Enum,,No,Recorded/released lifecycle state without ERP expansion,"D-069,D-070"
+PRODUCTION_BATCH,production_date,DateTime,,No,Recorded batch production date,D-069
+PRODUCTION_BATCH,released_at,DateTime,,Yes,Authorised one-time inventory release time,D-070
+REVIEW,id,UUID,PK,No,Review identifier,D-073
+REVIEW,customer_id,UUID,FK; composite UK with perfume_id,No,Authenticated reviewing customer,D-073
+REVIEW,perfume_id,UUID,FK; composite UK with customer_id,No,Reviewed perfume,D-073
+REVIEW,verified_order_item_id,UUID,FK,No,Qualifying purchased order item proving review eligibility,D-073
+REVIEW,rating,Integer,,No,Customer rating,D-073
+REVIEW,review_text,String,,No,Short public review text,D-073
+REVIEW,moderation_status,Enum,,No,Public/hidden/removed moderation state without inventing social features,"D-073,D-074"
+REVIEW,created_at,DateTime,,No,Review submission time,D-073
+LOYALTY_ACCOUNT,customer_id,UUID,"PK, FK",No,One simple loyalty account per customer,D-075
+LOYALTY_ACCOUNT,points_balance,Integer,,No,Current simple points balance,D-075
+LOYALTY_ACCOUNT,updated_at,DateTime,,No,Last balance update time,D-075
+LOYALTY_TRANSACTION,id,UUID,PK,No,Loyalty points ledger entry,"D-075,D-077"
+LOYALTY_TRANSACTION,customer_id,UUID,FK,No,Customer receiving/spending points,D-075
+LOYALTY_TRANSACTION,points_delta,Integer,,No,Signed points change,D-075
+LOYALTY_TRANSACTION,reason,String,,No,Qualifying order/redemption/referral reason,"D-075,D-077"
+LOYALTY_TRANSACTION,reference,String,,Yes,Related order/referral reference,"D-075,D-077"
+LOYALTY_TRANSACTION,created_at,DateTime,,No,Points transaction time,D-075
+SUBSCRIPTION,customer_id,UUID,"PK, FK",No,One basic subscription preference per customer,D-076
+SUBSCRIPTION,opted_in,Boolean,,No,Current opt-in/out state; no recurring billing,D-076
+SUBSCRIPTION,updated_at,DateTime,,No,Latest subscription preference change,D-076
+REFERRAL_CODE,customer_id,UUID,"PK, FK",No,Customer owning reusable referral code/link,D-077
+REFERRAL_CODE,code,String,UK,No,Unique referral code/link token,D-077
+REFERRAL_CODE,created_at,DateTime,,No,Referral code creation time,D-077
+REFERRAL,id,UUID,PK,No,Individual referral event identifier,D-077
+REFERRAL,referral_code_customer_id,UUID,FK,No,Referrer identified by owned referral code,D-077
+REFERRAL,referred_customer_id,UUID,FK,Yes,Referred customer once identifiable/qualified,D-077
+REFERRAL,status,Enum,,No,Referral qualification/reward state,D-077
+REFERRAL,qualified_at,DateTime,,Yes,Time referral met configured qualifying rule,D-077
+REFERRAL,rewarded_at,DateTime,,Yes,Time configured loyalty reward was applied,D-077
+SUPPORT_CONVERSATION,id,UUID,PK,No,Support conversation identifier,D-048
+SUPPORT_CONVERSATION,customer_id,UUID,FK,Yes,Authenticated customer when account-specific support is used,D-049
+SUPPORT_CONVERSATION,visitor_session_key,String,,Yes,Temporary public-support conversation identity,D-049
+SUPPORT_CONVERSATION,status,Enum,,No,Conversation lifecycle status,D-048
+SUPPORT_CONVERSATION,started_at,DateTime,,No,Conversation start time,D-048
+SUPPORT_CONVERSATION,closed_at,DateTime,,Yes,Conversation close time,D-056
+SUPPORT_MESSAGE,id,UUID,PK,No,Support message identifier,D-048
+SUPPORT_MESSAGE,conversation_id,UUID,FK,No,Owning support conversation,D-048
+SUPPORT_MESSAGE,sender_type,String,,No,Customer/visitor/assistant/system message source,D-048
+SUPPORT_MESSAGE,content,String,,No,Support message content subject to approved retention,D-056
+SUPPORT_MESSAGE,intent,String,,Yes,Bounded operational support intent where identified,D-052
+SUPPORT_MESSAGE,created_at,DateTime,,No,Message time,D-048
+FEEDBACK,id,UUID,PK,No,Explicitly submitted feedback record,D-054
+FEEDBACK,conversation_id,UUID,FK,Yes,Related support conversation where applicable,D-054
+FEEDBACK,customer_id,UUID,FK,Yes,Authenticated customer where feedback is account-associated,D-054
+FEEDBACK,feedback_text,String,,No,Approved feedback content submitted explicitly,D-054
+FEEDBACK,submitted_at,DateTime,,No,Explicit feedback submission time,D-054
+PROMOTIONAL_CONTENT,id,UUID,PK,No,Admin-managed promotional-content record identifier,D-079
+PROMOTIONAL_CONTENT,created_by_admin_id,UUID,FK,No,Administrator creating/managing record,D-079
+PROMOTIONAL_CONTENT,content_type,String,,No,Promotional content type without implying scheduler integration,D-079
+PROMOTIONAL_CONTENT,title,String,,No,Promotional content title/label,D-079
+PROMOTIONAL_CONTENT,content_body,String,,Yes,Approved promotional text/content payload,D-079
+PROMOTIONAL_CONTENT,asset_reference,String,,Yes,Approved/copyright-safe source asset reference,"D-079,D-080,D-094"
+PROMOTIONAL_CONTENT,status,Enum,,No,Promotional-content lifecycle status,D-079
+PROMOTIONAL_CONTENT,created_at,DateTime,,No,Content record creation time,D-079
+AI_VIDEO_GENERATION,id,UUID,PK,No,AI promotional-video generation identifier,D-080
+AI_VIDEO_GENERATION,promotional_content_id,UUID,FK,No,Promotional content being used for generation,D-080
+AI_VIDEO_GENERATION,status,Enum,,No,Generate/preview/approve/reject lifecycle status,D-080
+AI_VIDEO_GENERATION,provider_reference,String,,Yes,AI-provider generation reference,D-080
+AI_VIDEO_GENERATION,output_reference,String,,Yes,Generated preview/output asset reference,D-080
+AI_VIDEO_GENERATION,reviewed_by_admin_id,UUID,FK,Yes,Administrator approving/rejecting output; null before review,D-080
+AI_VIDEO_GENERATION,created_at,DateTime,,No,Generation request time,D-080
+AI_VIDEO_GENERATION,reviewed_at,DateTime,,Yes,Administrator review decision time,D-080
