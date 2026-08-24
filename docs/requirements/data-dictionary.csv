@@ -4,7 +4,7 @@ CUSTOMER,name,String,,No,Customer display/account name collected at registration
 CUSTOMER,email,String,UK,No,Unique customer login identifier,D-003
 CUSTOMER,account_status,Enum,,No,Customer account lifecycle status,"D-001,D-002"
 CUSTOMER,email_verified_at,DateTime,,Yes,Time email verification completed,D-001
-CUSTOMER,created_at,DateTime,,No,Customer record creation time,Traceability
+CUSTOMER,created_at,DateTime,,No,Customer record creation time,D-003
 CUSTOMER,deactivated_at,DateTime,,Yes,Time self-deactivation occurred,D-002
 ADDRESS,id,UUID,PK,No,Address record identifier,D-004
 ADDRESS,customer_id,UUID,FK,No,Owning customer,D-004
@@ -65,20 +65,20 @@ FRAGRANCE_FAMILY,description,String,,Yes,Family description,D-016
 FRAGRANCE_FAMILY,status,Enum,,No,Controlled vocabulary availability status,D-016
 FRAGRANCE_NOTE,id,UUID,PK,No,Canonical fragrance-note identifier,D-015
 FRAGRANCE_NOTE,name,String,UK,No,Canonical fragrance-note name,D-015
-FRAGRANCE_NOTE,description,String,,Yes,Note description,FR-COLLECTION
+FRAGRANCE_NOTE,description,String,,Yes,Note description,D-015
 FRAGRANCE_NOTE,status,Enum,,No,Controlled vocabulary availability status,D-015
 PERFUME,id,UUID,PK,No,Parent perfume identifier,D-014
 PERFUME,fragrance_family_id,UUID,FK,No,Exactly one primary canonical fragrance family,D-016
-PERFUME,name,String,,No,Perfume display name,FR-PRODUCT
-PERFUME,description,String,,No,Perfume description,FR-PRODUCT
+PERFUME,name,String,,No,Perfume display name,"FR-PRODUCT-001,FR-PRODUCT-002"
+PERFUME,description,String,,No,Perfume description,FR-PRODUCT-005
 PERFUME,status,Enum,,No,Catalogue lifecycle state including logical archive,D-013
-PERFUME,created_at,DateTime,,No,Catalogue creation time,FR-PRODUCT
+PERFUME,created_at,DateTime,,No,Catalogue creation time,FR-PRODUCT-001
 PERFUME,archived_at,DateTime,,Yes,Logical archival time,D-013
-PERFUME_IMAGE,id,UUID,PK,No,Perfume image record identifier,FR-PRODUCT
-PERFUME_IMAGE,perfume_id,UUID,FK,No,Parent perfume,FR-PRODUCT
-PERFUME_IMAGE,image_reference,String,,No,Stored/reference location for approved image,FR-PRODUCT
-PERFUME_IMAGE,sort_order,Integer,,No,Display ordering,FR-PRODUCT
-PERFUME_IMAGE,status,Enum,,No,Image availability status,FR-PRODUCT
+PERFUME_IMAGE,id,UUID,PK,No,Perfume image record identifier,FR-PRODUCT-004
+PERFUME_IMAGE,perfume_id,UUID,FK,No,Parent perfume,FR-PRODUCT-004
+PERFUME_IMAGE,image_reference,String,,No,Stored/reference location for approved image,FR-PRODUCT-004
+PERFUME_IMAGE,sort_order,Integer,,No,Display ordering,FR-PRODUCT-004
+PERFUME_IMAGE,status,Enum,,No,Image availability status,FR-PRODUCT-004
 PERFUME_NOTE_ASSIGNMENT,perfume_id,UUID,"PK, FK",No,Perfume receiving note assignment,D-015
 PERFUME_NOTE_ASSIGNMENT,note_id,UUID,"PK, FK",No,Canonical note assigned,D-015
 PERFUME_NOTE_ASSIGNMENT,note_layer,Enum,PK,No,"TOP, MIDDLE or BASE relationship role","D-015,D-023"
@@ -90,7 +90,7 @@ PERFUME_VARIANT,sku,String,UK,No,Unique sellable SKU,D-014
 PERFUME_VARIANT,price,Decimal,,No,Current server-authoritative price,"D-014,D-035"
 PERFUME_VARIANT,availability_status,Enum,,No,Current sellable availability separate from perfume archival,"D-013,D-014"
 COLLECTION,id,UUID,PK,No,Reusable collection identifier,D-017
-COLLECTION,name,String,,No,Collection name,FR-COLLECTION
+COLLECTION,name,String,,No,Collection name,"FR-COLLECTION-001,FR-COLLECTION-002"
 COLLECTION,collection_type,Enum,,No,"GENERAL, SEASONAL or LIMITED_EDITION classification",D-017
 COLLECTION,status,Enum,,No,Collection availability status,D-017
 COLLECTION_PERFUME,collection_id,UUID,"PK, FK",No,Collection membership owner,D-017
@@ -138,19 +138,19 @@ CART,id,UUID,PK,No,Cart identifier,"D-011,D-034"
 CART,customer_id,UUID,FK,Yes,Owning authenticated customer; null for visitor cart,D-011
 CART,visitor_session_key,String,,Yes,Temporary visitor-cart identity,D-011
 CART,promotion_id,UUID,FK,Yes,Currently applied/revalidated promotion where persisted,D-037
-CART,status,Enum,,No,Cart lifecycle status,Commerce
-CART,updated_at,DateTime,,No,Last cart mutation time,Commerce
+CART,status,Enum,,No,Cart lifecycle status,"D-011,D-034"
+CART,updated_at,DateTime,,No,Last cart mutation time,"D-011,D-034"
 CART_ITEM,id,UUID,PK,No,Cart-line identifier,D-034
 CART_ITEM,cart_id,UUID,FK,No,Owning cart,D-034
 CART_ITEM,perfume_variant_id,UUID,FK,No,Sellable variant,D-034
-CART_ITEM,quantity,Integer,,No,Requested quantity,FR-CART
+CART_ITEM,quantity,Integer,,No,Requested quantity,FR-CART-002
 CART_ITEM,personalised_label,String,,Yes,Eligible personalised label customisation,"D-027,D-028"
 CART_ITEM,engraving_name,String,,Yes,Eligible engraving customisation,"D-027,D-028"
 CART_ITEM,gift_message,String,,Yes,Eligible gift message,"D-027,D-028"
 CART_ITEM,gift_packaging,String,,Yes,Eligible gift-packaging selection,"D-027,D-028"
 WISHLIST_ITEM,customer_id,UUID,"PK, FK",No,Customer owning wishlist entry,D-011
-WISHLIST_ITEM,perfume_id,UUID,"PK, FK",No,Saved perfume,FR-CART
-WISHLIST_ITEM,created_at,DateTime,,No,Wishlist save time,FR-CART
+WISHLIST_ITEM,perfume_id,UUID,"PK, FK",No,Saved perfume,FR-CART-005
+WISHLIST_ITEM,created_at,DateTime,,No,Wishlist save time,FR-CART-005
 PROMOTION,id,UUID,PK,No,Promotion identifier,D-078
 PROMOTION,code,String,UK,No,Promotion code entered by customer,"D-037,D-078"
 PROMOTION,discount_type,String,,No,Approved basic discount type,D-078
@@ -171,7 +171,7 @@ ORDER,total,Decimal,,No,Immutable placed-order total,D-035
 ORDER,delivery_method_snapshot,Structured value,,No,Immutable method/display information snapshot,D-045
 ORDER,delivery_address_snapshot,Structured value,,No,Immutable delivery address snapshot,"D-004,D-035"
 ORDER,billing_address_snapshot,Structured value,,No,Immutable billing address snapshot,"D-004,D-041"
-ORDER,placed_at,DateTime,,No,Order placement time,FR-ORDER
+ORDER,placed_at,DateTime,,No,Order placement time,FR-ORDER-001
 ORDER_ITEM,id,UUID,PK,No,Placed order-line identifier,D-035
 ORDER_ITEM,order_id,UUID,FK,No,Owning order,D-035
 ORDER_ITEM,perfume_variant_id,UUID,FK,No,Referenced sellable variant for history/inventory linkage,"D-014,D-035"
@@ -191,7 +191,7 @@ PAYMENT,provider_reference,String,,Yes,Provider payment reference only; no PAN/C
 PAYMENT,updated_at,DateTime,,No,Latest verified payment-state update time,"D-039,D-040"
 INVOICE,id,UUID,PK,No,Invoice record identifier,D-041
 INVOICE,order_id,UUID,"FK, UK",No,Successfully paid order represented by invoice,D-041
-INVOICE,invoice_number,String,UK,No,Unique digital invoice number,FR-ORDER
+INVOICE,invoice_number,String,UK,No,Unique digital invoice number,FR-ORDER-003
 INVOICE,total_snapshot,Decimal,,No,Invoice total based on immutable order snapshot,D-041
 INVOICE,payment_reference_snapshot,String,,Yes,Payment reference captured for immutable invoice output,D-041
 INVOICE,issued_at,DateTime,,No,Invoice issue time after successful payment,D-041
