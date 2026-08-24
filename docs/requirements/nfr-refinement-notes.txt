@@ -1,0 +1,16 @@
+NFR refinement notes
+
+This package updates the existing canonical NFR registry rather than creating a parallel
+requirements source.
+
+The original 33 source requirements are retained verbatim in the Source requirement
+column. The added measurable criteria are explicitly project-defined SRS refinements.
+
+The thresholds are intentionally capstone-scale:
+- 20 concurrent virtual users, not enterprise-scale load;
+- 5x the controlled seed volume rather than an invented production forecast;
+- staged availability/restore/DR acceptance windows rather than contractual SLAs;
+- WCAG 2.2 AA target where applicable plus automated/manual evidence;
+- exact-once commerce checks for the already-locked transaction semantics.
+
+No new D-number decision is introduced.
