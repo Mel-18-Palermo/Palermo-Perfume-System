@@ -1,0 +1,43 @@
+Palermo system-wide use-case diagram — SRS Section 6
+
+Purpose
+-------
+This is the report-level system use-case overview. It deliberately groups the detailed domain use
+cases already stored under docs/srs/use-cases/ so the diagram remains readable in the Final SRS.
+It does not replace the detailed use-case specifications or their FR/DER traceability.
+
+Canonical actors
+----------------
+Business actors:
+- Visitor
+- Customer
+- Administrator
+
+External systems:
+- Email delivery service
+- Stripe sandbox / payment service
+- AI service / API
+
+The baseline delivery simulator is internal to Palermo and is therefore shown inside the system
+boundary rather than as an external actor.
+
+Important scope boundaries
+--------------------------
+- Public catalogue/discovery and virtual-fragrance functionality is available to Visitor and Customer.
+- Visitors may use a temporary cart, but order placement requires an authenticated active Customer.
+- Wishlist is customer-specific.
+- Personalisation, layering, sample-set, quiz and public AI support flows may be used by Visitor or Customer where allowed by the detailed use cases.
+- Customer-specific account/order/delivery support requires authentication and ownership checks.
+- Administrative functions require server-authorised RBAC.
+- No real courier actor is included in the baseline.
+- AI is supporting only; Palermo remains authoritative for catalogue, payment, order, inventory and policy facts.
+
+Primary source documents
+------------------------
+- docs/requirements/actor-registry.md
+- docs/requirements/decision-register.md
+- docs/srs/use-cases/account-profile.md
+- docs/srs/use-cases/catalogue-discovery.md
+- docs/srs/use-cases/personalisation-ai-support.md
+- docs/srs/use-cases/cart-order-delivery.md
+- docs/srs/use-cases/admin-derived-modules.md
