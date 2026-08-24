@@ -1,51 +1,29 @@
-flowchart TB
-    Visitor["Visitor"]
-    Customer["Customer"]
-    Admin["Administrator"]
+flowchart LR
+    %% Palermo Perfume System — Final SRS System Architecture
+    %% High-level report view. Detailed implementation structure is intentionally omitted.
 
-    subgraph Client["Client boundary — Web browser"]
-        PublicUI["Public customer UI"]
-        CustomerUI["Authenticated customer UI"]
-        AdminUI["Administrator UI"]
-    end
+    Users["Visitor / Customer / Administrator"]
 
-    subgraph Palermo["Palermo application boundary — Next.js + TypeScript modular monolith"]
-        Entry["Next.js server entry points\nRoutes / server actions / application services"]
-        Domains["Domain modules\nAccount & Profile • Catalogue & Discovery • Personalisation & Quiz\nCart / Order / Payment • Delivery • AI Support • Admin / Reporting\nInventory • Reviews • Loyalty • Promotions"]
-        Prisma["Prisma data access"]
+    subgraph Palermo["Palermo Web Application — Next.js + TypeScript"]
+        UI["Web Interface"]
+        APP["Server / Domain Logic"]
+        ADAPTERS["Integration Adapters"]
+        PRISMA["Prisma Data Access"]
+        DELIVERY["Internal Delivery Simulator"]
 
-        subgraph Integrations["Integration adapters"]
-            StripeAdapter["Stripe adapter"]
-            EmailAdapter["Email adapter"]
-            AIAdapter["AI adapter"]
-            DeliveryAdapter["Delivery provider adapter"]
-        end
-
-        DeliverySimulator["Internal delivery simulator"]
+        UI --> APP
+        APP --> PRISMA
+        APP --> ADAPTERS
+        APP --> DELIVERY
     end
 
     DB[("Supabase PostgreSQL")]
-    Stripe["Stripe sandbox / payment service"]
-    Email["Email delivery service"]
-    AI["AI service / API"]
+    EMAIL["Email Delivery Service"]
+    STRIPE["Stripe Sandbox"]
+    AI["AI Service / API"]
 
-    Visitor -->|"HTTPS"| PublicUI
-    Customer -->|"HTTPS"| CustomerUI
-    Admin -->|"HTTPS"| AdminUI
-
-    PublicUI --> Entry
-    CustomerUI --> Entry
-    AdminUI --> Entry
-    Entry --> Domains
-    Domains --> Prisma
-    Prisma --> DB
-
-    Domains --> StripeAdapter
-    Domains --> EmailAdapter
-    Domains --> AIAdapter
-    Domains --> DeliveryAdapter
-
-    StripeAdapter --> Stripe
-    EmailAdapter --> Email
-    AIAdapter --> AI
-    DeliveryAdapter --> DeliverySimulator
+    Users <--> UI
+    PRISMA <--> DB
+    ADAPTERS <--> EMAIL
+    ADAPTERS <--> STRIPE
+    ADAPTERS <--> AI
