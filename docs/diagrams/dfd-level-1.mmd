@@ -1,0 +1,104 @@
+flowchart LR
+    %% Palermo Perfume System — DFD Level 1
+    %% Decomposes the Level 0 Palermo process into major logical processes and data stores.
+
+    Visitor["Visitor"]
+    Customer["Customer"]
+    Admin["Administrator"]
+
+    Email["Email delivery service"]
+    Stripe["Stripe sandbox / payment service"]
+    AI["AI service / API"]
+
+    subgraph Palermo["Palermo Perfume System"]
+        direction TB
+
+        P1(("1.0\nAccount & Profile Management"))
+        P2(("2.0\nCatalogue, Discovery & Virtual Fragrance"))
+        P3(("3.0\nPersonalisation, Quiz & AI Support"))
+        P4(("4.0\nCart, Order, Payment & Delivery"))
+        P5(("5.0\nCommunity, Loyalty & Referral"))
+        P6(("6.0\nAdministration & Operations"))
+
+        D1[("D1 Customer & Profile Data")]
+        D2[("D2 Catalogue & Fragrance Data")]
+        D3[("D3 Commerce & Fulfilment Data")]
+        D4[("D4 Inventory & Production Data")]
+        D5[("D5 Quiz, Recommendation & Support Data")]
+        D6[("D6 Community & Loyalty Data")]
+        D7[("D7 Admin, Promotion & Audit Data")]
+
+        DeliverySim["Internal delivery simulator"]
+    end
+
+    %% 1.0 Account & Profile Management
+    Visitor -->|"Registration details; verification/reset actions"| P1
+    P1 -->|"Registration/verification outcome"| Visitor
+    Customer -->|"Login/logout; profile, address and fragrance-preference changes; deactivation request"| P1
+    P1 -->|"Account/session outcome; profile and Fragrance Identity information"| Customer
+    P1 <--> |"Customer account, addresses, preferences, Fragrance Identity"| D1
+    P1 -->|"Verification/password-reset message request"| Email
+    Email -->|"Message delivery status"| P1
+
+    %% 2.0 Catalogue, Discovery & Virtual Fragrance
+    Visitor -->|"Browse/search/filter/compare/virtual-fragrance requests"| P2
+    Customer -->|"Browse/search/filter/compare/virtual-fragrance requests"| P2
+    P2 -->|"Catalogue results; comparisons; fragrance-wheel/note/performance/suitability views"| Visitor
+    P2 -->|"Catalogue results; comparisons; fragrance-wheel/note/performance/suitability views"| Customer
+    P2 <--> |"Perfumes, variants, notes, families, collections, suitability metadata"| D2
+    P2 -->|"Current sellable availability query"| D4
+    D4 -->|"Variant stock/availability information"| P2
+
+    %% 3.0 Personalisation, Quiz & AI Support
+    Visitor -->|"Customisation intent; layering/sample-set request; quiz responses; public support enquiry; feedback"| P3
+    Customer -->|"Customisation intent; layering/sample-set request; quiz/profile context; support enquiry; feedback"| P3
+    P3 -->|"Layering/sample guidance; recommendations; support response; feedback confirmation"| Visitor
+    P3 -->|"Layering/sample guidance; recommendations; support/order-support response; feedback confirmation"| Customer
+    P3 -->|"Catalogue candidate/context query"| D2
+    D2 -->|"Approved catalogue candidates/facts"| P3
+    P3 -->|"Approved customer/profile context query"| D1
+    D1 -->|"Minimised approved profile context"| P3
+    P3 <--> |"Quiz attempts, recommendation records, support conversations, feedback"| D5
+    P3 -->|"Minimised approved recommendation/support context"| AI
+    AI -->|"Recommendation/support output"| P3
+    P3 -->|"Own-order/support lookup"| D3
+    D3 -->|"Authoritative own-order/payment/delivery facts"| P3
+
+    %% 4.0 Cart, Order, Payment & Delivery
+    Visitor -->|"Temporary cart actions; promo-code submission"| P4
+    P4 -->|"Validated cart state and totals; authentication requirement for checkout"| Visitor
+    Customer -->|"Cart/checkout data; delivery selection; order placement; payment action; cancellation/tracking request"| P4
+    P4 -->|"Validated cart/checkout result; order/payment status; invoice; tracking/delivery confirmation"| Customer
+    P4 -->|"Variant/pricing/customisation query"| D2
+    D2 -->|"Authoritative variant/pricing/customisation data"| P4
+    P4 <--> |"Cart, order, payment reference, invoice and shipment records"| D3
+    P4 <--> |"Reservation, stock balance and inventory movement"| D4
+    P4 -->|"Promotion validation query"| D7
+    D7 -->|"Current promotion rules/status"| P4
+    P4 -->|"Payment initiation / verification request"| Stripe
+    Stripe -->|"Verified payment result / provider reference"| P4
+    P4 -->|"Shipment create/status transition request"| DeliverySim
+    DeliverySim -->|"Tracking reference / controlled delivery status"| P4
+
+    %% 5.0 Community, Loyalty & Referral
+    Customer -->|"Review submission; loyalty redemption/use; subscription opt-in/out; referral action"| P5
+    P5 -->|"Review result; loyalty balance/result; subscription/referral information"| Customer
+    P5 -->|"Purchased-item eligibility query"| D3
+    D3 -->|"Qualifying purchase/order facts"| P5
+    P5 <--> |"Reviews, loyalty transactions, subscription and referral records"| D6
+
+    %% 6.0 Administration & Operations
+    Admin -->|"Catalogue, inventory/batch, promotion/content, moderation, RBAC, report, audit and backup actions"| P6
+    P6 -->|"Management confirmations; inventory/report/moderation/audit/backup results"| Admin
+    P6 <--> |"Catalogue and classification management"| D2
+    P6 <--> |"Inventory balances, movements and production batches"| D4
+    P6 <--> |"Review moderation and loyalty operational data"| D6
+    P6 <--> |"Admin accounts/RBAC, promotions, promotional content, audit and backup metadata"| D7
+    P6 -->|"Reporting query"| D1
+    D1 -->|"Aggregated customer/preference data"| P6
+    P6 -->|"Reporting query"| D3
+    D3 -->|"Sales/order/payment/fulfilment data"| P6
+    P6 -->|"Reporting query"| D5
+    D5 -->|"Quiz/recommendation/support metrics"| P6
+    P6 -->|"AI promotional-video generation context"| AI
+    AI -->|"Generated promotional-video output"| P6
