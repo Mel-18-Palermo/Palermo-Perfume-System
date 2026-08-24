@@ -12,7 +12,7 @@ classDiagram
         }
 
         class Address {
-            <<value/entity>>
+            <<entity>>
             +UUID id
             +AddressType type
             +String recipientName
@@ -55,7 +55,7 @@ classDiagram
         }
 
         class Perfume {
-            <<aggregate root>>
+            <<aggregate>>
             +UUID id
             +String name
             +String description
@@ -87,7 +87,7 @@ classDiagram
 
     namespace Commerce {
         class Cart {
-            <<aggregate root>>
+            <<aggregate>>
             +UUID id
             +String visitorSessionKey
             +String status
@@ -107,7 +107,7 @@ classDiagram
         }
 
         class Order {
-            <<aggregate root>>
+            <<aggregate>>
             +UUID id
             +String orderStatus
             +Decimal subtotal
@@ -186,7 +186,7 @@ classDiagram
         }
 
         class InventoryMovement {
-            <<ledger entry>>
+            <<ledger>>
             +UUID id
             +Integer quantityDelta
             +String reason
@@ -222,7 +222,7 @@ classDiagram
         }
 
         class SupportConversation {
-            <<aggregate root>>
+            <<aggregate>>
             +UUID id
             +String visitorSessionKey
             +String status
@@ -263,7 +263,7 @@ classDiagram
         }
 
         class AuditEvent {
-            <<immutable record>>
+            <<record>>
             +UUID id
             +String actorType
             +String action
@@ -276,7 +276,7 @@ classDiagram
 
     namespace Application {
         class CheckoutService {
-            <<application service>>
+            <<service>>
             +revalidateCheckout()
             +reserveInventory()
             +createOrder()
@@ -286,14 +286,14 @@ classDiagram
         }
 
         class RecommendationService {
-            <<application service>>
+            <<service>>
             +buildApprovedContext()
             +requestRecommendations()
             +validateRecommendationOutput()
         }
 
         class SupportService {
-            <<application service>>
+            <<service>>
             +handlePublicSupport()
             +handleCustomerSupport()
             +loadAuthoritativeOrderFacts()
@@ -326,7 +326,7 @@ classDiagram
         }
 
         class InternalDeliverySimulator {
-            <<internal adapter>>
+            <<adapter>>
         }
     }
 
