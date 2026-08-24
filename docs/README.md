@@ -8,7 +8,7 @@ This directory contains the canonical technical and project documentation for th
 - `docs/diagrams/system-architecture.mmd` is the final report architecture source.
 - Final report diagrams that require manual page composition or exact notation may use editable draw.io source under `docs/diagrams/report-src/`.
 - Final report diagram exports belong under `docs/diagrams/report/` as SVG.
-- Detailed Mermaid diagrams may remain as technical/reference material but are not automatically report artefacts.
+- The detailed logical ERD is maintained under `requirements/` beside the data dictionary and data-model notes.
 - Generated Word/PDF submission files do not replace the editable repository sources.
 
 ## Structure

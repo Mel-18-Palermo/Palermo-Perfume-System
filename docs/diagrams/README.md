@@ -1,10 +1,10 @@
 # Final SRS diagram workspace
 
-## Final report artefacts
+This directory contains only the report-facing diagram workspace.
 
-The Final SRS uses exactly eight system/design diagrams:
+## Final report diagrams
 
-1. `system-architecture.mmd` — System Architecture (already final)
+1. `system-architecture.mmd` — final System Architecture source
 2. `report/use-case-diagram.svg`
 3. `report/dfd-level-0.svg`
 4. `report/dfd-level-1.svg`
@@ -17,27 +17,17 @@ Editable manual sources for items 2–8 belong in:
 
 `report-src/*.drawio`
 
-## Current technical/reference sources
+## Ownership
 
-Until the delegated report drawings are approved, the existing Mermaid sources remain available as technical references:
+- System Architecture is maintained as Mermaid in this directory.
+- Use Case, DFD Level 0, DFD Level 1, DFD Level 2, Sequence, report ERD and Class Diagram are being produced manually under issues #195–#201.
+- Their editable `.drawio` sources belong in `report-src/`.
+- Their report-ready SVG exports belong in `report/`.
 
-- `use-case-diagram.mmd`
-- `dfd-level-0.mmd`
-- `dfd-level-1.mmd`
-- `dfd-level-2-commerce.mmd`
-- `sequence-checkout-payment.mmd`
-- `erd-core.mmd`
-- `erd-logical-detailed.mmd`
-- `class-diagram.mmd`
+## Detailed data-model reference
 
-They are not the final report renders unless explicitly selected.
+The detailed 53-entity logical ERD is not a report-facing diagram and is stored at:
 
-## Cleanup policy
+`docs/requirements/erd-logical-detailed.mmd`
 
-The broken generated Gane & Sarson SVG attempts and temporary diagram note files have been removed.
-
-After all seven delegated manual diagram PRs merge:
-- keep the seven `.drawio` files and seven report `.svg` exports;
-- keep `system-architecture.mmd`;
-- keep `erd-logical-detailed.mmd` only as a technical/appendix reference if still useful;
-- remove or move obsolete report-unfriendly Mermaid sources so there is one obvious report artefact per diagram.
+It supports the canonical data dictionary and data-model documentation.
