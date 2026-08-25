@@ -1,191 +1,191 @@
 <mxfile host="app.diagrams.net">
   <diagram name="9 Sequence Diagram" id="rRNsZeefo2sdwvCA2jnQ">
-    <mxGraphModel dx="1534" dy="852" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1157" dy="910" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="6qjR2CaTXifLgiMhj2cK-2" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=15;fontStyle=1;fontColor=#000000;" value="9  Sequence Diagram — Checkout / Payment Journey" vertex="1">
-          <mxGeometry height="20" width="520" x="40" y="40" as="geometry" />
+          <mxGeometry height="20" width="520" x="40" y="110" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-3" parent="1" style="text;html=1;align=right;verticalAlign=middle;fontSize=10;fontColor=#000000;" value="solid arrow = call / message · dashed arrow = return · alt = conditional branch" vertex="1">
-          <mxGeometry height="20" width="449" x="720" y="40" as="geometry" />
+          <mxGeometry height="20" width="449" x="720" y="110" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-4" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=42;fontSize=12;fontStyle=1;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;" value="Customer" vertex="1">
-          <mxGeometry height="768" width="120" x="40" y="68" as="geometry" />
+          <mxGeometry height="768" width="120" x="40" y="138" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-5" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=42;fontSize=12;fontStyle=1;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;" value="Palermo&lt;br&gt;Web UI" vertex="1">
-          <mxGeometry height="768" width="124" x="198" y="68" as="geometry" />
+          <mxGeometry height="768" width="124" x="198" y="138" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-6" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=42;fontSize=12;fontStyle=1;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;" value="Palermo&lt;br&gt;Application" vertex="1">
-          <mxGeometry height="768" width="134" x="403" y="68" as="geometry" />
+          <mxGeometry height="768" width="134" x="403" y="138" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-7" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=42;fontSize=12;fontStyle=1;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;" value="Palermo&lt;br&gt;Database" vertex="1">
-          <mxGeometry height="768" width="124" x="678" y="68" as="geometry" />
+          <mxGeometry height="768" width="124" x="678" y="138" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-8" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=42;fontSize=12;fontStyle=1;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;" value="Stripe" vertex="1">
-          <mxGeometry height="768" width="104" x="868" y="68" as="geometry" />
+          <mxGeometry height="768" width="104" x="868" y="138" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-9" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=42;fontSize=12;fontStyle=1;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;" value="Internal Delivery&lt;br&gt;Simulator" vertex="1">
-          <mxGeometry height="768" width="160" x="1010" y="68" as="geometry" />
+          <mxGeometry height="768" width="160" x="1010" y="138" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-10" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="1. start checkout">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="100" y="136" as="sourcePoint" />
-            <mxPoint x="260" y="136" as="targetPoint" />
+            <mxPoint x="100" y="206" as="sourcePoint" />
+            <mxPoint x="260" y="206" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-11" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="2. submit checkout">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="260" y="161" as="sourcePoint" />
-            <mxPoint x="470" y="161" as="targetPoint" />
+            <mxPoint x="260" y="231" as="sourcePoint" />
+            <mxPoint x="470" y="231" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-12" edge="1" parent="1" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;endFill=1;align=left;verticalAlign=middle;spacingLeft=12;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=none;" value="3. verify authenticated&lt;br&gt;ACTIVE Customer">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="532" y="184" />
-              <mxPoint x="532" y="206" />
+              <mxPoint x="532" y="254" />
+              <mxPoint x="532" y="276" />
             </Array>
-            <mxPoint x="470" y="184" as="sourcePoint" />
-            <mxPoint x="470" y="206" as="targetPoint" />
+            <mxPoint x="470" y="254" as="sourcePoint" />
+            <mxPoint x="470" y="276" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-13" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="4. revalidate cart, price, promo &amp;amp; stock">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="231" as="sourcePoint" />
-            <mxPoint x="740" y="231" as="targetPoint" />
+            <mxPoint x="470" y="301" as="sourcePoint" />
+            <mxPoint x="740" y="301" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-14" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=open;endFill=0;dashed=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="current cart / price / promo / stock">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="740" y="256" as="sourcePoint" />
-            <mxPoint x="470" y="256" as="targetPoint" />
+            <mxPoint x="740" y="326" as="sourcePoint" />
+            <mxPoint x="470" y="326" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-15" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="5. create bounded inventory reservation">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="281" as="sourcePoint" />
-            <mxPoint x="740" y="281" as="targetPoint" />
+            <mxPoint x="470" y="351" as="sourcePoint" />
+            <mxPoint x="740" y="351" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-16" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=open;endFill=0;dashed=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="reservation confirmed">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="740" y="306" as="sourcePoint" />
-            <mxPoint x="470" y="306" as="targetPoint" />
+            <mxPoint x="740" y="376" as="sourcePoint" />
+            <mxPoint x="470" y="376" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-17" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="6. create order &amp;amp; payment snapshot">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="331" as="sourcePoint" />
-            <mxPoint x="740" y="331" as="targetPoint" />
+            <mxPoint x="470" y="401" as="sourcePoint" />
+            <mxPoint x="740" y="401" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-18" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=open;endFill=0;dashed=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="snapshot stored">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="740" y="356" as="sourcePoint" />
-            <mxPoint x="470" y="356" as="targetPoint" />
+            <mxPoint x="740" y="426" as="sourcePoint" />
+            <mxPoint x="470" y="426" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-19" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="7. complete payment (provider-controlled)">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="100" y="383" as="sourcePoint" />
-            <mxPoint x="920" y="383" as="targetPoint" />
+            <mxPoint x="100" y="453" as="sourcePoint" />
+            <mxPoint x="920" y="453" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-20" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="8. payment result (verified server-side)">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="920" y="408" as="sourcePoint" />
-            <mxPoint x="470" y="408" as="targetPoint" />
+            <mxPoint x="920" y="478" as="sourcePoint" />
+            <mxPoint x="470" y="478" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-21" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFFFFF;strokeColor=#000000;align=left;verticalAlign=middle;spacingLeft=8;fontSize=10;fontColor=#000000;" value="Duplicate checkout / provider result → existing transaction outcome is reused;&lt;br&gt;no duplicate order, invoice or inventory effect." vertex="1">
-          <mxGeometry height="40" width="440" x="40" y="424" as="geometry" />
+          <mxGeometry height="40" width="440" x="40" y="494" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-22" parent="1" style="shape=umlFrame;whiteSpace=wrap;html=1;width=46;height=22;fillColor=none;strokeColor=#000000;fontSize=11;fontStyle=1;fontColor=#000000;" value="alt" vertex="1">
-          <mxGeometry height="354" width="1130" x="40" y="474" as="geometry" />
+          <mxGeometry height="354" width="1130" x="40" y="544" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-23" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#000000;labelBackgroundColor=#FFFFFF;" value="[ payment successful ]" vertex="1">
-          <mxGeometry height="16" width="130" x="96" y="478" as="geometry" />
+          <mxGeometry height="16" width="130" x="96" y="548" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-24" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="9. record successful payment">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="512" as="sourcePoint" />
-            <mxPoint x="740" y="512" as="targetPoint" />
+            <mxPoint x="470" y="582" as="sourcePoint" />
+            <mxPoint x="740" y="582" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-25" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="10. commit inventory &amp;amp; movement (exactly once)">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="537" as="sourcePoint" />
-            <mxPoint x="740" y="537" as="targetPoint" />
+            <mxPoint x="470" y="607" as="sourcePoint" />
+            <mxPoint x="740" y="607" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-26" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="11. confirm order &amp;amp; invoice (exactly once)">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="562" as="sourcePoint" />
-            <mxPoint x="740" y="562" as="targetPoint" />
+            <mxPoint x="470" y="632" as="sourcePoint" />
+            <mxPoint x="740" y="632" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-27" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=open;endFill=0;dashed=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="order confirmed + invoice">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="740" y="587" as="sourcePoint" />
-            <mxPoint x="470" y="587" as="targetPoint" />
+            <mxPoint x="740" y="657" as="sourcePoint" />
+            <mxPoint x="470" y="657" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-28" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="12. create one simulated shipment">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="612" as="sourcePoint" />
-            <mxPoint x="1090" y="612" as="targetPoint" />
+            <mxPoint x="470" y="682" as="sourcePoint" />
+            <mxPoint x="1090" y="682" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-29" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=open;endFill=0;dashed=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="shipment reference">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="1090" y="637" as="sourcePoint" />
-            <mxPoint x="470" y="637" as="targetPoint" />
+            <mxPoint x="1090" y="707" as="sourcePoint" />
+            <mxPoint x="470" y="707" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-30" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=open;endFill=0;dashed=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="checkout complete">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="662" as="sourcePoint" />
-            <mxPoint x="260" y="662" as="targetPoint" />
+            <mxPoint x="470" y="732" as="sourcePoint" />
+            <mxPoint x="260" y="732" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-31" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="13. order confirmation / invoice / tracking">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="260" y="687" as="sourcePoint" />
-            <mxPoint x="100" y="687" as="targetPoint" />
+            <mxPoint x="260" y="757" as="sourcePoint" />
+            <mxPoint x="100" y="757" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-32" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=none;dashed=1;strokeColor=#000000;">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="40" y="702" as="sourcePoint" />
-            <mxPoint x="1170" y="702" as="targetPoint" />
+            <mxPoint x="40" y="772" as="sourcePoint" />
+            <mxPoint x="1170" y="772" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-33" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#000000;labelBackgroundColor=#FFFFFF;" value="[ payment failed / reservation expired ]" vertex="1">
-          <mxGeometry height="16" width="210" x="50" y="706" as="geometry" />
+          <mxGeometry height="16" width="210" x="50" y="776" as="geometry" />
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-34" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="record non-successful outcome">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="740" as="sourcePoint" />
-            <mxPoint x="740" y="740" as="targetPoint" />
+            <mxPoint x="470" y="810" as="sourcePoint" />
+            <mxPoint x="740" y="810" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-35" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="release reservation (safe)">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="765" as="sourcePoint" />
-            <mxPoint x="740" y="765" as="targetPoint" />
+            <mxPoint x="470" y="835" as="sourcePoint" />
+            <mxPoint x="740" y="835" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-36" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=open;endFill=0;dashed=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="failure / retry state">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="470" y="790" as="sourcePoint" />
-            <mxPoint x="260" y="790" as="targetPoint" />
+            <mxPoint x="470" y="860" as="sourcePoint" />
+            <mxPoint x="260" y="860" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="6qjR2CaTXifLgiMhj2cK-37" edge="1" parent="1" style="html=1;edgeStyle=none;rounded=0;endArrow=block;endFill=1;verticalAlign=bottom;strokeColor=#000000;fontColor=#000000;fontSize=11;labelBackgroundColor=#FFFFFF;" value="show failure / retry state">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="260" y="815" as="sourcePoint" />
-            <mxPoint x="100" y="815" as="targetPoint" />
+            <mxPoint x="260" y="885" as="sourcePoint" />
+            <mxPoint x="100" y="885" as="targetPoint" />
           </mxGeometry>
         </mxCell>
       </root>
