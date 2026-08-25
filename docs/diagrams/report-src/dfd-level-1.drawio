@@ -121,14 +121,14 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f2_d2" value="Read perfumes &amp; notes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p2" target="ds_d2" parent="1">
+        <mxCell id="f2_d2" value="Read perfumes &amp; notes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" edge="1" source="p2" target="ds_d2" parent="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="f2_d4" value="Check stock availability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="ds_d4" target="p2" parent="1">
+        <mxCell id="f2_d4" value="Check stock availability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.2;exitDx=0;exitDy=0;entryX=1;entryY=0.85;entryDx=0;entryDy=0;" edge="1" source="ds_d4" target="p2" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="820" y="514" />
-              <mxPoint x="820" y="321" />
+              <mxPoint x="820" y="509" />
+              <mxPoint x="820" y="325" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -150,11 +150,11 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f3_d1" value="Min profile context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.2;entryDx=0;entryDy=0;" edge="1" source="ds_d1" target="p3" parent="1">
+        <mxCell id="f3_d1" value="Min profile context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.15;entryDx=0;entryDy=0;" edge="1" source="ds_d1" target="p3" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="880" y="146" />
-              <mxPoint x="880" y="449" />
+              <mxPoint x="880" y="445" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -166,18 +166,18 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f3_d3" value="Order fact lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d3" parent="1">
+        <mxCell id="f3_d3" value="Order fact lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.55;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d3" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="720" y="470" />
-              <mxPoint x="720" y="397" />
+              <mxPoint x="710" y="474" />
+              <mxPoint x="710" y="397" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f3_d5_w" value="Quiz/support write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d5" parent="1">
+        <mxCell id="f3_d5_w" value="Quiz/support write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d5" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="760" y="484" />
+              <mxPoint x="760" y="488" />
               <mxPoint x="760" y="644" />
             </Array>
           </mxGeometry>
@@ -343,28 +343,28 @@
           </mxGeometry>
         </mxCell>
 
-        <!-- Process 6.0 Reporting Flows -->
+        <!-- Process 6.0 Reporting Flows (Cleanly spaced off D-box boundaries) -->
         <mxCell id="f6_d1_rep" value="Customer reporting (D1)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.95;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds_d1" target="p6" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="920" y="153" />
-              <mxPoint x="920" y="987" />
+              <mxPoint x="910" y="153" />
+              <mxPoint x="910" y="987" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="f6_d3_rep" value="Sales/order metrics (D3)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.95;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" source="ds_d3" target="p6" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="860" y="413" />
-              <mxPoint x="860" y="998" />
+              <mxPoint x="850" y="413" />
+              <mxPoint x="850" y="998" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="f6_d5_rep" value="Quiz/support metrics (D5)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.95;exitDx=0;exitDy=0;entryX=1;entryY=0.9;entryDx=0;entryDy=0;" edge="1" source="ds_d5" target="p6" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="840" y="673" />
-              <mxPoint x="840" y="1008" />
+              <mxPoint x="830" y="673" />
+              <mxPoint x="830" y="1008" />
             </Array>
           </mxGeometry>
         </mxCell>
