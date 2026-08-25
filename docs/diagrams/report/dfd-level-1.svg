@@ -1,239 +1,288 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1900 1150" width="100%" height="100%" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1350" width="100%" height="100%" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#333333" />
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1f2937" />
     </marker>
     <style>
-      .entity { fill: #ffffff; stroke: #111827; stroke-width: 2; font-weight: bold; font-size: 14px; }
-      .process-bg { fill: #f9fafb; stroke: #111827; stroke-width: 2; rx: 10; ry: 10; }
-      .process-line { stroke: #111827; stroke-width: 1.5; }
-      .process-num { font-size: 13px; font-weight: bold; fill: #111827; }
-      .process-title { font-size: 12px; font-weight: 600; fill: #111827; }
-      .datastore-line { stroke: #111827; stroke-width: 2; fill: none; }
-      .datastore-id { font-weight: bold; font-size: 13px; fill: #111827; }
-      .datastore-name { font-size: 12px; font-weight: 500; fill: #111827; }
-      .flow-line { stroke: #333333; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-      .flow-text { font-size: 10px; fill: #4b5563; font-weight: 500; text-anchor: middle; }
+      .entity { fill: #ffffff; stroke: #111827; stroke-width: 2.5; font-weight: bold; font-size: 16px; }
+      .process-bg { fill: #f8fafc; stroke: #111827; stroke-width: 2.5; rx: 12; ry: 12; }
+      .process-line { stroke: #111827; stroke-width: 2; }
+      .process-num { font-size: 14px; font-weight: bold; fill: #111827; }
+      .process-title { font-size: 13.5px; font-weight: 600; fill: #111827; }
+      .datastore-line { stroke: #111827; stroke-width: 2.5; fill: none; }
+      .datastore-id { font-weight: bold; font-size: 14px; fill: #111827; }
+      .datastore-name { font-size: 13px; font-weight: 600; fill: #111827; }
+      .flow-line { stroke: #374151; stroke-width: 1.8; fill: none; marker-end: url(#arrow); }
+      .flow-text { font-size: 12px; fill: #1f2937; font-weight: 600; text-anchor: middle; background-color: #ffffff; }
     </style>
   </defs>
 
-  <text x="40" y="40" font-size="20" font-weight="bold" fill="#111827">Palermo Perfume System — DFD Level 1 (Gane &amp; Sarson Notation)</text>
+  <text x="40" y="40" font-size="24" font-weight="bold" fill="#111827">Palermo Perfume System — DFD Level 1 (Gane &amp; Sarson Notation)</text>
 
-  <!-- External Entities (Left) -->
+  <!-- External Entities -->
   <g id="entities">
-    <rect x="40" y="240" width="130" height="60" class="entity" />
-    <text x="105" y="275" text-anchor="middle" dominant-baseline="middle">Visitor</text>
+    <rect x="40" y="220" width="140" height="70" class="entity" />
+    <text x="110" y="260" text-anchor="middle" dominant-baseline="middle">Visitor</text>
 
-    <rect x="40" y="560" width="130" height="60" class="entity" />
-    <text x="105" y="595" text-anchor="middle" dominant-baseline="middle">Customer</text>
+    <rect x="40" y="580" width="140" height="70" class="entity" />
+    <text x="110" y="620" text-anchor="middle" dominant-baseline="middle">Customer</text>
 
-    <rect x="1650" y="80" width="160" height="60" class="entity" />
-    <text x="1730" y="115" text-anchor="middle" dominant-baseline="middle">Email delivery service</text>
+    <rect x="2100" y="80" width="170" height="65" class="entity" />
+    <text x="2185" y="117" text-anchor="middle" dominant-baseline="middle">Email Service</text>
 
-    <rect x="1650" y="435" width="160" height="60" class="entity" />
-    <text x="1730" y="470" text-anchor="middle" dominant-baseline="middle">AI service / API</text>
+    <rect x="2100" y="440" width="170" height="65" class="entity" />
+    <text x="2185" y="477" text-anchor="middle" dominant-baseline="middle">AI Service</text>
 
-    <rect x="1650" y="605" width="160" height="60" class="entity" />
-    <text x="1730" y="640" text-anchor="middle" dominant-baseline="middle">Stripe payment service</text>
+    <rect x="2100" y="640" width="170" height="65" class="entity" />
+    <text x="2185" y="677" text-anchor="middle" dominant-baseline="middle">Stripe</text>
 
-    <rect x="1650" y="945" width="160" height="60" class="entity" />
-    <text x="1730" y="980" text-anchor="middle" dominant-baseline="middle">Administrator</text>
+    <rect x="2100" y="1020" width="170" height="65" class="entity" />
+    <text x="2185" y="1057" text-anchor="middle" dominant-baseline="middle">Administrator</text>
   </g>
 
   <!-- 6 Processes -->
   <g id="processes">
-    <rect x="320" y="95" width="260" height="70" class="process-bg" />
-    <line x1="320" y1="125" x2="580" y2="125" class="process-line" />
-    <text x="450" y="115" text-anchor="middle" class="process-num">1.0</text>
-    <text x="450" y="148" text-anchor="middle" class="process-title">Account &amp; Profile Management</text>
+    <rect x="380" y="80" width="280" height="75" class="process-bg" />
+    <line x1="380" y1="110" x2="660" y2="110" class="process-line" />
+    <text x="520" y="100" text-anchor="middle" class="process-num">1.0</text>
+    <text x="520" y="136" text-anchor="middle" class="process-title">Account &amp; Profile Management</text>
 
-    <rect x="320" y="265" width="260" height="70" class="process-bg" />
-    <line x1="320" y1="295" x2="580" y2="295" class="process-line" />
-    <text x="450" y="285" text-anchor="middle" class="process-num">2.0</text>
-    <text x="450" y="318" text-anchor="middle" class="process-title">Catalogue &amp; Discovery</text>
+    <rect x="380" y="270" width="280" height="75" class="process-bg" />
+    <line x1="380" y1="300" x2="660" y2="300" class="process-line" />
+    <text x="520" y="290" text-anchor="middle" class="process-num">2.0</text>
+    <text x="520" y="326" text-anchor="middle" class="process-title">Catalogue &amp; Discovery</text>
 
-    <rect x="320" y="435" width="260" height="70" class="process-bg" />
-    <line x1="320" y1="465" x2="580" y2="465" class="process-line" />
-    <text x="450" y="455" text-anchor="middle" class="process-num">3.0</text>
-    <text x="450" y="488" text-anchor="middle" class="process-title">Personalisation &amp; AI Support</text>
+    <rect x="380" y="460" width="280" height="75" class="process-bg" />
+    <line x1="380" y1="490" x2="660" y2="490" class="process-line" />
+    <text x="520" y="480" text-anchor="middle" class="process-num">3.0</text>
+    <text x="520" y="516" text-anchor="middle" class="process-title">Personalisation &amp; AI Support</text>
 
-    <rect x="320" y="605" width="260" height="70" class="process-bg" />
-    <line x1="320" y1="635" x2="580" y2="635" class="process-line" />
-    <text x="450" y="625" text-anchor="middle" class="process-num">4.0</text>
-    <text x="450" y="658" text-anchor="middle" class="process-title">Cart, Order, Payment &amp; Delivery</text>
+    <rect x="380" y="650" width="280" height="75" class="process-bg" />
+    <line x1="380" y1="680" x2="660" y2="680" class="process-line" />
+    <text x="520" y="670" text-anchor="middle" class="process-num">4.0</text>
+    <text x="520" y="706" text-anchor="middle" class="process-title">Cart, Order, Payment &amp; Delivery</text>
 
-    <rect x="320" y="775" width="260" height="70" class="process-bg" />
-    <line x1="320" y1="805" x2="580" y2="805" class="process-line" />
-    <text x="450" y="795" text-anchor="middle" class="process-num">5.0</text>
-    <text x="450" y="828" text-anchor="middle" class="process-title">Community, Loyalty &amp; Referral</text>
+    <rect x="380" y="840" width="280" height="75" class="process-bg" />
+    <line x1="380" y1="870" x2="660" y2="870" class="process-line" />
+    <text x="520" y="860" text-anchor="middle" class="process-num">5.0</text>
+    <text x="520" y="896" text-anchor="middle" class="process-title">Community, Loyalty &amp; Referral</text>
 
-    <rect x="320" y="945" width="260" height="70" class="process-bg" />
-    <line x1="320" y1="975" x2="580" y2="975" class="process-line" />
-    <text x="450" y="965" text-anchor="middle" class="process-num">6.0</text>
-    <text x="450" y="998" text-anchor="middle" class="process-title">Administration &amp; Operations</text>
+    <rect x="380" y="1030" width="280" height="75" class="process-bg" />
+    <line x1="380" y1="1060" x2="660" y2="1060" class="process-line" />
+    <text x="520" y="1050" text-anchor="middle" class="process-num">6.0</text>
+    <text x="520" y="1086" text-anchor="middle" class="process-title">Administration &amp; Operations</text>
   </g>
 
   <!-- 7 Data Stores -->
   <g id="datastores">
-    <path d="M 1300 110 L 960 110 L 960 155 L 1300 155" class="datastore-line" />
-    <line x1="1010" y1="110" x2="1010" y2="155" class="datastore-line" />
-    <text x="985" y="138" text-anchor="middle" class="datastore-id">D1</text>
-    <text x="1025" y="138" class="datastore-name">Customer &amp; Profile Data</text>
+    <path d="M 1520 95 L 1150 95 L 1150 145 L 1520 145" class="datastore-line" />
+    <line x1="1205" y1="95" x2="1205" y2="145" class="datastore-line" />
+    <text x="1177" y="125" text-anchor="middle" class="datastore-id">D1</text>
+    <text x="1225" y="125" class="datastore-name">Customer &amp; Profile Data</text>
 
-    <path d="M 1300 240 L 960 240 L 960 285 L 1300 285" class="datastore-line" />
-    <line x1="1010" y1="240" x2="1010" y2="285" class="datastore-line" />
-    <text x="985" y="268" text-anchor="middle" class="datastore-id">D2</text>
-    <text x="1025" y="268" class="datastore-name">Catalogue &amp; Fragrance Data</text>
+    <path d="M 1520 240 L 1150 240 L 1150 290 L 1520 290" class="datastore-line" />
+    <line x1="1205" y1="240" x2="1205" y2="290" class="datastore-line" />
+    <text x="1177" y="270" text-anchor="middle" class="datastore-id">D2</text>
+    <text x="1225" y="270" class="datastore-name">Catalogue &amp; Fragrance Data</text>
 
-    <path d="M 1300 370 L 960 370 L 960 415 L 1300 415" class="datastore-line" />
-    <line x1="1010" y1="370" x2="1010" y2="415" class="datastore-line" />
-    <text x="985" y="398" text-anchor="middle" class="datastore-id">D3</text>
-    <text x="1025" y="398" class="datastore-name">Commerce &amp; Fulfilment Data</text>
+    <path d="M 1520 385 L 1150 385 L 1150 435 L 1520 435" class="datastore-line" />
+    <line x1="1205" y1="385" x2="1205" y2="435" class="datastore-line" />
+    <text x="1177" y="415" text-anchor="middle" class="datastore-id">D3</text>
+    <text x="1225" y="415" class="datastore-name">Commerce &amp; Fulfilment Data</text>
 
-    <path d="M 1300 500 L 960 500 L 960 545 L 1300 545" class="datastore-line" />
-    <line x1="1010" y1="500" x2="1010" y2="545" class="datastore-line" />
-    <text x="985" y="528" text-anchor="middle" class="datastore-id">D4</text>
-    <text x="1025" y="528" class="datastore-name">Inventory &amp; Production Data</text>
+    <path d="M 1520 530 L 1150 530 L 1150 580 L 1520 580" class="datastore-line" />
+    <line x1="1205" y1="530" x2="1205" y2="580" class="datastore-line" />
+    <text x="1177" y="560" text-anchor="middle" class="datastore-id">D4</text>
+    <text x="1225" y="560" class="datastore-name">Inventory &amp; Production Data</text>
 
-    <path d="M 1300 630 L 960 630 L 960 675 L 1300 675" class="datastore-line" />
-    <line x1="1010" y1="630" x2="1010" y2="675" class="datastore-line" />
-    <text x="985" y="658" text-anchor="middle" class="datastore-id">D5</text>
-    <text x="1025" y="658" class="datastore-name">Quiz, Recommendation &amp; Support Data</text>
+    <path d="M 1520 675 L 1150 675 L 1150 725 L 1520 725" class="datastore-line" />
+    <line x1="1205" y1="675" x2="1205" y2="725" class="datastore-line" />
+    <text x="1177" y="705" text-anchor="middle" class="datastore-id">D5</text>
+    <text x="1225" y="705" class="datastore-name">Quiz, Recommendation &amp; Support Data</text>
 
-    <path d="M 1300 760 L 960 760 L 960 805 L 1300 805" class="datastore-line" />
-    <line x1="1010" y1="760" x2="1010" y2="805" class="datastore-line" />
-    <text x="985" y="788" text-anchor="middle" class="datastore-id">D6</text>
-    <text x="1025" y="788" class="datastore-name">Community &amp; Loyalty Data</text>
+    <path d="M 1520 820 L 1150 820 L 1150 870 L 1520 870" class="datastore-line" />
+    <line x1="1205" y1="820" x2="1205" y2="870" class="datastore-line" />
+    <text x="1177" y="850" text-anchor="middle" class="datastore-id">D6</text>
+    <text x="1225" y="850" class="datastore-name">Community &amp; Loyalty Data</text>
 
-    <path d="M 1300 890 L 960 890 L 960 935 L 1300 935" class="datastore-line" />
-    <line x1="1010" y1="890" x2="1010" y2="935" class="datastore-line" />
-    <text x="985" y="918" text-anchor="middle" class="datastore-id">D7</text>
-    <text x="1025" y="918" class="datastore-name">Admin, Promotion &amp; Audit Data</text>
+    <path d="M 1520 965 L 1150 965 L 1150 1015 L 1520 1015" class="datastore-line" />
+    <line x1="1205" y1="965" x2="1205" y2="1015" class="datastore-line" />
+    <text x="1177" y="995" text-anchor="middle" class="datastore-id">D7</text>
+    <text x="1225" y="995" class="datastore-name">Admin, Promotion &amp; Audit Data</text>
   </g>
 
   <!-- Connectors -->
   <g id="connectors">
     <!-- P1 Flows -->
-    <path d="M 170 250 L 220 250 L 220 116 L 312 116" class="flow-line" />
-    <text x="220" y="180" class="flow-text">Registration &amp; verification</text>
+    <path d="M 180 235 L 230 235 L 230 95 L 372 95" class="flow-line" />
+    <text x="230" y="80" class="flow-text">Registration &amp; credentials</text>
 
-    <path d="M 170 575 L 200 575 L 200 144 L 312 144" class="flow-line" />
-    <text x="200" y="360" class="flow-text">Profile &amp; session</text>
+    <path d="M 380 110 L 250 110 L 250 248 L 188 248" class="flow-line" />
+    <text x="250" y="170" class="flow-text">Auth token &amp; account status</text>
 
-    <path d="M 580 120 L 952 120" class="flow-line" />
-    <text x="770" y="112" class="flow-text">Customer/profile write</text>
+    <path d="M 180 600 L 210 600 L 210 125 L 372 125" class="flow-line" />
+    <text x="210" y="360" class="flow-text">Profile updates &amp; login</text>
 
-    <path d="M 960 140 L 588 140" class="flow-line" />
-    <text x="770" y="152" class="flow-text">Account &amp; identity lookup</text>
+    <path d="M 380 140 L 190 140 L 190 622 L 188 622" class="flow-line" />
+    <text x="190" y="380" class="flow-text">Profile confirmation</text>
 
-    <path d="M 580 105 L 700 105 L 700 50 L 1500 50 L 1500 110 L 1642 110" class="flow-line" />
-    <text x="1100" y="42" class="flow-text">Verification &amp; reset messages</text>
+    <path d="M 660 105 L 1142 105" class="flow-line" />
+    <text x="900" y="97" class="flow-text">Customer/profile write</text>
+
+    <path d="M 1150 135 L 668 135" class="flow-line" />
+    <text x="900" y="147" class="flow-text">Account &amp; identity lookup</text>
+
+    <path d="M 660 91 L 750 91 L 750 50 L 1850 50 L 1850 112 L 2092 112" class="flow-line" />
+    <text x="1400" y="42" class="flow-text">Verification &amp; reset messages</text>
 
     <!-- P2 Flows -->
-    <path d="M 170 270 L 230 270 L 230 286 L 312 286" class="flow-line" />
-    <text x="230" y="278" class="flow-text">Search, browse &amp; filter</text>
+    <path d="M 180 260 L 250 260 L 250 292 L 372 292" class="flow-line" />
+    <text x="250" y="278" class="flow-text">Search, filter &amp; note queries</text>
 
-    <path d="M 170 585 L 220 585 L 220 314 L 312 314" class="flow-line" />
-    <text x="220" y="450" class="flow-text">Fragrance wheel queries</text>
+    <path d="M 380 307 L 270 307 L 270 276 L 188 276" class="flow-line" />
+    <text x="270" y="325" class="flow-text">Catalogue matches &amp; details</text>
 
-    <path d="M 580 295 L 952 295" class="flow-line" />
-    <text x="770" y="275" class="flow-text">Read perfumes &amp; notes</text>
+    <path d="M 180 610 L 240 610 L 240 322 L 372 322" class="flow-line" />
+    <text x="240" y="460" class="flow-text">Fragrance wheel queries</text>
 
-    <path d="M 960 509 L 820 509 L 820 325 L 588 325" class="flow-line" />
-    <text x="820" y="415" class="flow-text">Stock availability</text>
+    <path d="M 380 334 L 260 334 L 260 594 L 188 594" class="flow-line" />
+    <text x="260" y="480" class="flow-text">Fragrance recommendations</text>
+
+    <path d="M 1150 265 L 668 265" class="flow-line" />
+    <text x="900" y="257" class="flow-text">Perfume &amp; note details</text>
+
+    <path d="M 1150 540 L 900 540 L 900 330 L 668 330" class="flow-line" />
+    <text x="900" y="430" class="flow-text">Stock availability check</text>
 
     <!-- P3 Flows -->
-    <path d="M 170 285 L 240 285 L 240 456 L 312 456" class="flow-line" />
-    <text x="240" y="370" class="flow-text">Quiz &amp; enquiry intent</text>
+    <path d="M 180 280 L 290 280 L 290 482 L 372 482" class="flow-line" />
+    <text x="290" y="380" class="flow-text">Quiz answers &amp; layering enquiry</text>
 
-    <path d="M 170 595 L 240 595 L 240 484 L 312 484" class="flow-line" />
-    <text x="240" y="540" class="flow-text">Layering &amp; custom context</text>
+    <path d="M 380 497 L 310 497 L 310 286 L 188 286" class="flow-line" />
+    <text x="310" y="400" class="flow-text">Personalised recommendations</text>
 
-    <path d="M 960 146 L 880 146 L 880 445 L 588 445" class="flow-line" />
-    <text x="880" y="295" class="flow-text">Min profile context</text>
+    <path d="M 180 625 L 270 625 L 270 512 L 372 512" class="flow-line" />
+    <text x="270" y="565" class="flow-text">Layering &amp; AI support prompt</text>
 
-    <path d="M 580 459 L 740 459 L 740 276 L 952 276" class="flow-line" />
-    <text x="800" y="268" class="flow-text">Read verified facts</text>
+    <path d="M 380 524 L 290 524 L 290 605 L 188 605" class="flow-line" />
+    <text x="290" y="585" class="flow-text">AI support response</text>
 
-    <path d="M 580 474 L 710 474 L 710 397 L 952 397" class="flow-line" />
-    <text x="790" y="389" class="flow-text">Order fact lookup</text>
+    <path d="M 1150 138 L 980 138 L 980 471 L 668 471" class="flow-line" />
+    <text x="980" y="300" class="flow-text">Minimised profile context</text>
 
-    <path d="M 580 488 L 760 488 L 760 644 L 952 644" class="flow-line" />
-    <text x="810" y="636" class="flow-text">Quiz/support write</text>
+    <path d="M 1150 280 L 940 280 L 940 486 L 668 486" class="flow-line" />
+    <text x="940" y="380" class="flow-text">Verified fragrance facts</text>
 
-    <path d="M 960 662 L 780 662 L 780 498 L 588 498" class="flow-line" />
-    <text x="780" y="580" class="flow-text">Prior quiz/support context</text>
+    <path d="M 1150 415 L 920 415 L 920 497 L 668 497" class="flow-line" />
+    <text x="920" y="450" class="flow-text">Order fact lookup context</text>
 
-    <path d="M 580 442 L 680 442 L 680 420 L 1480 420 L 1480 465 L 1642 465" class="flow-line" />
-    <text x="1080" y="412" class="flow-text">Minimised prompt / rationale</text>
+    <path d="M 660 512 L 880 512 L 880 690 L 1142 690" class="flow-line" />
+    <text x="880" y="600" class="flow-text">Quiz/support write</text>
+
+    <path d="M 1150 710 L 860 710 L 860 528 L 668 528" class="flow-line" />
+    <text x="860" y="620" class="flow-text">Prior quiz/support context</text>
+
+    <path d="M 660 475 L 780 475 L 780 450 L 2092 450" class="flow-line" />
+    <text x="1400" y="442" class="flow-text">Minimised prompt request</text>
+
+    <path d="M 2100 485 L 1880 485 L 1880 520 L 668 520" class="flow-line" />
+    <text x="1400" y="512" class="flow-text">AI recommendation &amp; advice</text>
 
     <!-- P4 Flows -->
-    <path d="M 170 295 L 260 295 L 260 619 L 312 619" class="flow-line" />
-    <text x="260" y="460" class="flow-text">Guest cart</text>
+    <path d="M 180 270 L 320 270 L 320 665 L 372 665" class="flow-line" />
+    <text x="320" y="470" class="flow-text">Visitor cart actions</text>
 
-    <path d="M 170 605 L 220 605 L 220 654 L 312 654" class="flow-line" />
-    <text x="220" y="630" class="flow-text">Checkout &amp; payment</text>
+    <path d="M 180 635 L 280 635 L 280 695 L 372 695" class="flow-line" />
+    <text x="280" y="665" class="flow-text">Checkout &amp; payment initiation</text>
 
-    <path d="M 580 615 L 700 615 L 700 281 L 952 281" class="flow-line" />
-    <text x="770" y="273" class="flow-text">Price &amp; variant lookup</text>
+    <path d="M 380 714 L 300 714 L 300 636 L 188 636" class="flow-line" />
+    <text x="300" y="680" class="flow-text">Order confirmation &amp; receipt</text>
 
-    <path d="M 580 626 L 720 626 L 720 384 L 952 384" class="flow-line" />
-    <text x="770" y="376" class="flow-text">Cart/order updates</text>
+    <path d="M 1150 285 L 1040 285 L 1040 661 L 668 661" class="flow-line" />
+    <text x="1040" y="470" class="flow-text">Price &amp; variant data</text>
 
-    <path d="M 960 406 L 740 406 L 740 636 L 588 636" class="flow-line" />
-    <text x="740" y="520" class="flow-text">Order/invoice records</text>
+    <path d="M 660 672 L 800 672 L 800 400 L 1142 400" class="flow-line" />
+    <text x="800" y="530" class="flow-text">Cart/order updates</text>
 
-    <path d="M 580 647 L 760 647 L 760 518 L 952 518" class="flow-line" />
-    <text x="800" y="510" class="flow-text">Reservation/stock updates</text>
+    <path d="M 1150 425 L 820 425 L 820 684 L 668 684" class="flow-line" />
+    <text x="820" y="550" class="flow-text">Order/invoice records</text>
 
-    <path d="M 960 531 L 780 531 L 780 658 L 588 658" class="flow-line" />
-    <text x="780" y="595" class="flow-text">Stock balances</text>
+    <path d="M 660 695 L 840 695 L 840 550 L 1142 550" class="flow-line" />
+    <text x="840" y="620" class="flow-text">Reservation/stock updates</text>
 
-    <path d="M 580 668 L 710 668 L 710 904 L 952 904" class="flow-line" />
-    <text x="770" y="896" class="flow-text">Promotion rule query</text>
+    <path d="M 1150 565 L 860 565 L 860 706 L 668 706" class="flow-line" />
+    <text x="860" y="640" class="flow-text">Stock balances</text>
 
-    <path d="M 580 640 L 680 640 L 680 580 L 1480 580 L 1480 635 L 1642 635" class="flow-line" />
-    <text x="1080" y="572" class="flow-text">Payment intents &amp; results</text>
+    <path d="M 1150 975 L 760 975 L 760 718 L 668 718" class="flow-line" />
+    <text x="760" y="840" class="flow-text">Active promotion rules</text>
+
+    <path d="M 660 688 L 720 688 L 720 620 L 1850 620 L 1850 660 L 2092 660" class="flow-line" />
+    <text x="1400" y="612" class="flow-text">Payment intent / charge request</text>
+
+    <path d="M 2100 686 L 1880 686 L 1880 740 L 700 740 L 700 710 L 668 710" class="flow-line" />
+    <text x="1400" y="732" class="flow-text">Verified payment result</text>
 
     <!-- P5 Flows -->
-    <path d="M 170 615 L 200 615 L 200 810 L 312 810" class="flow-line" />
-    <text x="200" y="710" class="flow-text">Reviews &amp; loyalty</text>
+    <path d="M 180 645 L 250 645 L 250 870 L 372 870" class="flow-line" />
+    <text x="250" y="760" class="flow-text">Review submission &amp; referral click</text>
 
-    <path d="M 960 411 L 800 411 L 800 789 L 588 789" class="flow-line" />
-    <text x="800" y="600" class="flow-text">Purchase eligibility</text>
+    <path d="M 380 900 L 230 900 L 230 647 L 188 647" class="flow-line" />
+    <text x="230" y="780" class="flow-text">Loyalty rewards &amp; referral balance</text>
 
-    <path d="M 580 790 L 952 790" class="flow-line" />
-    <text x="770" y="782" class="flow-text">Review/loyalty updates</text>
+    <path d="M 1150 430 L 1000 430 L 1000 855 L 668 855" class="flow-line" />
+    <text x="1000" y="640" class="flow-text">Purchase eligibility lookup</text>
 
-    <path d="M 960 800 L 588 800" class="flow-line" />
-    <text x="770" y="812" class="flow-text">Loyalty/referral records</text>
+    <path d="M 660 855 L 1142 855" class="flow-line" />
+    <text x="900" y="847" class="flow-text">Review/loyalty write</text>
+
+    <path d="M 1150 865 L 668 865" class="flow-line" />
+    <text x="900" y="877" class="flow-text">Loyalty/referral balances</text>
 
     <!-- P6 Flows -->
-    <path d="M 1650 975 L 1500 975 L 1500 980 L 588 980" class="flow-line" />
-    <text x="1050" y="972" class="flow-text">Catalogue, stock &amp; RBAC ops</text>
+    <path d="M 2100 1040 L 668 1040" class="flow-line" />
+    <text x="1400" y="1032" class="flow-text">Admin actions, catalogue &amp; stock updates</text>
 
-    <path d="M 580 952 L 640 952 L 640 283 L 952 283" class="flow-line" />
-    <text x="760" y="275" class="flow-text">Catalogue updates</text>
+    <path d="M 660 1083 L 800 1083 L 800 1066 L 2092 1066" class="flow-line" />
+    <text x="1400" y="1075" class="flow-text">Ops dashboards &amp; audit reports</text>
 
-    <path d="M 580 963 L 660 963 L 660 541 L 952 541" class="flow-line" />
-    <text x="770" y="533" class="flow-text">Inventory/batch updates</text>
+    <path d="M 1150 288 L 1080 288 L 1080 1038 L 668 1038" class="flow-line" />
+    <text x="1080" y="660" class="flow-text">Current catalogue read</text>
 
-    <path d="M 580 970 L 680 970 L 680 798 L 952 798" class="flow-line" />
-    <text x="780" y="790" class="flow-text">Review moderation / loyalty ops</text>
+    <path d="M 660 1041 L 720 1041 L 720 245 L 1142 245" class="flow-line" />
+    <text x="720" y="640" class="flow-text">Catalogue/classification updates</text>
 
-    <path d="M 580 977 L 700 977 L 700 922 L 952 922" class="flow-line" />
-    <text x="790" y="914" class="flow-text">Admin/RBAC/audit updates</text>
+    <path d="M 1150 575 L 1060 575 L 1060 1049 L 668 1049" class="flow-line" />
+    <text x="1060" y="810" class="flow-text">Current inventory read</text>
 
-    <path d="M 960 153 L 910 153 L 910 987 L 588 987" class="flow-line" />
-    <text x="910" y="570" class="flow-text">Customer reporting (D1)</text>
+    <path d="M 660 1056 L 740 1056 L 740 573 L 1142 573" class="flow-line" />
+    <text x="740" y="810" class="flow-text">Inventory/batch updates</text>
 
-    <path d="M 960 413 L 850 413 L 850 998 L 588 998" class="flow-line" />
-    <text x="850" y="700" class="flow-text">Sales/order metrics (D3)</text>
+    <path d="M 1150 865 L 1040 865 L 1040 1060 L 668 1060" class="flow-line" />
+    <text x="1040" y="960" class="flow-text">Community/loyalty state read</text>
 
-    <path d="M 960 673 L 830 673 L 830 1008 L 588 1008" class="flow-line" />
-    <text x="830" y="840" class="flow-text">Quiz/support metrics (D5)</text>
+    <path d="M 660 1068 L 760 1068 L 760 863 L 1142 863" class="flow-line" />
+    <text x="760" y="960" class="flow-text">Review moderation / loyalty ops</text>
 
-    <path d="M 580 1012 L 600 1012 L 600 1080 L 1730 1080 L 1730 503" class="flow-line" />
-    <text x="1150" y="1072" class="flow-text">Promo video context</text>
+    <path d="M 1150 1008 L 1020 1008 L 1020 1071 L 668 1071" class="flow-line" />
+    <text x="1020" y="1039" class="flow-text">Admin &amp; RBAC rules read</text>
+
+    <path d="M 660 1075 L 1142 1075" class="flow-line" />
+    <text x="900" y="1067" class="flow-text">Admin/RBAC/audit updates</text>
+
+    <!-- Reporting Flows -->
+    <path d="M 1150 143 L 1100 143 L 1100 1090 L 668 1090" class="flow-line" />
+    <text x="1100" y="610" class="flow-text">Customer reporting (D1)</text>
+
+    <path d="M 1150 433 L 1020 433 L 1020 1096 L 668 1096" class="flow-line" />
+    <text x="1020" y="760" class="flow-text">Sales/order metrics (D3)</text>
+
+    <path d="M 1150 723 L 980 723 L 980 1101 L 668 1101" class="flow-line" />
+    <text x="980" y="910" class="flow-text">Quiz/support metrics (D5)</text>
+
+    <path d="M 660 1101 L 700 1101 L 700 1160 L 2134 1160 L 2134 513" class="flow-line" />
+    <text x="1400" y="1152" class="flow-text">Promo video context request</text>
+
+    <path d="M 2236 513 L 2236 1190 L 520 1190 L 520 1113" class="flow-line" />
+    <text x="1400" y="1182" class="flow-text">Generated video assets</text>
   </g>
 </svg>
