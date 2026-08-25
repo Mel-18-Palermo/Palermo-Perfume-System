@@ -137,9 +137,9 @@
     <text x="220" y="450" class="flow-text">Fragrance wheel queries</text>
 
     <path d="M 580 295 L 952 295" class="flow-line" />
-    <text x="770" y="287" class="flow-text">Read perfumes &amp; notes</text>
+    <text x="770" y="275" class="flow-text">Read perfumes &amp; notes</text>
 
-    <path d="M 960 514 L 820 514 L 820 321 L 588 321" class="flow-line" />
+    <path d="M 960 509 L 820 509 L 820 325 L 588 325" class="flow-line" />
     <text x="820" y="415" class="flow-text">Stock availability</text>
 
     <!-- P3 Flows -->
@@ -149,16 +149,16 @@
     <path d="M 170 595 L 240 595 L 240 484 L 312 484" class="flow-line" />
     <text x="240" y="540" class="flow-text">Layering &amp; custom context</text>
 
-    <path d="M 960 146 L 880 146 L 880 449 L 588 449" class="flow-line" />
-    <text x="880" y="300" class="flow-text">Min profile context</text>
+    <path d="M 960 146 L 880 146 L 880 445 L 588 445" class="flow-line" />
+    <text x="880" y="295" class="flow-text">Min profile context</text>
 
     <path d="M 580 459 L 740 459 L 740 276 L 952 276" class="flow-line" />
     <text x="800" y="268" class="flow-text">Read verified facts</text>
 
-    <path d="M 580 470 L 720 470 L 720 397 L 952 397" class="flow-line" />
+    <path d="M 580 474 L 710 474 L 710 397 L 952 397" class="flow-line" />
     <text x="790" y="389" class="flow-text">Order fact lookup</text>
 
-    <path d="M 580 484 L 760 484 L 760 644 L 952 644" class="flow-line" />
+    <path d="M 580 488 L 760 488 L 760 644 L 952 644" class="flow-line" />
     <text x="810" y="636" class="flow-text">Quiz/support write</text>
 
     <path d="M 960 662 L 780 662 L 780 498 L 588 498" class="flow-line" />
@@ -224,14 +224,14 @@
     <path d="M 580 977 L 700 977 L 700 922 L 952 922" class="flow-line" />
     <text x="790" y="914" class="flow-text">Admin/RBAC/audit updates</text>
 
-    <path d="M 960 153 L 920 153 L 920 987 L 588 987" class="flow-line" />
-    <text x="920" y="570" class="flow-text">Customer reporting (D1)</text>
+    <path d="M 960 153 L 910 153 L 910 987 L 588 987" class="flow-line" />
+    <text x="910" y="570" class="flow-text">Customer reporting (D1)</text>
 
-    <path d="M 960 413 L 860 413 L 860 998 L 588 998" class="flow-line" />
-    <text x="860" y="700" class="flow-text">Sales/order metrics (D3)</text>
+    <path d="M 960 413 L 850 413 L 850 998 L 588 998" class="flow-line" />
+    <text x="850" y="700" class="flow-text">Sales/order metrics (D3)</text>
 
-    <path d="M 960 673 L 840 673 L 840 1008 L 588 1008" class="flow-line" />
-    <text x="840" y="840" class="flow-text">Quiz/support metrics (D5)</text>
+    <path d="M 960 673 L 830 673 L 830 1008 L 588 1008" class="flow-line" />
+    <text x="830" y="840" class="flow-text">Quiz/support metrics (D5)</text>
 
     <path d="M 580 1012 L 600 1012 L 600 1080 L 1730 1080 L 1730 503" class="flow-line" />
     <text x="1150" y="1072" class="flow-text">Promo video context</text>
