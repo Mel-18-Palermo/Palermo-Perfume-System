@@ -289,7 +289,7 @@ Protected administrator management/reporting functions.
 - inventory/batch management;
 - promotion management;
 - review moderation;
-- customer/admin management within approved permissions;
+- administrative account and role/access management within approved permissions;
 - reporting/dashboard;
 - audit views;
 - backup controls/status within the approved implementation baseline;
