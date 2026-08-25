@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" modified="2026-08-25T00:00:00.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
   <diagram id="dfd-level-1" name="DFD Level 1 - Gane and Sarson">
-    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1200" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -31,10 +31,10 @@
         <mxCell id="p1" value="1.0&#xa;Account &amp; Profile Management" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
           <mxGeometry x="340" y="95" width="250" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="p2" value="2.0&#xa;Catalogue, Discovery &amp; Virtual Fragrance" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
+        <mxCell id="p2" value="2.0&#xa;Catalogue &amp; Discovery" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
           <mxGeometry x="340" y="265" width="250" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="p3" value="3.0&#xa;Personalisation, Quiz &amp; AI Support" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
+        <mxCell id="p3" value="3.0&#xa;Personalisation &amp; AI Support" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
           <mxGeometry x="340" y="435" width="250" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p4" value="4.0&#xa;Cart, Order, Payment &amp; Delivery" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
@@ -87,7 +87,10 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f1_d1" value="Read/Write account &amp; Identity" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p1" target="ds_d1" parent="1">
+        <mxCell id="f1_d1_w" value="Customer/profile write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p1" target="ds_d1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1_d1_r" value="Customer account &amp; Identity lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ds_d1" target="p1" parent="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="f1_email" value="Verification &amp; reset messages" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p1" target="ent_email" parent="1">
@@ -174,11 +177,19 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f3_d5" value="Save quiz/chat records" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d5" parent="1">
+        <mxCell id="f3_d5_w" value="Quiz/support write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d5" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="700" y="491" />
-              <mxPoint x="700" y="653" />
+              <mxPoint x="700" y="484" />
+              <mxPoint x="700" y="644" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f3_d5_r" value="Prior quiz/support context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.9;entryDx=0;entryDy=0;" edge="1" source="ds_d5" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="662" />
+              <mxPoint x="720" y="498" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -216,19 +227,35 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f4_d3" value="Orders &amp; payment state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d3" parent="1">
+        <mxCell id="f4_d3_w" value="Cart/order updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d3" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="650" y="626" />
-              <mxPoint x="650" y="388" />
+              <mxPoint x="650" y="619" />
+              <mxPoint x="650" y="384" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f4_d4" value="Stock reserve &amp; updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d4" parent="1">
+        <mxCell id="f4_d3_r" value="Order/invoice records" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="ds_d3" target="p4" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="670" y="640" />
-              <mxPoint x="670" y="523" />
+              <mxPoint x="670" y="401" />
+              <mxPoint x="670" y="633" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f4_d4_w" value="Reservation/stock updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d4" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="640" />
+              <mxPoint x="680" y="514" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f4_d4_r" value="Stock balances" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds_d4" target="p4" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="531" />
+              <mxPoint x="690" y="647" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -240,10 +267,10 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f4_stripe" value="Payment intents &amp; results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ent_stripe" parent="1">
+        <mxCell id="f4_stripe" value="Payment intents &amp; results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ent_stripe" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="640" y="647" />
+              <mxPoint x="640" y="654" />
               <mxPoint x="640" y="610" />
             </Array>
           </mxGeometry>
@@ -266,15 +293,18 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f5_d6" value="Points &amp; review transactions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p5" target="ds_d6" parent="1">
+        <mxCell id="f5_d6_w" value="Review/loyalty updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p5" target="ds_d6" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f5_d6_r" value="Loyalty/referral records" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ds_d6" target="p5" parent="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Process 6.0 Flows (Complete Admin & Store Links) -->
+        <!-- Process 6.0 Flows (Complete Admin & Explicit Store Links) -->
         <mxCell id="f6_admin" value="Catalogue, stock &amp; RBAC ops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_admin" target="p6" parent="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="f6_d2" value="Catalogue CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.1;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d2" parent="1">
+        <mxCell id="f6_d2" value="Catalogue/classification updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.1;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d2" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="620" y="952" />
@@ -282,7 +312,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f6_d4" value="Inventory &amp; batch ops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d4" parent="1">
+        <mxCell id="f6_d4" value="Inventory/batch updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d4" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="640" y="959" />
@@ -290,7 +320,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f6_d6" value="Review moderation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d6" parent="1">
+        <mxCell id="f6_d6" value="Review moderation / loyalty ops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d6" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="660" y="966" />
@@ -298,7 +328,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f6_d7" value="Admin &amp; audit CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d7" parent="1">
+        <mxCell id="f6_d7" value="Admin/RBAC/audit updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d7" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="680" y="973" />
@@ -306,15 +336,33 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f6_rep" value="Reporting metrics (D1, D3, D5)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d5" parent="1">
+
+        <!-- Process 6.0 Reporting Flows (Dedicated Links to D1, D3, D5) -->
+        <mxCell id="f6_d1_rep" value="Customer reporting data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds_d1" target="p6" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="710" y="994" />
-              <mxPoint x="710" y="720" />
-              <mxPoint x="1060" y="720" />
+              <mxPoint x="830" y="151" />
+              <mxPoint x="830" y="987" />
             </Array>
           </mxGeometry>
         </mxCell>
+        <mxCell id="f6_d3_rep" value="Sales &amp; order metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ds_d3" target="p6" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="411" />
+              <mxPoint x="790" y="994" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f6_d5_rep" value="Quiz &amp; support metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="ds_d5" target="p6" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="671" />
+              <mxPoint x="750" y="1001" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
         <mxCell id="f6_ai" value="Promo video context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="p6" target="ent_ai" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
