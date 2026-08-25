@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1169" height="826" viewBox="0 0 1169 826" font-family="Helvetica, Arial, sans-serif">
+<defs><marker id="a" markerWidth="9" markerHeight="7" refX="8.6" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L9,3.5 L0,7 Z" fill="#000000"/></marker></defs>
+<rect width="1169" height="826" fill="#ffffff"/>
+<text x="24" y="28" font-size="15" font-weight="bold">8.2  DFD Level 2 &#8212; Commerce (decomposition of Level 1 Process 4.0)</text>
+<text x="1145" y="28" font-size="10" text-anchor="end">Gane &amp; Sarson notation</text>
+<rect x="24" y="150" width="1121" height="562" fill="none" stroke="#000000" stroke-width="1.4"/>
+<text x="1137" y="703" font-size="10" font-style="italic" text-anchor="end">Palermo Perfume System</text>
+<rect x="45" y="57" width="130" height="44" fill="#000000"/>
+<rect x="40" y="52" width="130" height="44" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<text x="105" y="78" font-size="11" font-weight="bold" text-anchor="middle">Visitor</text>
+<rect x="205" y="57" width="130" height="44" fill="#000000"/>
+<rect x="200" y="52" width="130" height="44" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<text x="265" y="78" font-size="11" font-weight="bold" text-anchor="middle">Customer</text>
+<rect x="525" y="57" width="130" height="44" fill="#000000"/>
+<rect x="520" y="52" width="130" height="44" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<text x="585" y="78" font-size="11" font-weight="bold" text-anchor="middle">Stripe</text>
+<rect x="945" y="57" width="180" height="44" fill="#000000"/>
+<rect x="940" y="52" width="180" height="44" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<text x="1030" y="78" font-size="11" font-weight="bold" text-anchor="middle">Customer *</text>
+<rect x="40" y="210" width="148" height="105" rx="10" ry="10" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="40" y1="234" x2="188" y2="234" stroke="#000000" stroke-width="1.4"/>
+<text x="114" y="227" font-size="12" font-weight="bold" text-anchor="middle">4.1</text>
+<text x="114" y="278.5" font-size="11" text-anchor="middle">Manage Cart</text>
+<rect x="275" y="210" width="148" height="105" rx="10" ry="10" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="275" y1="234" x2="423" y2="234" stroke="#000000" stroke-width="1.4"/>
+<text x="349" y="227" font-size="12" font-weight="bold" text-anchor="middle">4.2</text>
+<text x="349" y="271.5" font-size="11" text-anchor="middle">Validate Checkout</text>
+<text x="349" y="285.5" font-size="11" text-anchor="middle">&amp; Create Order</text>
+<rect x="510" y="210" width="148" height="105" rx="10" ry="10" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="510" y1="234" x2="658" y2="234" stroke="#000000" stroke-width="1.4"/>
+<text x="584" y="227" font-size="12" font-weight="bold" text-anchor="middle">4.3</text>
+<text x="584" y="271.5" font-size="11" text-anchor="middle">Process &amp; Verify</text>
+<text x="584" y="285.5" font-size="11" text-anchor="middle">Payment</text>
+<rect x="745" y="210" width="148" height="105" rx="10" ry="10" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="745" y1="234" x2="893" y2="234" stroke="#000000" stroke-width="1.4"/>
+<text x="819" y="227" font-size="12" font-weight="bold" text-anchor="middle">4.4</text>
+<text x="819" y="271.5" font-size="11" text-anchor="middle">Finalise Order</text>
+<text x="819" y="285.5" font-size="11" text-anchor="middle">&amp; Inventory</text>
+<rect x="980" y="210" width="148" height="105" rx="10" ry="10" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="980" y1="234" x2="1128" y2="234" stroke="#000000" stroke-width="1.4"/>
+<text x="1054" y="227" font-size="12" font-weight="bold" text-anchor="middle">4.5</text>
+<text x="1054" y="248" font-size="11" text-anchor="middle">Manage Delivery</text>
+<text x="1054" y="262" font-size="11" text-anchor="middle">&amp; Tracking</text>
+<rect x="988" y="270" width="132" height="38" rx="6" ry="6" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1054" y="285" font-size="8.5" font-style="italic" text-anchor="middle">4.5.1  Simulate delivery</text>
+<text x="1054" y="297" font-size="8.5" font-style="italic" text-anchor="middle">status (internal)</text>
+<path d="M256,500 H60 V546 H256" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="92" y1="500" x2="92" y2="546" stroke="#000000" stroke-width="1.4"/>
+<text x="76" y="527" font-size="11" font-weight="bold" text-anchor="middle">D2</text>
+<text x="100" y="527" font-size="10.5">Catalogue &amp; Fragrance Data</text>
+<path d="M480,500 H276 V546 H480" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="308" y1="500" x2="308" y2="546" stroke="#000000" stroke-width="1.4"/>
+<text x="292" y="527" font-size="11" font-weight="bold" text-anchor="middle">D7</text>
+<text x="316" y="527" font-size="10.5">Admin, Promotion &amp; Audit Data</text>
+<path d="M912,500 H712 V546 H912" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="744" y1="500" x2="744" y2="546" stroke="#000000" stroke-width="1.4"/>
+<text x="728" y="527" font-size="11" font-weight="bold" text-anchor="middle">D4</text>
+<text x="752" y="527" font-size="10.5">Inventory &amp; Production Data</text>
+<path d="M690,600 H490 V646 H690" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="522" y1="600" x2="522" y2="646" stroke="#000000" stroke-width="1.4"/>
+<line x1="495" y1="600" x2="495" y2="646" stroke="#000000" stroke-width="1.4"/>
+<text x="509" y="627" font-size="11" font-weight="bold" text-anchor="middle">D3*</text>
+<text x="530" y="627" font-size="10.5">Commerce &amp; Fulfilment Data</text>
+<path d="M1120,600 H920 V646 H1120" fill="#ffffff" stroke="#000000" stroke-width="1.4"/>
+<line x1="952" y1="600" x2="952" y2="646" stroke="#000000" stroke-width="1.4"/>
+<line x1="925" y1="600" x2="925" y2="646" stroke="#000000" stroke-width="1.4"/>
+<text x="939" y="627" font-size="11" font-weight="bold" text-anchor="middle">D3*</text>
+<text x="960" y="627" font-size="10.5">Commerce &amp; Fulfilment Data</text>
+<path d="M105,96 L105,210" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="98" y="196" font-size="10" text-anchor="end">cart actions</text>
+<path d="M230,96 L230,140 L150,140 L150,210" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="190" y="133" font-size="10" text-anchor="middle">cart actions</text>
+<path d="M310,96 L310,210" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="317" y="176" font-size="10" text-anchor="start">checkout details</text>
+<path d="M550,210 L550,96" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="543" y="158" font-size="10" text-anchor="end">payment request</text>
+<path d="M620,96 L620,210" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="627" y="158" font-size="10" text-anchor="start">verified result</text>
+<path d="M1000,96 L1000,210" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="993" y="186" font-size="10" text-anchor="end">tracking request</text>
+<path d="M1060,210 L1060,96" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="1067" y="134" font-size="10" text-anchor="start">tracking /</text>
+<text x="1067" y="147" font-size="10" text-anchor="start">delivery</text>
+<text x="1067" y="160" font-size="10" text-anchor="start">confirmation</text>
+<path d="M188,262 L275,262" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="231" y="254" font-size="10" text-anchor="middle">validated cart</text>
+<path d="M423,262 L510,262" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="466" y="254" font-size="10" text-anchor="middle">order to pay</text>
+<path d="M658,262 L745,262" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="701" y="254" font-size="10" text-anchor="middle">payment verified</text>
+<path d="M893,262 L980,262" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="936" y="254" font-size="10" text-anchor="middle">start shipment</text>
+<path d="M100,500 L100,315" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="107" y="380" font-size="10" text-anchor="start">variant / price / options</text>
+<path d="M300,500 L300,340 L60,340 L60,315" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="200" y="334" font-size="10" text-anchor="middle">promo eligibility</text>
+<path d="M40,290 L30,290 L30,692 L540,692 L540,646" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="280" y="686" font-size="10" text-anchor="middle">update cart state</text>
+<path d="M580,646 L580,662 L50,662 L50,315" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="300" y="656" font-size="10" text-anchor="middle">cart state</text>
+<path d="M220,500 L220,418 L295,418 L295,315" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="247" y="412" font-size="10" text-anchor="middle">price / product check</text>
+<path d="M350,500 L350,315" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="357" y="490" font-size="10" text-anchor="start">promo check</text>
+<path d="M730,500 L730,444 L340,444 L340,315" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="560" y="438" font-size="10" text-anchor="middle">stock check</text>
+<path d="M400,315 L400,470 L760,470 L760,500" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="450" y="464" font-size="10" text-anchor="middle">bounded reservation</text>
+<path d="M415,315 L415,418 L520,418 L520,600" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="467" y="412" font-size="10" text-anchor="middle">order &amp; payment snapshot</text>
+<path d="M620,315 L620,600" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="613" y="380" font-size="10" text-anchor="end">payment state</text>
+<path d="M640,315 L640,340 L860,340 L860,500" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="750" y="334" font-size="10" text-anchor="middle">release reservation</text>
+<path d="M800,315 L800,500" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="793" y="380" font-size="10" text-anchor="end">commit stock</text>
+<text x="793" y="393" font-size="10" text-anchor="end">+ movement</text>
+<path d="M880,315 L880,340 L960,340 L960,600" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="953" y="440" font-size="10" text-anchor="end">order confirmed</text>
+<text x="953" y="453" font-size="10" text-anchor="end">+ invoice</text>
+<path d="M1040,315 L1040,600" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="1033" y="430" font-size="10" text-anchor="end">shipment /</text>
+<text x="1033" y="443" font-size="10" text-anchor="end">tracking</text>
+<path d="M1100,600 L1100,315" fill="none" stroke="#000000" stroke-width="1.1" marker-end="url(#a)"/>
+<text x="1107" y="430" font-size="10" text-anchor="start">tracking</text>
+<text x="1107" y="443" font-size="10" text-anchor="start">status</text>
+<path d="M24,734 H1129 L1145,750 V792 H24 Z" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+<path d="M1129,734 V750 H1145" fill="none" stroke="#000000" stroke-width="1.2"/>
+<text x="36" y="751" font-size="9.5">Notation: rounded box = process (number in the top strip);  open-ended box = data store;  shadowed box = external entity, drawn outside the system boundary.</text>
+<text x="36" y="765" font-size="9.5">*  marks a duplicated symbol drawn twice to reduce crossing connectors. Both Customer symbols are the same single entity; both D3 symbols are the same single data store.</text>
+<text x="36" y="779" font-size="9.5">Delivery simulation (4.5.1) is an internal component of process 4.5, not an external entity. Every data flow is one-directional and named.</text>
+</svg>
