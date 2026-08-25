@@ -1,0 +1,73 @@
+<mxfile host="app.diagrams.net" modified="2026-08-25T05:57:00+10:00" agent="ChatGPT" version="28.0.6" type="device">
+  <diagram id="palermo-dfd0" name="DFD Level 0 - Context Diagram">
+    <mxGraphModel dx="1600" dy="900" grid="10" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="visitor" value="Visitor" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1.5;fontFamily=Arial;fontSize=16;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="customer" value="Customer" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1.5;fontFamily=Arial;fontSize=16;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="250" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="admin" value="Administrator" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1.5;fontFamily=Arial;fontSize=16;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="410" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="email" value="Email Service" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1.5;fontFamily=Arial;fontSize=16;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="40" y="570" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="stripe" value="Stripe" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1.5;fontFamily=Arial;fontSize=16;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="180" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ai" value="AI Service" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1.5;fontFamily=Arial;fontSize=16;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="420" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="process" value="0&lt;br&gt;&lt;b&gt;Palermo Perfume System&lt;/b&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;strokeWidth=2;fontFamily=Arial;fontSize=17;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="405" y="235" width="390" height="250" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f1" value="Registration / discovery / cart / quiz / support data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="visitor" target="process">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="290" y="120"/><mxPoint x="290" y="290"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="f2" value="Catalogue / cart / recommendation / support results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="process" target="visitor">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="330" y="335"/><mxPoint x="330" y="135"/></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="f3" value="Account / checkout / order / review / support data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="customer" target="process">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="255" y="280"/><mxPoint x="255" y="345"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="f4" value="Account / order / invoice / tracking / support results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="process" target="customer">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="375" y="400"/><mxPoint x="375" y="295"/></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="f5" value="Management / inventory / moderation / reporting actions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="admin" target="process">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="220" y="440"/><mxPoint x="220" y="455"/><mxPoint x="405" y="455"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="f6" value="Management confirmations / reports / audit results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="process" target="admin">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="360" y="465"/><mxPoint x="360" y="495"/><mxPoint x="215" y="495"/><mxPoint x="215" y="455"/></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="f7" value="Verification / reset email request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="process" target="email">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="350" y="545"/><mxPoint x="350" y="600"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="f8" value="Delivery result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="email" target="process">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="305" y="575"/><mxPoint x="305" y="520"/><mxPoint x="405" y="520"/></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="f9" value="Payment request / verification" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="process" target="stripe">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="850" y="270"/><mxPoint x="850" y="210"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="f10" value="Verified payment result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="stripe" target="process">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="910" y="220"/><mxPoint x="910" y="325"/><mxPoint x="795" y="325"/></Array></mxGeometry>
+        </mxCell>
+
+        <mxCell id="f11" value="Minimised approved context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="process" target="ai">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="850" y="455"/><mxPoint x="900" y="455"/></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="f12" value="AI recommendation / support / promotional output" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Arial;fontSize=12;endArrow=block;strokeWidth=1.2;" edge="1" parent="1" source="ai" target="process">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="900" y="495"/><mxPoint x="850" y="495"/></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
