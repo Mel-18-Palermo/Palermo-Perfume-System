@@ -1,288 +1,269 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1350" width="100%" height="100%" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1169px" height="827px" viewBox="-0.5 -0.5 1169 827" style="background-color: #ffffff;">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#1f2937" />
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333333" />
     </marker>
-    <style>
-      .entity { fill: #ffffff; stroke: #111827; stroke-width: 2.5; font-weight: bold; font-size: 16px; }
-      .process-bg { fill: #f8fafc; stroke: #111827; stroke-width: 2.5; rx: 12; ry: 12; }
-      .process-line { stroke: #111827; stroke-width: 2; }
-      .process-num { font-size: 14px; font-weight: bold; fill: #111827; }
-      .process-title { font-size: 13.5px; font-weight: 600; fill: #111827; }
-      .datastore-line { stroke: #111827; stroke-width: 2.5; fill: none; }
-      .datastore-id { font-weight: bold; font-size: 14px; fill: #111827; }
-      .datastore-name { font-size: 13px; font-weight: 600; fill: #111827; }
-      .flow-line { stroke: #374151; stroke-width: 1.8; fill: none; marker-end: url(#arrow); }
-      .flow-text { font-size: 12px; fill: #1f2937; font-weight: 600; text-anchor: middle; background-color: #ffffff; }
-    </style>
   </defs>
+  <g>
+    <!-- External Entities (Left) -->
+    <rect x="30" y="160" width="100" height="50" fill="#ffffff" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <text x="80" y="190" fill="#000000" font-family="Helvetica" font-size="12px" font-weight="bold" text-anchor="middle">Visitor</text>
+
+    <rect x="30" y="420" width="100" height="50" fill="#ffffff" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <text x="80" y="450" fill="#000000" font-family="Helvetica" font-size="12px" font-weight="bold" text-anchor="middle">Customer</text>
+
+    <!-- External Entities (Right) -->
+    <rect x="1010" y="60" width="130" height="45" fill="#ffffff" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <text x="1075" y="87" fill="#000000" font-family="Helvetica" font-size="12px" font-weight="bold" text-anchor="middle">Email Service</text>
+
+    <rect x="1010" y="320" width="130" height="45" fill="#ffffff" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <text x="1075" y="347" fill="#000000" font-family="Helvetica" font-size="12px" font-weight="bold" text-anchor="middle">AI Service</text>
+
+    <rect x="1010" y="460" width="130" height="45" fill="#ffffff" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <text x="1075" y="487" fill="#000000" font-family="Helvetica" font-size="12px" font-weight="bold" text-anchor="middle">Stripe</text>
+
+    <rect x="1010" y="715" width="130" height="45" fill="#ffffff" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <text x="1075" y="742" fill="#000000" font-family="Helvetica" font-size="12px" font-weight="bold" text-anchor="middle">Administrator</text>
+
+    <!-- Processes -->
+    <rect x="220" y="60" width="210" height="55" rx="8" ry="8" fill="#f8f9fa" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <line x1="220" y1="82" x2="430" y2="82" stroke="#000000" stroke-width="1.5" />
+    <text x="325" y="76" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">1.0</text>
+    <text x="325" y="100" fill="#000000" font-family="Helvetica" font-size="10.5px" font-weight="bold" text-anchor="middle">Account &amp; Profile Management</text>
+
+    <rect x="220" y="190" width="210" height="55" rx="8" ry="8" fill="#f8f9fa" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <line x1="220" y1="212" x2="430" y2="212" stroke="#000000" stroke-width="1.5" />
+    <text x="325" y="206" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">2.0</text>
+    <text x="325" y="230" fill="#000000" font-family="Helvetica" font-size="10.5px" font-weight="bold" text-anchor="middle">Catalogue &amp; Discovery</text>
+
+    <rect x="220" y="320" width="210" height="55" rx="8" ry="8" fill="#f8f9fa" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <line x1="220" y1="342" x2="430" y2="342" stroke="#000000" stroke-width="1.5" />
+    <text x="325" y="336" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">3.0</text>
+    <text x="325" y="360" fill="#000000" font-family="Helvetica" font-size="10.5px" font-weight="bold" text-anchor="middle">Personalisation &amp; AI Support</text>
+
+    <rect x="220" y="450" width="210" height="55" rx="8" ry="8" fill="#f8f9fa" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <line x1="220" y1="472" x2="430" y2="472" stroke="#000000" stroke-width="1.5" />
+    <text x="325" y="466" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">4.0</text>
+    <text x="325" y="490" fill="#000000" font-family="Helvetica" font-size="10.5px" font-weight="bold" text-anchor="middle">Cart, Order, Payment &amp; Delivery</text>
+
+    <rect x="220" y="580" width="210" height="55" rx="8" ry="8" fill="#f8f9fa" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <line x1="220" y1="602" x2="430" y2="602" stroke="#000000" stroke-width="1.5" />
+    <text x="325" y="596" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">5.0</text>
+    <text x="325" y="620" fill="#000000" font-family="Helvetica" font-size="10.5px" font-weight="bold" text-anchor="middle">Community, Loyalty &amp; Referral</text>
 
-  <text x="40" y="40" font-size="24" font-weight="bold" fill="#111827">Palermo Perfume System — DFD Level 1 (Gane &amp; Sarson Notation)</text>
-
-  <!-- External Entities -->
-  <g id="entities">
-    <rect x="40" y="220" width="140" height="70" class="entity" />
-    <text x="110" y="260" text-anchor="middle" dominant-baseline="middle">Visitor</text>
-
-    <rect x="40" y="580" width="140" height="70" class="entity" />
-    <text x="110" y="620" text-anchor="middle" dominant-baseline="middle">Customer</text>
-
-    <rect x="2100" y="80" width="170" height="65" class="entity" />
-    <text x="2185" y="117" text-anchor="middle" dominant-baseline="middle">Email Service</text>
-
-    <rect x="2100" y="440" width="170" height="65" class="entity" />
-    <text x="2185" y="477" text-anchor="middle" dominant-baseline="middle">AI Service</text>
-
-    <rect x="2100" y="640" width="170" height="65" class="entity" />
-    <text x="2185" y="677" text-anchor="middle" dominant-baseline="middle">Stripe</text>
-
-    <rect x="2100" y="1020" width="170" height="65" class="entity" />
-    <text x="2185" y="1057" text-anchor="middle" dominant-baseline="middle">Administrator</text>
-  </g>
-
-  <!-- 6 Processes -->
-  <g id="processes">
-    <rect x="380" y="80" width="280" height="75" class="process-bg" />
-    <line x1="380" y1="110" x2="660" y2="110" class="process-line" />
-    <text x="520" y="100" text-anchor="middle" class="process-num">1.0</text>
-    <text x="520" y="136" text-anchor="middle" class="process-title">Account &amp; Profile Management</text>
-
-    <rect x="380" y="270" width="280" height="75" class="process-bg" />
-    <line x1="380" y1="300" x2="660" y2="300" class="process-line" />
-    <text x="520" y="290" text-anchor="middle" class="process-num">2.0</text>
-    <text x="520" y="326" text-anchor="middle" class="process-title">Catalogue &amp; Discovery</text>
-
-    <rect x="380" y="460" width="280" height="75" class="process-bg" />
-    <line x1="380" y1="490" x2="660" y2="490" class="process-line" />
-    <text x="520" y="480" text-anchor="middle" class="process-num">3.0</text>
-    <text x="520" y="516" text-anchor="middle" class="process-title">Personalisation &amp; AI Support</text>
-
-    <rect x="380" y="650" width="280" height="75" class="process-bg" />
-    <line x1="380" y1="680" x2="660" y2="680" class="process-line" />
-    <text x="520" y="670" text-anchor="middle" class="process-num">4.0</text>
-    <text x="520" y="706" text-anchor="middle" class="process-title">Cart, Order, Payment &amp; Delivery</text>
-
-    <rect x="380" y="840" width="280" height="75" class="process-bg" />
-    <line x1="380" y1="870" x2="660" y2="870" class="process-line" />
-    <text x="520" y="860" text-anchor="middle" class="process-num">5.0</text>
-    <text x="520" y="896" text-anchor="middle" class="process-title">Community, Loyalty &amp; Referral</text>
-
-    <rect x="380" y="1030" width="280" height="75" class="process-bg" />
-    <line x1="380" y1="1060" x2="660" y2="1060" class="process-line" />
-    <text x="520" y="1050" text-anchor="middle" class="process-num">6.0</text>
-    <text x="520" y="1086" text-anchor="middle" class="process-title">Administration &amp; Operations</text>
-  </g>
+    <rect x="220" y="710" width="210" height="55" rx="8" ry="8" fill="#f8f9fa" stroke="#000000" stroke-width="2" pointer-events="all"/>
+    <line x1="220" y1="732" x2="430" y2="732" stroke="#000000" stroke-width="1.5" />
+    <text x="325" y="726" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">6.0</text>
+    <text x="325" y="750" fill="#000000" font-family="Helvetica" font-size="10.5px" font-weight="bold" text-anchor="middle">Administration &amp; Operations</text>
 
-  <!-- 7 Data Stores -->
-  <g id="datastores">
-    <path d="M 1520 95 L 1150 95 L 1150 145 L 1520 145" class="datastore-line" />
-    <line x1="1205" y1="95" x2="1205" y2="145" class="datastore-line" />
-    <text x="1177" y="125" text-anchor="middle" class="datastore-id">D1</text>
-    <text x="1225" y="125" class="datastore-name">Customer &amp; Profile Data</text>
+    <!-- Data Stores -->
+    <path d="M 870 68 L 610 68 L 610 106 L 870 106" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="645" y1="68" x2="645" y2="106" stroke="#000000" stroke-width="2"/>
+    <text x="627" y="91" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">D1</text>
+    <text x="655" y="91" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold">Customer &amp; Profile Data</text>
 
-    <path d="M 1520 240 L 1150 240 L 1150 290 L 1520 290" class="datastore-line" />
-    <line x1="1205" y1="240" x2="1205" y2="290" class="datastore-line" />
-    <text x="1177" y="270" text-anchor="middle" class="datastore-id">D2</text>
-    <text x="1225" y="270" class="datastore-name">Catalogue &amp; Fragrance Data</text>
+    <path d="M 870 170 L 610 170 L 610 208 L 870 208" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="645" y1="170" x2="645" y2="208" stroke="#000000" stroke-width="2"/>
+    <text x="627" y="193" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">D2</text>
+    <text x="655" y="193" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold">Catalogue &amp; Fragrance Data</text>
 
-    <path d="M 1520 385 L 1150 385 L 1150 435 L 1520 435" class="datastore-line" />
-    <line x1="1205" y1="385" x2="1205" y2="435" class="datastore-line" />
-    <text x="1177" y="415" text-anchor="middle" class="datastore-id">D3</text>
-    <text x="1225" y="415" class="datastore-name">Commerce &amp; Fulfilment Data</text>
+    <path d="M 870 272 L 610 272 L 610 310 L 870 310" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="645" y1="272" x2="645" y2="310" stroke="#000000" stroke-width="2"/>
+    <text x="627" y="295" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">D3</text>
+    <text x="655" y="295" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold">Commerce &amp; Fulfilment Data</text>
 
-    <path d="M 1520 530 L 1150 530 L 1150 580 L 1520 580" class="datastore-line" />
-    <line x1="1205" y1="530" x2="1205" y2="580" class="datastore-line" />
-    <text x="1177" y="560" text-anchor="middle" class="datastore-id">D4</text>
-    <text x="1225" y="560" class="datastore-name">Inventory &amp; Production Data</text>
+    <path d="M 870 374 L 610 374 L 610 412 L 870 412" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="645" y1="374" x2="645" y2="412" stroke="#000000" stroke-width="2"/>
+    <text x="627" y="397" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">D4</text>
+    <text x="655" y="397" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold">Inventory &amp; Production Data</text>
 
-    <path d="M 1520 675 L 1150 675 L 1150 725 L 1520 725" class="datastore-line" />
-    <line x1="1205" y1="675" x2="1205" y2="725" class="datastore-line" />
-    <text x="1177" y="705" text-anchor="middle" class="datastore-id">D5</text>
-    <text x="1225" y="705" class="datastore-name">Quiz, Recommendation &amp; Support Data</text>
+    <path d="M 870 476 L 610 476 L 610 514 L 870 514" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="645" y1="476" x2="645" y2="514" stroke="#000000" stroke-width="2"/>
+    <text x="627" y="499" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">D5</text>
+    <text x="655" y="499" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold">Quiz, Rec &amp; Support Data</text>
 
-    <path d="M 1520 820 L 1150 820 L 1150 870 L 1520 870" class="datastore-line" />
-    <line x1="1205" y1="820" x2="1205" y2="870" class="datastore-line" />
-    <text x="1177" y="850" text-anchor="middle" class="datastore-id">D6</text>
-    <text x="1225" y="850" class="datastore-name">Community &amp; Loyalty Data</text>
+    <path d="M 870 578 L 610 578 L 610 616 L 870 616" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="645" y1="578" x2="645" y2="616" stroke="#000000" stroke-width="2"/>
+    <text x="627" y="601" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">D6</text>
+    <text x="655" y="601" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold">Community &amp; Loyalty Data</text>
 
-    <path d="M 1520 965 L 1150 965 L 1150 1015 L 1520 1015" class="datastore-line" />
-    <line x1="1205" y1="965" x2="1205" y2="1015" class="datastore-line" />
-    <text x="1177" y="995" text-anchor="middle" class="datastore-id">D7</text>
-    <text x="1225" y="995" class="datastore-name">Admin, Promotion &amp; Audit Data</text>
-  </g>
+    <path d="M 870 680 L 610 680 L 610 718 L 870 718" fill="none" stroke="#000000" stroke-width="2"/>
+    <line x1="645" y1="680" x2="645" y2="718" stroke="#000000" stroke-width="2"/>
+    <text x="627" y="703" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold" text-anchor="middle">D7</text>
+    <text x="655" y="703" fill="#000000" font-family="Helvetica" font-size="11px" font-weight="bold">Admin, Promo &amp; Audit Data</text>
 
-  <!-- Connectors -->
-  <g id="connectors">
-    <!-- P1 Flows -->
-    <path d="M 180 235 L 230 235 L 230 95 L 372 95" class="flow-line" />
-    <text x="230" y="80" class="flow-text">Registration &amp; credentials</text>
+    <!-- Connectors -->
+    <!-- P1 -->
+    <path d="M 130 170 L 160 170 L 160 71 L 214 71" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="175" y="65" fill="#333333" font-family="Helvetica" font-size="9px">Registration &amp; credentials</text>
 
-    <path d="M 380 110 L 250 110 L 250 248 L 188 248" class="flow-line" />
-    <text x="250" y="170" class="flow-text">Auth token &amp; account status</text>
+    <path d="M 220 82 L 175 82 L 175 180 L 136 180" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="178" y="130" fill="#333333" font-family="Helvetica" font-size="9px">Auth token &amp; status</text>
 
-    <path d="M 180 600 L 210 600 L 210 125 L 372 125" class="flow-line" />
-    <text x="210" y="360" class="flow-text">Profile updates &amp; login</text>
+    <path d="M 130 435 L 150 435 L 150 93 L 214 93" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="153" y="270" fill="#333333" font-family="Helvetica" font-size="9px">Profile updates &amp; login</text>
 
-    <path d="M 380 140 L 190 140 L 190 622 L 188 622" class="flow-line" />
-    <text x="190" y="380" class="flow-text">Profile confirmation</text>
+    <path d="M 220 104 L 135 104 L 135 450 L 130 450" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="138" y="290" fill="#333333" font-family="Helvetica" font-size="9px">Profile confirmation</text>
 
-    <path d="M 660 105 L 1142 105" class="flow-line" />
-    <text x="900" y="97" class="flow-text">Customer/profile write</text>
+    <path d="M 430 79 L 604 79" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="520" y="74" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Customer/profile write</text>
 
-    <path d="M 1150 135 L 668 135" class="flow-line" />
-    <text x="900" y="147" class="flow-text">Account &amp; identity lookup</text>
+    <path d="M 610 95 L 436 95" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="520" y="105" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Account &amp; identity lookup</text>
 
-    <path d="M 660 91 L 750 91 L 750 50 L 1850 50 L 1850 112 L 2092 112" class="flow-line" />
-    <text x="1400" y="42" class="flow-text">Verification &amp; reset messages</text>
+    <path d="M 430 68 L 500 68 L 500 40 L 950 40 L 950 82 L 1004 82" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="725" y="35" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Verification &amp; reset messages</text>
 
-    <!-- P2 Flows -->
-    <path d="M 180 260 L 250 260 L 250 292 L 372 292" class="flow-line" />
-    <text x="250" y="278" class="flow-text">Search, filter &amp; note queries</text>
+    <!-- P2 -->
+    <path d="M 130 190 L 180 190 L 180 206 L 214 206" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="180" y="183" fill="#333333" font-family="Helvetica" font-size="9px">Search, filter &amp; note queries</text>
 
-    <path d="M 380 307 L 270 307 L 270 276 L 188 276" class="flow-line" />
-    <text x="270" y="325" class="flow-text">Catalogue matches &amp; details</text>
+    <path d="M 220 217 L 190 217 L 190 200 L 136 200" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="190" y="228" fill="#333333" font-family="Helvetica" font-size="9px">Catalogue details</text>
 
-    <path d="M 180 610 L 240 610 L 240 322 L 372 322" class="flow-line" />
-    <text x="240" y="460" class="flow-text">Fragrance wheel queries</text>
+    <path d="M 130 440 L 170 440 L 170 228 L 214 228" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="173" y="340" fill="#333333" font-family="Helvetica" font-size="9px">Fragrance wheel queries</text>
 
-    <path d="M 380 334 L 260 334 L 260 594 L 188 594" class="flow-line" />
-    <text x="260" y="480" class="flow-text">Fragrance recommendations</text>
+    <path d="M 220 237 L 185 237 L 185 430 L 136 430" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="188" y="360" fill="#333333" font-family="Helvetica" font-size="9px">Fragrance recommendations</text>
 
-    <path d="M 1150 265 L 668 265" class="flow-line" />
-    <text x="900" y="257" class="flow-text">Perfume &amp; note details</text>
+    <path d="M 610 189 L 436 189" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="520" y="184" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Perfume &amp; note details</text>
 
-    <path d="M 1150 540 L 900 540 L 900 330 L 668 330" class="flow-line" />
-    <text x="900" y="430" class="flow-text">Stock availability check</text>
+    <path d="M 610 382 L 520 382 L 520 234 L 436 234" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="523" y="310" fill="#333333" font-family="Helvetica" font-size="9px">Stock availability check</text>
 
-    <!-- P3 Flows -->
-    <path d="M 180 280 L 290 280 L 290 482 L 372 482" class="flow-line" />
-    <text x="290" y="380" class="flow-text">Quiz answers &amp; layering enquiry</text>
+    <!-- P3 -->
+    <path d="M 130 200 L 200 200 L 200 336 L 214 336" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="203" y="270" fill="#333333" font-family="Helvetica" font-size="9px">Quiz answers &amp; enquiry</text>
 
-    <path d="M 380 497 L 310 497 L 310 286 L 188 286" class="flow-line" />
-    <text x="310" y="400" class="flow-text">Personalised recommendations</text>
+    <path d="M 220 347 L 210 347 L 210 208 L 136 208" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="213" y="290" fill="#333333" font-family="Helvetica" font-size="9px">Personalised recs</text>
 
-    <path d="M 180 625 L 270 625 L 270 512 L 372 512" class="flow-line" />
-    <text x="270" y="565" class="flow-text">Layering &amp; AI support prompt</text>
+    <path d="M 130 450 L 190 450 L 190 358 L 214 358" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="193" y="405" fill="#333333" font-family="Helvetica" font-size="9px">Custom layering &amp; AI prompt</text>
 
-    <path d="M 380 524 L 290 524 L 290 605 L 188 605" class="flow-line" />
-    <text x="290" y="585" class="flow-text">AI support response</text>
+    <path d="M 220 367 L 205 367 L 205 438 L 136 438" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="208" y="415" fill="#333333" font-family="Helvetica" font-size="9px">AI advice response</text>
 
-    <path d="M 1150 138 L 980 138 L 980 471 L 668 471" class="flow-line" />
-    <text x="980" y="300" class="flow-text">Minimised profile context</text>
+    <path d="M 610 100 L 570 100 L 570 328 L 436 328" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="573" y="215" fill="#333333" font-family="Helvetica" font-size="9px">Min profile context</text>
 
-    <path d="M 1150 280 L 940 280 L 940 486 L 668 486" class="flow-line" />
-    <text x="940" y="380" class="flow-text">Verified fragrance facts</text>
+    <path d="M 610 200 L 550 200 L 550 339 L 436 339" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="553" y="270" fill="#333333" font-family="Helvetica" font-size="9px">Verified fragrance facts</text>
 
-    <path d="M 1150 415 L 920 415 L 920 497 L 668 497" class="flow-line" />
-    <text x="920" y="450" class="flow-text">Order fact lookup context</text>
+    <path d="M 610 295 L 535 295 L 535 347 L 436 347" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="538" y="320" fill="#333333" font-family="Helvetica" font-size="9px">Order context lookup</text>
 
-    <path d="M 660 512 L 880 512 L 880 690 L 1142 690" class="flow-line" />
-    <text x="880" y="600" class="flow-text">Quiz/support write</text>
+    <path d="M 430 358 L 510 358 L 510 487 L 604 487" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="513" y="425" fill="#333333" font-family="Helvetica" font-size="9px">Quiz/support write</text>
 
-    <path d="M 1150 710 L 860 710 L 860 528 L 668 528" class="flow-line" />
-    <text x="860" y="620" class="flow-text">Prior quiz/support context</text>
+    <path d="M 610 503 L 495 503 L 495 370 L 436 370" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="498" y="440" fill="#333333" font-family="Helvetica" font-size="9px">Prior quiz context</text>
 
-    <path d="M 660 475 L 780 475 L 780 450 L 2092 450" class="flow-line" />
-    <text x="1400" y="442" class="flow-text">Minimised prompt request</text>
+    <path d="M 430 331 L 470 331 L 470 315 L 960 315 L 960 333 L 1004 333" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="715" y="310" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Min prompt request</text>
 
-    <path d="M 2100 485 L 1880 485 L 1880 520 L 668 520" class="flow-line" />
-    <text x="1400" y="512" class="flow-text">AI recommendation &amp; advice</text>
+    <path d="M 1010 351 L 975 351 L 975 364 L 436 364" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="715" y="360" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">AI recommendation response</text>
 
-    <!-- P4 Flows -->
-    <path d="M 180 270 L 320 270 L 320 665 L 372 665" class="flow-line" />
-    <text x="320" y="470" class="flow-text">Visitor cart actions</text>
+    <!-- P4 -->
+    <path d="M 130 185 L 215 185 L 215 461 L 214 461" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="218" y="325" fill="#333333" font-family="Helvetica" font-size="9px">Visitor cart actions</text>
 
-    <path d="M 180 635 L 280 635 L 280 695 L 372 695" class="flow-line" />
-    <text x="280" y="665" class="flow-text">Checkout &amp; payment initiation</text>
+    <path d="M 130 460 L 180 460 L 180 483 L 214 483" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="183" y="475" fill="#333333" font-family="Helvetica" font-size="9px">Checkout initiation</text>
 
-    <path d="M 380 714 L 300 714 L 300 636 L 188 636" class="flow-line" />
-    <text x="300" y="680" class="flow-text">Order confirmation &amp; receipt</text>
+    <path d="M 220 497 L 195 497 L 195 460 L 136 460" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="198" y="490" fill="#333333" font-family="Helvetica" font-size="9px">Order confirmation &amp; receipt</text>
 
-    <path d="M 1150 285 L 1040 285 L 1040 661 L 668 661" class="flow-line" />
-    <text x="1040" y="470" class="flow-text">Price &amp; variant data</text>
+    <path d="M 610 204 L 585 204 L 585 458 L 436 458" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="588" y="330" fill="#333333" font-family="Helvetica" font-size="9px">Price &amp; variant data</text>
 
-    <path d="M 660 672 L 800 672 L 800 400 L 1142 400" class="flow-line" />
-    <text x="800" y="530" class="flow-text">Cart/order updates</text>
+    <path d="M 430 466 L 480 466 L 480 283 L 604 283" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="483" y="375" fill="#333333" font-family="Helvetica" font-size="9px">Cart/order updates</text>
 
-    <path d="M 1150 425 L 820 425 L 820 684 L 668 684" class="flow-line" />
-    <text x="820" y="550" class="flow-text">Order/invoice records</text>
+    <path d="M 610 302 L 495 302 L 495 475 L 436 475" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="498" y="390" fill="#333333" font-family="Helvetica" font-size="9px">Order/invoice records</text>
 
-    <path d="M 660 695 L 840 695 L 840 550 L 1142 550" class="flow-line" />
-    <text x="840" y="620" class="flow-text">Reservation/stock updates</text>
+    <path d="M 430 483 L 510 483 L 510 389 L 604 389" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="513" y="436" fill="#333333" font-family="Helvetica" font-size="9px">Stock reservation write</text>
 
-    <path d="M 1150 565 L 860 565 L 860 706 L 668 706" class="flow-line" />
-    <text x="860" y="640" class="flow-text">Stock balances</text>
+    <path d="M 610 401 L 525 401 L 525 491 L 436 491" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="528" y="446" fill="#333333" font-family="Helvetica" font-size="9px">Stock balances</text>
 
-    <path d="M 1150 975 L 760 975 L 760 718 L 668 718" class="flow-line" />
-    <text x="760" y="840" class="flow-text">Active promotion rules</text>
+    <path d="M 610 688 L 465 688 L 465 500 L 436 500" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="468" y="595" fill="#333333" font-family="Helvetica" font-size="9px">Active promotion rules</text>
 
-    <path d="M 660 688 L 720 688 L 720 620 L 1850 620 L 1850 660 L 2092 660" class="flow-line" />
-    <text x="1400" y="612" class="flow-text">Payment intent / charge request</text>
+    <path d="M 430 478 L 450 478 L 450 445 L 950 445 L 950 473 L 1004 473" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="700" y="440" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Payment intent / charge</text>
 
-    <path d="M 2100 686 L 1880 686 L 1880 740 L 700 740 L 700 710 L 668 710" class="flow-line" />
-    <text x="1400" y="732" class="flow-text">Verified payment result</text>
+    <path d="M 1010 491 L 965 491 L 965 520 L 440 520 L 440 494 L 436 494" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="700" y="515" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Verified payment result</text>
 
-    <!-- P5 Flows -->
-    <path d="M 180 645 L 250 645 L 250 870 L 372 870" class="flow-line" />
-    <text x="250" y="760" class="flow-text">Review submission &amp; referral click</text>
+    <!-- P5 -->
+    <path d="M 130 465 L 160 465 L 160 602 L 214 602" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="163" y="535" fill="#333333" font-family="Helvetica" font-size="9px">Review submission</text>
 
-    <path d="M 380 900 L 230 900 L 230 647 L 188 647" class="flow-line" />
-    <text x="230" y="780" class="flow-text">Loyalty rewards &amp; referral balance</text>
+    <path d="M 220 624 L 145 624 L 145 468 L 136 468" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="148" y="545" fill="#333333" font-family="Helvetica" font-size="9px">Loyalty rewards stats</text>
 
-    <path d="M 1150 430 L 1000 430 L 1000 855 L 668 855" class="flow-line" />
-    <text x="1000" y="640" class="flow-text">Purchase eligibility lookup</text>
+    <path d="M 610 306 L 550 306 L 550 591 L 436 591" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="553" y="450" fill="#333333" font-family="Helvetica" font-size="9px">Purchase eligibility check</text>
 
-    <path d="M 660 855 L 1142 855" class="flow-line" />
-    <text x="900" y="847" class="flow-text">Review/loyalty write</text>
+    <path d="M 430 602 L 604 602" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="520" y="597" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Review/loyalty write</text>
 
-    <path d="M 1150 865 L 668 865" class="flow-line" />
-    <text x="900" y="877" class="flow-text">Loyalty/referral balances</text>
+    <path d="M 610 605 L 436 605" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="520" y="618" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Loyalty balances lookup</text>
 
-    <!-- P6 Flows -->
-    <path d="M 2100 1040 L 668 1040" class="flow-line" />
-    <text x="1400" y="1032" class="flow-text">Admin actions, catalogue &amp; stock updates</text>
+    <!-- P6 -->
+    <path d="M 1010 728 L 436 728" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="725" y="723" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Admin actions &amp; updates</text>
 
-    <path d="M 660 1083 L 800 1083 L 800 1066 L 2092 1066" class="flow-line" />
-    <text x="1400" y="1075" class="flow-text">Ops dashboards &amp; audit reports</text>
+    <path d="M 430 749 L 500 749 L 500 746 L 1004 746" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="725" y="743" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Ops dashboards &amp; audit</text>
 
-    <path d="M 1150 288 L 1080 288 L 1080 1038 L 668 1038" class="flow-line" />
-    <text x="1080" y="660" class="flow-text">Current catalogue read</text>
+    <path d="M 610 206 L 600 206 L 600 716 L 436 716" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="603" y="460" fill="#333333" font-family="Helvetica" font-size="9px">Current catalogue read</text>
 
-    <path d="M 660 1041 L 720 1041 L 720 245 L 1142 245" class="flow-line" />
-    <text x="720" y="640" class="flow-text">Catalogue/classification updates</text>
+    <path d="M 430 718 L 450 718 L 450 174 L 604 174" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="453" y="445" fill="#333333" font-family="Helvetica" font-size="9px">Catalogue updates</text>
 
-    <path d="M 1150 575 L 1060 575 L 1060 1049 L 668 1049" class="flow-line" />
-    <text x="1060" y="810" class="flow-text">Current inventory read</text>
+    <path d="M 610 408 L 585 408 L 585 724 L 436 724" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="588" y="565" fill="#333333" font-family="Helvetica" font-size="9px">Current inventory read</text>
 
-    <path d="M 660 1056 L 740 1056 L 740 573 L 1142 573" class="flow-line" />
-    <text x="740" y="810" class="flow-text">Inventory/batch updates</text>
+    <path d="M 430 729 L 465 729 L 465 406 L 604 406" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="468" y="565" fill="#333333" font-family="Helvetica" font-size="9px">Inventory/batch updates</text>
 
-    <path d="M 1150 865 L 1040 865 L 1040 1060 L 668 1060" class="flow-line" />
-    <text x="1040" y="960" class="flow-text">Community/loyalty state read</text>
+    <path d="M 610 612 L 570 612 L 570 732 L 436 732" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="573" y="670" fill="#333333" font-family="Helvetica" font-size="9px">Community state read</text>
 
-    <path d="M 660 1068 L 760 1068 L 760 863 L 1142 863" class="flow-line" />
-    <text x="760" y="960" class="flow-text">Review moderation / loyalty ops</text>
+    <path d="M 430 738 L 480 738 L 480 610 L 604 610" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="483" y="675" fill="#333333" font-family="Helvetica" font-size="9px">Moderation/loyalty ops</text>
 
-    <path d="M 1150 1008 L 1020 1008 L 1020 1071 L 668 1071" class="flow-line" />
-    <text x="1020" y="1039" class="flow-text">Admin &amp; RBAC rules read</text>
+    <path d="M 610 712 L 555 712 L 555 740 L 436 740" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="558" y="726" fill="#333333" font-family="Helvetica" font-size="9px">RBAC &amp; rules read</text>
 
-    <path d="M 660 1075 L 1142 1075" class="flow-line" />
-    <text x="900" y="1067" class="flow-text">Admin/RBAC/audit updates</text>
+    <path d="M 430 746 L 604 746" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="520" y="741" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Admin/RBAC updates</text>
 
-    <!-- Reporting Flows -->
-    <path d="M 1150 143 L 1100 143 L 1100 1090 L 668 1090" class="flow-line" />
-    <text x="1100" y="610" class="flow-text">Customer reporting (D1)</text>
+    <!-- Reporting Reads to P6 -->
+    <path d="M 610 104 L 595 104 L 595 754 L 436 754" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="598" y="425" fill="#333333" font-family="Helvetica" font-size="9px">Customer reporting (D1)</text>
 
-    <path d="M 1150 433 L 1020 433 L 1020 1096 L 668 1096" class="flow-line" />
-    <text x="1020" y="760" class="flow-text">Sales/order metrics (D3)</text>
+    <path d="M 610 308 L 540 308 L 540 758 L 436 758" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="543" y="530" fill="#333333" font-family="Helvetica" font-size="9px">Sales metrics (D3)</text>
 
-    <path d="M 1150 723 L 980 723 L 980 1101 L 668 1101" class="flow-line" />
-    <text x="980" y="910" class="flow-text">Quiz/support metrics (D5)</text>
+    <path d="M 610 512 L 525 512 L 525 762 L 436 762" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="528" y="637" fill="#333333" font-family="Helvetica" font-size="9px">Quiz metrics (D5)</text>
 
-    <path d="M 660 1101 L 700 1101 L 700 1160 L 2134 1160 L 2134 513" class="flow-line" />
-    <text x="1400" y="1152" class="flow-text">Promo video context request</text>
+    <!-- AI Promo Video -->
+    <path d="M 430 762 L 440 762 L 440 785 L 1036 785 L 1036 371" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="740" y="780" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Promo video request</text>
 
-    <path d="M 2236 513 L 2236 1190 L 520 1190 L 520 1113" class="flow-line" />
-    <text x="1400" y="1182" class="flow-text">Generated video assets</text>
+    <path d="M 1114 371 L 1114 805 L 325 805 L 325 771" fill="none" stroke="#333333" stroke-width="1.5" marker-end="url(#arrow)" />
+    <text x="720" y="800" fill="#333333" font-family="Helvetica" font-size="9px" text-anchor="middle">Generated video assets</text>
   </g>
 </svg>
