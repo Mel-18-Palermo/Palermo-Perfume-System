@@ -48,17 +48,17 @@
     <text x="465" y="115" text-anchor="middle" class="process-num">1.0</text>
     <text x="465" y="148" text-anchor="middle" class="process-title">Account &amp; Profile Management</text>
 
-    <!-- 2.0 -->
+    <!-- 2.0 (Exact name) -->
     <rect x="340" y="265" width="250" height="70" class="process-bg" />
     <line x1="340" y1="295" x2="590" y2="295" class="process-line" />
     <text x="465" y="285" text-anchor="middle" class="process-num">2.0</text>
-    <text x="465" y="318" text-anchor="middle" class="process-title">Catalogue, Discovery &amp; Virtual Fragrance</text>
+    <text x="465" y="318" text-anchor="middle" class="process-title">Catalogue &amp; Discovery</text>
 
-    <!-- 3.0 -->
+    <!-- 3.0 (Exact name) -->
     <rect x="340" y="435" width="250" height="70" class="process-bg" />
     <line x1="340" y1="465" x2="590" y2="465" class="process-line" />
     <text x="465" y="455" text-anchor="middle" class="process-num">3.0</text>
-    <text x="465" y="488" text-anchor="middle" class="process-title">Personalisation, Quiz &amp; AI Support</text>
+    <text x="465" y="488" text-anchor="middle" class="process-title">Personalisation &amp; AI Support</text>
 
     <!-- 4.0 -->
     <rect x="340" y="605" width="250" height="70" class="process-bg" />
@@ -124,7 +124,7 @@
     <text x="965" y="918" class="datastore-name">Admin, Promotion &amp; Audit Data</text>
   </g>
 
-  <!-- Connectors & Flows -->
+  <!-- Connectors & Directed Flows -->
   <g id="connectors">
     <!-- P1 Flows -->
     <path d="M 180 240 L 240 240 L 240 116 L 332 116" class="flow-line" />
@@ -133,18 +133,21 @@
     <path d="M 180 535 L 220 535 L 220 144 L 332 144" class="flow-line" />
     <text x="220" y="340" class="flow-text">Profile &amp; session</text>
 
-    <path d="M 590 130 L 892 130" class="flow-line" />
-    <text x="745" y="122" class="flow-text">Read/Write account &amp; Identity</text>
+    <path d="M 590 120 L 892 120" class="flow-line" />
+    <text x="745" y="112" class="flow-text">Customer/profile write</text>
 
-    <path d="M 590 109 L 1492 109" class="flow-line" />
-    <text x="1350" y="101" class="flow-text">Verification &amp; reset messages</text>
+    <path d="M 900 140 L 598 140" class="flow-line" />
+    <text x="745" y="152" class="flow-text">Account/Identity lookup</text>
+
+    <path d="M 590 105 L 1492 105" class="flow-line" />
+    <text x="1350" y="97" class="flow-text">Verification &amp; reset messages</text>
 
     <!-- P2 Flows -->
     <path d="M 180 265 L 250 265 L 250 286 L 332 286" class="flow-line" />
-    <text x="250" y="278" class="flow-text">Browse &amp; filter</text>
+    <text x="250" y="278" class="flow-text">Search, browse &amp; filter</text>
 
     <path d="M 180 550 L 240 550 L 240 314 L 332 314" class="flow-line" />
-    <text x="240" y="430" class="flow-text">Wheel queries</text>
+    <text x="240" y="430" class="flow-text">Fragrance wheel queries</text>
 
     <path d="M 590 286 L 650 286 L 650 263 L 892 263" class="flow-line" />
     <text x="770" y="255" class="flow-text">Read perfumes &amp; notes</text>
@@ -154,10 +157,10 @@
 
     <!-- P3 Flows -->
     <path d="M 180 275 L 260 275 L 260 456 L 332 456" class="flow-line" />
-    <text x="260" y="365" class="flow-text">Quiz intent</text>
+    <text x="260" y="365" class="flow-text">Quiz &amp; enquiry intent</text>
 
     <path d="M 180 565 L 250 565 L 250 484 L 332 484" class="flow-line" />
-    <text x="250" y="525" class="flow-text">Custom context</text>
+    <text x="250" y="525" class="flow-text">Layering &amp; custom context</text>
 
     <path d="M 900 146 L 770 146 L 770 442 L 598 442" class="flow-line" />
     <text x="770" y="294" class="flow-text">Min profile context</text>
@@ -166,10 +169,13 @@
     <text x="785" y="264" class="flow-text">Read verified facts</text>
 
     <path d="M 590 456 L 660 456 L 660 397 L 892 397" class="flow-line" />
-    <text x="775" y="389" class="flow-text">Order facts lookup</text>
+    <text x="775" y="389" class="flow-text">Order fact lookup</text>
 
-    <path d="M 590 491 L 700 491 L 700 653 L 892 653" class="flow-line" />
-    <text x="795" y="645" class="flow-text">Save quiz/chat records</text>
+    <path d="M 590 484 L 700 484 L 700 644 L 892 644" class="flow-line" />
+    <text x="795" y="636" class="flow-text">Quiz/support write</text>
+
+    <path d="M 900 662 L 720 662 L 720 498 L 598 498" class="flow-line" />
+    <text x="720" y="580" class="flow-text">Prior quiz/support context</text>
 
     <path d="M 590 470 L 650 470 L 650 410 L 1492 410" class="flow-line" />
     <text x="1350" y="402" class="flow-text">Minimised prompt / rationale</text>
@@ -184,16 +190,22 @@
     <path d="M 590 612 L 630 612 L 630 276 L 892 276" class="flow-line" />
     <text x="760" y="268" class="flow-text">Price &amp; variant lookup</text>
 
-    <path d="M 590 626 L 650 626 L 650 388 L 892 388" class="flow-line" />
-    <text x="770" y="380" class="flow-text">Orders &amp; payment state</text>
+    <path d="M 590 619 L 650 619 L 650 384 L 892 384" class="flow-line" />
+    <text x="760" y="376" class="flow-text">Cart/order updates</text>
 
-    <path d="M 590 640 L 670 640 L 670 523 L 892 523" class="flow-line" />
-    <text x="780" y="515" class="flow-text">Stock reserve &amp; updates</text>
+    <path d="M 900 401 L 670 401 L 670 633 L 598 633" class="flow-line" />
+    <text x="670" y="517" class="flow-text">Order/invoice records</text>
+
+    <path d="M 590 640 L 680 640 L 680 514 L 892 514" class="flow-line" />
+    <text x="780" y="506" class="flow-text">Reservation/stock updates</text>
+
+    <path d="M 900 531 L 690 531 L 690 647 L 598 647" class="flow-line" />
+    <text x="690" y="589" class="flow-text">Stock balances</text>
 
     <path d="M 590 661 L 660 661 L 660 904 L 892 904" class="flow-line" />
     <text x="775" y="896" class="flow-text">Promotion rule query</text>
 
-    <path d="M 590 647 L 640 647 L 640 610 L 1492 610" class="flow-line" />
+    <path d="M 590 654 L 640 654 L 640 610 L 1492 610" class="flow-line" />
     <text x="1350" y="602" class="flow-text">Payment intents &amp; results</text>
 
     <!-- P5 Flows -->
@@ -203,27 +215,38 @@
     <path d="M 900 406 L 750 406 L 750 789 L 598 789" class="flow-line" />
     <text x="750" y="600" class="flow-text">Purchase eligibility</text>
 
-    <path d="M 590 800 L 892 800" class="flow-line" />
-    <text x="745" y="792" class="flow-text">Points &amp; review transactions</text>
+    <path d="M 590 790 L 892 790" class="flow-line" />
+    <text x="745" y="782" class="flow-text">Review/loyalty updates</text>
 
-    <!-- P6 Flows -->
+    <path d="M 900 800 L 598 800" class="flow-line" />
+    <text x="745" y="812" class="flow-text">Loyalty/referral records</text>
+
+    <!-- P6 Admin Operations & Individual Reporting Links -->
+    <mxCell id="f6_admin" value="Catalogue, stock &amp; RBAC ops" />
     <path d="M 1500 970 L 598 970" class="flow-line" />
     <text x="1050" y="962" class="flow-text">Catalogue, stock &amp; RBAC ops</text>
 
     <path d="M 590 952 L 620 952 L 620 281 L 892 281" class="flow-line" />
-    <text x="755" y="273" class="flow-text">Catalogue CRUD</text>
+    <text x="755" y="273" class="flow-text">Catalogue/classification updates</text>
 
     <path d="M 590 959 L 640 959 L 640 536 L 892 536" class="flow-line" />
-    <text x="765" y="528" class="flow-text">Inventory &amp; batch ops</text>
+    <text x="765" y="528" class="flow-text">Inventory/batch updates</text>
 
     <path d="M 590 966 L 660 966 L 660 796 L 892 796" class="flow-line" />
-    <text x="775" y="788" class="flow-text">Review moderation</text>
+    <text x="775" y="788" class="flow-text">Review moderation / loyalty ops</text>
 
     <path d="M 590 973 L 680 973 L 680 922 L 892 922" class="flow-line" />
-    <text x="785" y="914" class="flow-text">Admin &amp; audit CRUD</text>
+    <text x="785" y="914" class="flow-text">Admin/RBAC/audit updates</text>
 
-    <path d="M 590 994 L 710 994 L 710 720 L 1060 720 L 1060 683" class="flow-line" />
-    <text x="885" y="712" class="flow-text">Reporting metrics (D1, D3, D5)</text>
+    <!-- Individual Reporting Lines from D1, D3, D5 to P6 -->
+    <path d="M 900 151 L 830 151 L 830 987 L 598 987" class="flow-line" />
+    <text x="830" y="570" class="flow-text">Customer reporting (D1)</text>
+
+    <path d="M 900 411 L 790 411 L 790 994 L 598 994" class="flow-line" />
+    <text x="790" y="702" class="flow-text">Sales/order metrics (D3)</text>
+
+    <path d="M 900 671 L 750 671 L 750 1001 L 598 1001" class="flow-line" />
+    <text x="750" y="836" class="flow-text">Quiz/support metrics (D5)</text>
 
     <path d="M 590 1008 L 630 1008 L 630 1060 L 1575 1060 L 1575 448" class="flow-line" />
     <text x="1100" y="1052" class="flow-text">Promo video context</text>
