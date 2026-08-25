@@ -1,132 +1,164 @@
 <mxfile host="app.diagrams.net" modified="2026-08-25T00:00:00.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
   <diagram id="dfd-level-1" name="DFD Level 1 - Gane and Sarson">
-    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1200" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
         <!-- External Entities (Left) -->
         <mxCell id="ent_visitor" value="Visitor" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;strokeWidth=1.5;" vertex="1" parent="1">
-          <mxGeometry x="60" y="240" width="130" height="60" as="geometry" />
+          <mxGeometry x="50" y="220" width="130" height="60" as="geometry" />
         </mxCell>
         <mxCell id="ent_customer" value="Customer" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;strokeWidth=1.5;" vertex="1" parent="1">
-          <mxGeometry x="60" y="520" width="130" height="60" as="geometry" />
+          <mxGeometry x="50" y="520" width="130" height="60" as="geometry" />
         </mxCell>
 
         <!-- External Entities (Right) -->
         <mxCell id="ent_email" value="Email delivery service" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;strokeWidth=1.5;" vertex="1" parent="1">
-          <mxGeometry x="1460" y="100" width="140" height="60" as="geometry" />
+          <mxGeometry x="1500" y="100" width="150" height="60" as="geometry" />
         </mxCell>
         <mxCell id="ent_ai" value="AI service / API" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;strokeWidth=1.5;" vertex="1" parent="1">
-          <mxGeometry x="1460" y="380" width="140" height="60" as="geometry" />
+          <mxGeometry x="1500" y="380" width="150" height="60" as="geometry" />
         </mxCell>
         <mxCell id="ent_stripe" value="Stripe payment service" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;strokeWidth=1.5;" vertex="1" parent="1">
-          <mxGeometry x="1460" y="580" width="140" height="60" as="geometry" />
+          <mxGeometry x="1500" y="580" width="150" height="60" as="geometry" />
         </mxCell>
         <mxCell id="ent_admin" value="Administrator" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;strokeWidth=1.5;" vertex="1" parent="1">
-          <mxGeometry x="1460" y="940" width="140" height="60" as="geometry" />
+          <mxGeometry x="1500" y="940" width="150" height="60" as="geometry" />
         </mxCell>
 
         <!-- 6 Gane & Sarson Processes -->
         <mxCell id="p1" value="1.0&#xa;Account &amp; Profile Management" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="340" y="95" width="240" height="70" as="geometry" />
+          <mxGeometry x="340" y="95" width="250" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p2" value="2.0&#xa;Catalogue, Discovery &amp; Virtual Fragrance" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="340" y="265" width="240" height="70" as="geometry" />
+          <mxGeometry x="340" y="265" width="250" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p3" value="3.0&#xa;Personalisation, Quiz &amp; AI Support" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="340" y="435" width="240" height="70" as="geometry" />
+          <mxGeometry x="340" y="435" width="250" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p4" value="4.0&#xa;Cart, Order, Payment &amp; Delivery" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="340" y="605" width="240" height="70" as="geometry" />
+          <mxGeometry x="340" y="605" width="250" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p5" value="5.0&#xa;Community, Loyalty &amp; Referral" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="340" y="775" width="240" height="70" as="geometry" />
+          <mxGeometry x="340" y="775" width="250" height="70" as="geometry" />
         </mxCell>
         <mxCell id="p6" value="6.0&#xa;Administration &amp; Operations" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;rounded=1;arcSize=14;strokeWidth=1.5;fillColor=#f8f9fa;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="340" y="945" width="240" height="70" as="geometry" />
+          <mxGeometry x="340" y="945" width="250" height="70" as="geometry" />
         </mxCell>
 
         <!-- 7 Gane & Sarson Data Stores (D1 - D7) -->
         <mxCell id="ds_d1" value="D1 | Customer &amp; Profile Data" style="shape=partialRectangle;top=0;bottom=0;fillColor=none;strokeWidth=1.5;align=left;spacingLeft=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="880" y="110" width="300" height="45" as="geometry" />
+          <mxGeometry x="900" y="110" width="320" height="45" as="geometry" />
         </mxCell>
         <mxCell id="ds_d2" value="D2 | Catalogue &amp; Fragrance Data" style="shape=partialRectangle;top=0;bottom=0;fillColor=none;strokeWidth=1.5;align=left;spacingLeft=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="880" y="240" width="300" height="45" as="geometry" />
+          <mxGeometry x="900" y="240" width="320" height="45" as="geometry" />
         </mxCell>
         <mxCell id="ds_d3" value="D3 | Commerce &amp; Fulfilment Data" style="shape=partialRectangle;top=0;bottom=0;fillColor=none;strokeWidth=1.5;align=left;spacingLeft=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="880" y="370" width="300" height="45" as="geometry" />
+          <mxGeometry x="900" y="370" width="320" height="45" as="geometry" />
         </mxCell>
         <mxCell id="ds_d4" value="D4 | Inventory &amp; Production Data" style="shape=partialRectangle;top=0;bottom=0;fillColor=none;strokeWidth=1.5;align=left;spacingLeft=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="880" y="500" width="300" height="45" as="geometry" />
+          <mxGeometry x="900" y="500" width="320" height="45" as="geometry" />
         </mxCell>
         <mxCell id="ds_d5" value="D5 | Quiz, Recommendation &amp; Support Data" style="shape=partialRectangle;top=0;bottom=0;fillColor=none;strokeWidth=1.5;align=left;spacingLeft=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="880" y="630" width="300" height="45" as="geometry" />
+          <mxGeometry x="900" y="630" width="320" height="45" as="geometry" />
         </mxCell>
         <mxCell id="ds_d6" value="D6 | Community &amp; Loyalty Data" style="shape=partialRectangle;top=0;bottom=0;fillColor=none;strokeWidth=1.5;align=left;spacingLeft=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="880" y="760" width="300" height="45" as="geometry" />
+          <mxGeometry x="900" y="760" width="320" height="45" as="geometry" />
         </mxCell>
         <mxCell id="ds_d7" value="D7 | Admin, Promotion &amp; Audit Data" style="shape=partialRectangle;top=0;bottom=0;fillColor=none;strokeWidth=1.5;align=left;spacingLeft=10;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="880" y="890" width="300" height="45" as="geometry" />
+          <mxGeometry x="900" y="890" width="320" height="45" as="geometry" />
         </mxCell>
 
         <!-- Process 1.0 Flows -->
-        <mxCell id="f1_auth" value="Registration &amp; credentials" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_visitor" target="p1" parent="1">
+        <mxCell id="f1_vis" value="Registration &amp; verification" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="ent_visitor" target="p1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="240" y="250" />
-              <mxPoint x="240" y="130" />
+              <mxPoint x="240" y="240" />
+              <mxPoint x="240" y="116" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f1_email" value="Verification email" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p1" target="ent_email" parent="1">
+        <mxCell id="f1_cust" value="Profile &amp; session management" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="640" y="116" />
+              <mxPoint x="220" y="535" />
+              <mxPoint x="220" y="144" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f1_d1" value="Read/Write account &amp; Identity" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p1" target="ds_d1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f1_email" value="Verification &amp; reset messages" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p1" target="ent_email" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="109" />
               <mxPoint x="640" y="130" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f1_d1" value="Profile CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p1" target="ds_d1" parent="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
 
         <!-- Process 2.0 Flows -->
-        <mxCell id="f2_search" value="Search &amp; filter queries" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_visitor" target="p2" parent="1">
+        <mxCell id="f2_vis" value="Search, browse &amp; filter" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="ent_visitor" target="p2" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="240" y="280" />
-              <mxPoint x="240" y="300" />
+              <mxPoint x="250" y="265" />
+              <mxPoint x="250" y="286" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f2_d2" value="Read catalogue &amp; notes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p2" target="ds_d2" parent="1">
+        <mxCell id="f2_cust" value="Fragrance wheel queries" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p2" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="640" y="286" />
-              <mxPoint x="640" y="263" />
+              <mxPoint x="240" y="550" />
+              <mxPoint x="240" y="314" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f2_d4" value="Read stock availability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ds_d4" target="p2" parent="1">
+        <mxCell id="f2_d2" value="Read perfumes &amp; notes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p2" target="ds_d2" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="720" y="523" />
-              <mxPoint x="720" y="314" />
+              <mxPoint x="650" y="286" />
+              <mxPoint x="650" y="263" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f2_d4" value="Check stock availability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ds_d4" target="p2" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="523" />
+              <mxPoint x="740" y="314" />
             </Array>
           </mxGeometry>
         </mxCell>
 
         <!-- Process 3.0 Flows -->
-        <mxCell id="f3_user" value="Quiz, customisation &amp; support" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p3" parent="1">
+        <mxCell id="f3_vis" value="Quiz &amp; enquiry intent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="ent_visitor" target="p3" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="240" y="535" />
-              <mxPoint x="240" y="470" />
+              <mxPoint x="260" y="275" />
+              <mxPoint x="260" y="456" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f3_d2" value="Read verified facts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.7;entryDx=0;entryDy=0;exitX=1;exitY=0.2;exitDx=0;exitDy=0;" edge="1" source="p3" target="ds_d2" parent="1">
+        <mxCell id="f3_cust" value="Layering &amp; custom context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="250" y="565" />
+              <mxPoint x="250" y="484" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f3_d1" value="Minimised profile context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.1;entryDx=0;entryDy=0;" edge="1" source="ds_d1" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="770" y="146" />
+              <mxPoint x="770" y="442" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f3_d2" value="Read verified facts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d2" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="680" y="449" />
@@ -134,96 +166,161 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f3_d5" value="Quiz &amp; chat logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d5" parent="1">
+        <mxCell id="f3_d3" value="Order fact lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d3" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="700" y="470" />
+              <mxPoint x="660" y="456" />
+              <mxPoint x="660" y="397" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f3_d5" value="Save quiz/chat records" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p3" target="ds_d5" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="491" />
               <mxPoint x="700" y="653" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f3_ai" value="Minimised prompt / rationale" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p3" target="ent_ai" parent="1">
+        <mxCell id="f3_ai" value="Minimised prompt / rationale" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p3" target="ent_ai" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="650" y="456" />
+              <mxPoint x="650" y="470" />
               <mxPoint x="650" y="410" />
             </Array>
           </mxGeometry>
         </mxCell>
 
         <!-- Process 4.0 Flows -->
-        <mxCell id="f4_user" value="Cart &amp; checkout actions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p4" parent="1">
+        <mxCell id="f4_vis" value="Guest cart actions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.2;entryDx=0;entryDy=0;" edge="1" source="ent_visitor" target="p4" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="240" y="565" />
-              <mxPoint x="240" y="640" />
+              <mxPoint x="270" y="270" />
+              <mxPoint x="270" y="619" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f4_stripe" value="Payment tokens &amp; results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ent_stripe" parent="1">
+        <mxCell id="f4_cust" value="Checkout, payment &amp; tracking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p4" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="640" y="626" />
+              <mxPoint x="230" y="575" />
+              <mxPoint x="230" y="654" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f4_d2" value="Price &amp; variant lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.1;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d2" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="612" />
+              <mxPoint x="630" y="276" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f4_d3" value="Orders &amp; payment state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d3" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="626" />
+              <mxPoint x="650" y="388" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f4_d4" value="Stock reserve &amp; updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d4" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="640" />
+              <mxPoint x="670" y="523" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f4_d7" value="Promotion rule query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d7" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="661" />
+              <mxPoint x="660" y="904" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f4_stripe" value="Payment intents &amp; results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ent_stripe" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="647" />
               <mxPoint x="640" y="610" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="f4_d3" value="Order &amp; shipment records" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d3" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="660" y="619" />
-              <mxPoint x="660" y="393" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="f4_d4" value="Reserve &amp; update stock" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p4" target="ds_d4" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="680" y="640" />
-              <mxPoint x="680" y="523" />
             </Array>
           </mxGeometry>
         </mxCell>
 
         <!-- Process 5.0 Flows -->
-        <mxCell id="f5_user" value="Reviews, loyalty &amp; referrals" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p5" parent="1">
+        <mxCell id="f5_cust" value="Reviews, loyalty &amp; referrals" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_customer" target="p5" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="220" y="575" />
-              <mxPoint x="220" y="810" />
+              <mxPoint x="210" y="575" />
+              <mxPoint x="210" y="810" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f5_d6" value="Points &amp; review updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p5" target="ds_d6" parent="1">
+        <mxCell id="f5_d3" value="Verify purchase eligibility" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.2;entryDx=0;entryDy=0;" edge="1" source="ds_d3" target="p5" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="406" />
+              <mxPoint x="750" y="789" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f5_d6" value="Points &amp; review transactions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p5" target="ds_d6" parent="1">
           <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="f5_d3" value="Verify purchase eligibility" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.2;entryDx=0;entryDy=0;" edge="1" source="ds_d3" target="p5" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="740" y="402" />
-              <mxPoint x="740" y="789" />
-            </Array>
-          </mxGeometry>
         </mxCell>
 
-        <!-- Process 6.0 Flows -->
-        <mxCell id="f6_admin" value="Admin actions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_admin" target="p6" parent="1">
+        <!-- Process 6.0 Flows (Complete Admin & Store Links) -->
+        <mxCell id="f6_admin" value="Catalogue, stock &amp; RBAC ops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ent_admin" target="p6" parent="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="f6_d7" value="Admin &amp; audit CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d7" parent="1">
+        <mxCell id="f6_d2" value="Catalogue CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.1;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d2" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="670" y="959" />
-              <mxPoint x="670" y="913" />
+              <mxPoint x="620" y="952" />
+              <mxPoint x="620" y="281" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="f6_ai" value="Promo generation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="p6" target="ent_ai" parent="1">
+        <mxCell id="f6_d4" value="Inventory &amp; batch ops" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d4" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="630" y="994" />
+              <mxPoint x="640" y="959" />
+              <mxPoint x="640" y="536" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f6_d6" value="Review moderation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d6" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="660" y="966" />
+              <mxPoint x="660" y="796" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f6_d7" value="Admin &amp; audit CRUD" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d7" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="973" />
+              <mxPoint x="680" y="922" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f6_rep" value="Reporting metrics (D1, D3, D5)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="p6" target="ds_d5" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="710" y="994" />
+              <mxPoint x="710" y="720" />
+              <mxPoint x="1060" y="720" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f6_ai" value="Promo video context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="p6" target="ent_ai" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="1008" />
               <mxPoint x="630" y="1060" />
-              <mxPoint x="1530" y="1060" />
+              <mxPoint x="1575" y="1060" />
             </Array>
           </mxGeometry>
         </mxCell>
