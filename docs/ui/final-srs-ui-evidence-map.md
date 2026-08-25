@@ -25,16 +25,16 @@ The Final SRS should show enough visual evidence to demonstrate the main custome
 
 | Evidence ID | Report-facing evidence | Required content | Primary source | Coverage |
 |---|---|---|---|---|
-| UI-E01 | Registration / verification / login flow | registration inputs, verification state, sign-in, validation/error states | `docs/ui/account-profile.md` | FR-AUTH-001..007 |
+| UI-E01 | Registration / verification / login flow | registration inputs, verification state, sign-in/sign-out, password reset, account deactivation, validation/error states | `docs/ui/account-profile.md` | FR-AUTH-001..007 |
 | UI-E02 | Customer profile + fragrance preferences | profile, addresses, favourite notes, intensity, non-medical sensitivity, Fragrance Identity | `docs/ui/account-profile.md` | FR-PROFILE-001..008 |
-| UI-E03 | Catalogue / search / filters | browse, keyword search, note/family/price/intensity/occasion/mood filters; no invented brand filter | `docs/ui/catalogue-discovery.md` | FR-DISCOVERY-001..008 |
-| UI-E04 | Perfume detail / virtual fragrance experience | fragrance wheel, top-middle-base journey, longevity/projection, suitability and compare access | `docs/ui/catalogue-discovery.md` | FR-VIRTUAL-001..007 |
+| UI-E03 | Catalogue / search / filters | browse, keyword search, note/family/price/intensity/occasion/mood filters, deterministic weather-category suggestions and perfume comparison; no invented brand filter | `docs/ui/catalogue-discovery.md` | FR-DISCOVERY-001..010 |
+| UI-E04 | Perfume detail / virtual fragrance experience | fragrance wheel, top-middle-base journey, longevity/projection, suitability and virtual scent-profile comparison | `docs/ui/catalogue-discovery.md` | FR-VIRTUAL-001..007 |
 | UI-E05 | Personalisation / quiz / recommendation | customisation where eligible, quiz inputs/result, AI-assisted recommendations with transparency/fallback | `docs/ui/personalisation-ai-support.md` | FR-PERSONAL-001..008 |
 | UI-E06 | Cart / wishlist | Visitor temporary cart, authenticated Customer cart, wishlist, quantity, totals, promo result, customisation summary | `docs/ui/cart-order-delivery.md` | FR-CART-001..005 |
 | UI-E07 | Checkout / payment / order confirmation | authenticated checkout, delivery selection, price/stock revalidation result, Stripe handoff/result, invoice/order confirmation | `docs/ui/cart-order-delivery.md` | FR-ORDER-001..004, FR-DELIVERY-001 |
 | UI-E08 | Order detail / tracking | order status, invoice access, shipment/tracking, delivery confirmation, cancellation-request state where eligible | `docs/ui/cart-order-delivery.md` | FR-DELIVERY-002..003, FR-ORDER-003..004 |
 | UI-E09 | AI customer support | public generic support vs authenticated own-order/delivery support, AI disclosure, feedback | `docs/ui/personalisation-ai-support.md` | FR-SUPPORT-001..008 |
-| UI-E10 | Administrator dashboard / operations | dashboard/reporting, catalogue/inventory, review moderation, promotion/admin controls, RBAC-sensitive actions | `docs/ui/admin-derived-modules.md` | FR-ADMIN-001..013; DER-INVENTORY-*; DER-REVIEW-001; DER-PROMO-001 |
+| UI-E10 | Administrator dashboard / operations | dashboard/reporting, catalogue/inventory, review moderation, promotion/admin controls, RBAC-sensitive actions | `docs/ui/admin-derived-modules.md` | FR-PRODUCT-001..010; FR-COLLECTION-001..008; FR-ADMIN-001..013; DER-INVENTORY-*; DER-REVIEW-001; DER-PROMO-001 |
 | UI-E11 | Derived customer participation | review, loyalty, subscription opt-in/out and referral views without expanding into social-network or recurring-billing features | `docs/ui/admin-derived-modules.md` | DER-REVIEW-001; DER-COMMUNITY-001; DER-LOYALTY-001; DER-SUBSCRIPTION-001; DER-REFERRAL-001 |
 | UI-E12 | Promotional content / AI video approval | content record, generate/preview, approve/reject; no automatic posting | `docs/ui/admin-derived-modules.md` | DER-SOCIAL-001..002 |
 
