@@ -157,7 +157,7 @@ Customer/Visitor scope includes, where applicable:
 - bounded personalised sample sets;
 - structured fragrance discovery quiz;
 - AI-assisted perfume recommendations over approved catalogue candidates;
-- Visitor temporary cart and Customer persistent cart;
+- Visitor temporary cart and authenticated Customer cart;
 - account-specific wishlist;
 - promotional-code application;
 - authenticated checkout;
