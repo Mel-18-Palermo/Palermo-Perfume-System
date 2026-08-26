@@ -1,0 +1,22 @@
+# pnpm v11 supply-chain policy for the Palermo scaffold.
+# Keep the default 24-hour release-age delay, with narrow exclusions for the
+# explicitly pinned Next.js 16.3.3 packages selected for this security baseline.
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - "@next/env"
+  - "@next/eslint-plugin-next"
+  - "@next/swc-darwin-arm64"
+  - "@next/swc-darwin-x64"
+  - "@next/swc-linux-arm64-gnu"
+  - "@next/swc-linux-arm64-musl"
+  - "@next/swc-linux-x64-gnu"
+  - "@next/swc-linux-x64-musl"
+  - "@next/swc-win32-arm64-msvc"
+  - "@next/swc-win32-x64-msvc"
+  - "eslint-config-next"
+  - "next"
+
+# unrs-resolver 1.12.2 is a transitive dependency with a required postinstall.
+# Approve only the reviewed version. A future version must be reviewed again.
+allowBuilds:
+  "unrs-resolver@1.12.2": true
