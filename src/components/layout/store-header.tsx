@@ -34,6 +34,9 @@ export function StoreHeader({ onOpenMobileNav, cartCount = 0 }: StoreHeaderProps
             <Link href="/" className="text-sm font-medium text-foreground hover:text-accent transition-colors">
               Catalogue
             </Link>
+            <Link href="/quiz" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Fragrance Quiz
+            </Link>
             <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               New Arrivals
             </Link>
