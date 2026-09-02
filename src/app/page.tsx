@@ -1,51 +1,71 @@
-import { CircleCheck, HeartPulse } from "lucide-react";
+import { CustomerShell } from "@/components/layout/customer-shell";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 
-export default function HomePage() {
+export default function Home() {
   return (
-    <main className="min-h-dvh bg-background px-4 py-10 text-foreground md:px-6 md:py-16 lg:px-8">
-      <section className="mx-auto flex max-w-reading flex-col gap-6">
-        <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-          <CircleCheck aria-hidden="true" size={20} strokeWidth={1.75} />
-          <span>Implementation foundation active</span>
-        </div>
+    <CustomerShell cartCount={2}>
+      <div className="space-y-6">
+        <Alert variant="info" title="Sprint Foundation Status">
+          Customer shell primitives baseline (Issue #245) loaded cleanly with responsive navigation and design tokens.
+        </Alert>
 
-        <div className="flex flex-col gap-4">
-          <p className="text-sm font-medium uppercase tracking-wide text-accent">
-            Palermo Perfume System
-          </p>
-          <h1 className="text-3xl font-bold leading-tight md:text-4xl">
-            Application scaffold
-          </h1>
-          <p className="max-w-reading text-base leading-6 text-muted-foreground">
-            The Next.js, React and strict TypeScript foundation is ready for
-            contract, persistence and feature implementation.
-          </p>
-        </div>
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Santorini Eau de Parfum</CardTitle>
+                <Badge variant="accent">Best Seller</Badge>
+              </div>
+              <CardDescription>Fresh citrus, marine notes, and crisp cedar.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">$120.00</p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="primary" className="w-full">Add to Cart</Button>
+            </CardFooter>
+          </Card>
 
-        <div className="rounded-lg border border-border bg-surface p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <HeartPulse
-              aria-hidden="true"
-              className="mt-0.5 shrink-0 text-success"
-              size={24}
-              strokeWidth={1.75}
-            />
-            <div className="flex flex-col gap-2">
-              <h2 className="text-xl font-semibold">Health surface</h2>
-              <p className="text-sm leading-5 text-muted-foreground">
-                The server exposes a minimal non-sensitive health endpoint for
-                local and later automated smoke validation.
-              </p>
-              <a
-                className="w-fit text-sm font-medium underline underline-offset-4"
-                href="/api/health"
-              >
-                Open /api/health
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Velvet Rose Extract</CardTitle>
+                <Badge variant="neutral">New</Badge>
+              </div>
+              <CardDescription>Damask rose, warm amber, and spiced vanilla.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">$145.00</p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="secondary" className="w-full">Add to Cart</Button>
+            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Discovery Set</CardTitle>
+              <CardDescription>Five 5ml miniature flacons curated for profiling.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-foreground">$45.00</p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full">Explore Set</Button>
+            </CardFooter>
+          </Card>
+        </section>
+
+        <EmptyState
+          title="No Recent Orders"
+          description="You haven't placed an order yet. Browse our catalogue to get started."
+          action={<Button variant="outline" size="sm">Browse All Perfumes</Button>}
+        />
+      </div>
+    </CustomerShell>
   );
 }
