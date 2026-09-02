@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
+import {
+  fetchFragranceRecommendations,
+  getDeterministicFallbackRecommendations,
+  type RecommendationContractResult,
+  type QuizAnswersPayload,
+} from "./recommendation-service";
 
 interface QuizOption {
   id: string;
@@ -20,21 +26,9 @@ interface QuizQuestion {
   options: QuizOption[];
 }
 
-interface FragranceRecommendation {
-  id: string;
-  name: string;
-  concentration: string;
-  family: string;
-  matchScore: number;
-  description: string;
-  dominantNotes: string[];
-  suggestedOccasion: string;
-  price: number;
-}
-
 const QUIZ_QUESTIONS: readonly QuizQuestion[] = [
   {
-    id: "scent_profile",
+    id: "scentProfile",
     title: "What scent profile resonates most with you?",
     subtitle: "Select the olfactory universe that reflects your aesthetic.",
     options: [
@@ -66,96 +60,19 @@ const QUIZ_QUESTIONS: readonly QuizQuestion[] = [
   },
 ] as const;
 
-const MOCK_RECOMMENDATIONS: Record<string, FragranceRecommendation[]> = {
-  citrus: [
-    {
-      id: "rec_1",
-      name: "Santorini Mist",
-      concentration: "Extrait de Parfum",
-      family: "Citrus Mineral",
-      matchScore: 98,
-      description: "Sun-drenched Calabrian bergamot infused with marine salt and crisp sea spray notes.",
-      dominantNotes: ["Calabrian Bergamot", "Sicilian Lemon", "Marine Salt"],
-      suggestedOccasion: "Daylight Elegance & Summer Days",
-      price: 120.0,
-    },
-    {
-      id: "rec_2",
-      name: "Neroli Blanc",
-      concentration: "Eau de Parfum",
-      family: "Citrus Floral",
-      matchScore: 92,
-      description: "Crisp white neroli petals anchored by sweet orange blossom and sparkling white musk.",
-      dominantNotes: ["Tunisian Neroli", "Sweet Orange", "White Musk"],
-      suggestedOccasion: "Universal Signature",
-      price: 115.0,
-    },
-  ],
-  floral: [
-    {
-      id: "rec_3",
-      name: "Velvet Damask",
-      concentration: "Extrait de Parfum",
-      family: "Floral Oriental",
-      matchScore: 96,
-      description: "Opulent Turkish damask rose kissed with pink peppercorn and velvety jasmine sambac.",
-      dominantNotes: ["Damask Rose", "Pink Pepper", "Jasmine Sambac"],
-      suggestedOccasion: "Evening & Formal Events",
-      price: 145.0,
-    },
-  ],
-  woody: [
-    {
-      id: "rec_4",
-      name: "Oud Royale",
-      concentration: "Extrait de Parfum",
-      family: "Woody Oriental",
-      matchScore: 99,
-      description: "Precious dark agarwood layered with smoked Atlas cedar and rich golden amber resin.",
-      dominantNotes: ["Smoky Agarwood", "Atlas Cedar", "Golden Amber"],
-      suggestedOccasion: "Nocturne & Evening Gala",
-      price: 180.0,
-    },
-    {
-      id: "rec_5",
-      name: "Cypress Noir",
-      concentration: "Eau de Parfum",
-      family: "Woody Aromatic",
-      matchScore: 89,
-      description: "Aromatic Mediterranean cypress needle blended with Haitian vetiver and dark pine resin.",
-      dominantNotes: ["Cypress Needle", "Haitian Vetiver", "Smoked Pine"],
-      suggestedOccasion: "All-Day Signature",
-      price: 150.0,
-    },
-  ],
-  oriental: [
-    {
-      id: "rec_6",
-      name: "Ambre Nuit",
-      concentration: "Extrait de Parfum",
-      family: "Warm Amber",
-      matchScore: 97,
-      description: "Lush Bourbon vanilla and Tonka bean laced with warm benzoin resin and golden honey.",
-      dominantNotes: ["Bourbon Vanilla", "Tonka Bean", "Benzoin Resin"],
-      suggestedOccasion: "Evening & Intimate Nights",
-      price: 160.0,
-    },
-  ],
-};
-
-const DEFAULT_RECOMMENDATIONS: FragranceRecommendation[] = MOCK_RECOMMENDATIONS.citrus ?? [];
-
 export function FragranceQuizView() {
   const [currentStep, setCurrentStep] = React.useState<number>(0);
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [showResults, setShowResults] = React.useState<boolean>(false);
-  const [recommendations, setRecommendations] = React.useState<FragranceRecommendation[]>([]);
-  const [fallbackTriggered, setFallbackTriggered] = React.useState<boolean>(false);
+  const [recommendations, setRecommendations] = React.useState<RecommendationContractResult[]>([]);
+  const [resultSource, setResultSource] = React.useState<"AI_LIVE_ADAPTER" | "DETERMINISTIC_FALLBACK">("AI_LIVE_ADAPTER");
+  const [advisoryBanner, setAdvisoryBanner] = React.useState<string | null>(null);
   const [stepError, setStepError] = React.useState<string | null>(null);
+  const [fatalError, setFatalError] = React.useState<string | null>(null);
 
   const fallbackQuestion: QuizQuestion = {
-    id: "unknown",
+    id: "scentProfile",
     title: "Question",
     subtitle: "",
     options: [],
@@ -179,7 +96,7 @@ export function FragranceQuizView() {
       setCurrentStep((prev) => prev + 1);
       setStepError(null);
     } else {
-      void handleSubmit();
+      void handleSubmit(false);
     }
   };
 
@@ -190,22 +107,36 @@ export function FragranceQuizView() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (forceSimulatedFailure: boolean = false) => {
     setIsSubmitting(true);
     setStepError(null);
+    setFatalError(null);
+
+    const payload: QuizAnswersPayload = {
+      scentProfile: answers.scentProfile ?? "citrus",
+      intensity: answers.intensity ?? "balanced",
+      occasion: answers.occasion ?? "all",
+    };
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      const selectedFamily = answers.scent_profile ?? "citrus";
-      const matched = MOCK_RECOMMENDATIONS[selectedFamily] ?? DEFAULT_RECOMMENDATIONS;
-
-      setRecommendations(matched);
+      const response = await fetchFragranceRecommendations(payload, forceSimulatedFailure);
+      setRecommendations(response.recommendations);
+      setResultSource(response.source);
+      setAdvisoryBanner(null);
       setShowResults(true);
     } catch {
-      setFallbackTriggered(true);
+      const fallback = getDeterministicFallbackRecommendations(payload);
+      setRecommendations(fallback.recommendations);
+      setResultSource(fallback.source);
+      setAdvisoryBanner(fallback.advisoryMessage ?? null);
+      setShowResults(true);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSimulateFatalError = () => {
+    setFatalError("Recommendation service is unavailable. Please explore the collection directly.");
   };
 
   const handleReset = () => {
@@ -213,31 +144,26 @@ export function FragranceQuizView() {
     setAnswers({});
     setShowResults(false);
     setRecommendations([]);
-    setFallbackTriggered(false);
+    setAdvisoryBanner(null);
     setStepError(null);
+    setFatalError(null);
   };
 
-  const handleTriggerSimulatedFallback = () => {
-    setFallbackTriggered(true);
-  };
-
-  if (fallbackTriggered) {
+  if (fatalError) {
     return (
       <div className="container mx-auto max-w-2xl px-4 py-16">
-        <Alert variant="info" className="mb-6">
-          <p className="font-semibold">AI Recommendation Service Advisory</p>
-          <p className="text-sm">
-            The personalized formulation advisor is temporarily undergoing refinement. Our complete bespoke catalogue remains accessible.
-          </p>
+        <Alert variant="danger" className="mb-6">
+          <p className="font-semibold text-base mb-1">Service Unavailable</p>
+          <p className="text-sm">{fatalError}</p>
         </Alert>
 
         <Card>
           <CardHeader>
             <CardTitle>Explore All Formulations</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <p className="text-sm text-muted-foreground">
-              You can browse our complete fragrance catalogue and filter by olfactory family, bottle size, and concentration directly.
+              Our bespoke fragrance catalogue is fully accessible while recommendation services are being updated.
             </p>
           </CardContent>
           <CardFooter className="flex gap-4">
@@ -245,7 +171,7 @@ export function FragranceQuizView() {
               <Button className="w-full">Return to Catalogue</Button>
             </Link>
             <Button variant="outline" onClick={handleReset} className="w-full sm:w-auto">
-              Retry Quiz
+              Try Again
             </Button>
           </CardFooter>
         </Card>
@@ -256,14 +182,24 @@ export function FragranceQuizView() {
   if (showResults) {
     return (
       <div className="container mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+        {advisoryBanner && (
+          <Alert variant="warning" className="mb-6">
+            <p className="font-semibold text-sm">Advisory Notification</p>
+            <p className="text-sm">{advisoryBanner}</p>
+          </Alert>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
-            <Badge variant="accent" className="mb-2">
-              Curated Matches
-            </Badge>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="accent">Curated Matches</Badge>
+              <Badge variant="neutral" className="text-[11px]">
+                {resultSource === "AI_LIVE_ADAPTER" ? "AI Recommendation Active" : "Deterministic Fallback Active"}
+              </Badge>
+            </div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Your Fragrance Signatures</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Bespoke selections based on your olfactory profile and intensity preferences.
+              Product-grounded matches derived strictly from approved catalogue formulas.
             </p>
           </div>
           <div className="flex gap-3">
@@ -291,6 +227,11 @@ export function FragranceQuizView() {
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">{rec.description}</p>
 
+                <div className="rounded-md bg-surface-muted p-3 text-xs">
+                  <span className="font-semibold text-foreground">Recommendation Match Rationale: </span>
+                  <span className="text-muted-foreground">{rec.reasoning}</span>
+                </div>
+
                 <div>
                   <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
                     Key Dominant Notes
@@ -304,9 +245,9 @@ export function FragranceQuizView() {
                   </div>
                 </div>
 
-                <div className="rounded-md bg-surface-muted p-3 text-xs">
+                <div className="text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">Ideal Occasion: </span>
-                  <span className="text-muted-foreground">{rec.suggestedOccasion}</span>
+                  {rec.suggestedOccasion}
                 </div>
               </CardContent>
 
@@ -314,7 +255,7 @@ export function FragranceQuizView() {
                 <span className="text-xl font-bold text-foreground">
                   ${rec.price.toFixed(2)} AUD
                 </span>
-                <Link href="/">
+                <Link href={`/?search=${encodeURIComponent(rec.name)}`}>
                   <Button size="sm">View Formulation</Button>
                 </Link>
               </CardFooter>
@@ -373,30 +314,41 @@ export function FragranceQuizView() {
           })}
         </CardContent>
 
-        <CardFooter className="flex items-center justify-between border-t border-border pt-6">
+        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border pt-6">
           <Button
             variant="outline"
             onClick={handleBack}
             disabled={currentStep === 0 || isSubmitting}
+            className="w-full sm:w-auto"
           >
             Previous
           </Button>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleTriggerSimulatedFallback}
+              onClick={() => void handleSubmit(true)}
+              disabled={isSubmitting}
               className="text-xs text-muted-foreground hover:text-foreground"
-              title="Test the advisory fallback error state"
+              title="Test deterministic fallback when AI adapter fails"
             >
-              Simulate Advisory State
+              Simulate AI Failure
             </Button>
-            <Button onClick={handleNext} disabled={isSubmitting}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSimulateFatalError}
+              className="text-xs text-muted-foreground hover:text-destructive"
+              title="Test catalogue recovery state"
+            >
+              Simulate Outage
+            </Button>
+            <Button onClick={handleNext} disabled={isSubmitting} className="w-full sm:w-auto">
               {isSubmitting
-                ? "Formulating Matches..."
+                ? "Connecting Adapter..."
                 : currentStep === QUIZ_QUESTIONS.length - 1
-                ? "Discover Matches"
+                ? "Generate Recommendations"
                 : "Next"}
             </Button>
           </div>
