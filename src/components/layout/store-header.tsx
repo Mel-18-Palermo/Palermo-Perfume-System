@@ -24,7 +24,7 @@ export function StoreHeader({ onOpenMobileNav, cartCount = 0 }: StoreHeaderProps
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          
+
           <Link href="/" className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-foreground">PALERMO</span>
             <span className="text-xs uppercase tracking-widest text-accent font-medium hidden sm:inline">Parfums</span>
@@ -44,7 +44,7 @@ export function StoreHeader({ onOpenMobileNav, cartCount = 0 }: StoreHeaderProps
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/" className="relative" aria-label={`Shopping cart with ${cartCount} items`}>
+          <Link href="/cart" className="relative" aria-label={`Shopping cart with ${cartCount} items`}>
             <Button variant="outline" size="sm" className="relative flex items-center gap-2">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
