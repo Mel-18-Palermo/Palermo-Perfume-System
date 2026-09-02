@@ -375,13 +375,15 @@ export function CartView() {
               </p>
             </CardContent>
             <CardFooter className="pt-2">
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={!cart.checkoutEligible || isMutating || cart.items.length === 0}
-              >
-                {!cart.checkoutEligible ? "Cart Ineligible for Checkout" : "Proceed to Checkout"}
-              </Button>
+              <Link href="/checkout" className="w-full">
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={!cart.checkoutEligible || isMutating || cart.items.length === 0}
+                >
+                  {!cart.checkoutEligible ? "Cart Ineligible for Checkout" : "Proceed to Checkout"}
+                </Button>
+              </Link>
             </CardFooter>
           </Card>
         </div>
