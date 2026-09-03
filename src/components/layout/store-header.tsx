@@ -43,6 +43,9 @@ export function StoreHeader({ onOpenMobileNav, cartCount = 0 }: StoreHeaderProps
             <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Best Sellers
             </Link>
+            <Link href="/support" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Support
+            </Link>
           </nav>
         </div>
 

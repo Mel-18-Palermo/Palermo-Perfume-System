@@ -72,6 +72,12 @@ const CATALOGUE_DETAILS: Record<string, PerfumeDetail> = {
   },
 };
 
+const DEFAULT_VARIANT: Variant = {
+  size: "Standard",
+  price: 0,
+  inStock: false,
+};
+
 export function PerfumeDetailView({ id }: { id: string }) {
   const item = CATALOGUE_DETAILS[id];
   const [selectedVariantIndex, setSelectedVariantIndex] = React.useState(0);
@@ -92,7 +98,8 @@ export function PerfumeDetailView({ id }: { id: string }) {
     );
   }
 
-  const selectedVariant = item.variants[selectedVariantIndex] ?? item.variants[0];
+  const selectedVariant: Variant =
+    item.variants[selectedVariantIndex] ?? item.variants[0] ?? DEFAULT_VARIANT;
 
   return (
     <div className="space-y-10 py-4">
@@ -148,7 +155,9 @@ export function PerfumeDetailView({ id }: { id: string }) {
           </div>
 
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-foreground">${selectedVariant.price}.00</span>
+            <span className="text-3xl font-extrabold text-foreground">
+              ${selectedVariant?.price ?? 0}.00
+            </span>
             <span className="text-xs text-muted-foreground">Includes complimentary luxury packaging</span>
           </div>
 
