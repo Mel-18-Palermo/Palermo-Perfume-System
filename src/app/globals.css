@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter);
+
+  --color-background: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f4f0;
+  --color-foreground: #181817;
+  --color-muted-foreground: #6b6b67;
+  --color-border: #e4e2dc;
+  --color-border-strong: #c9c6be;
+
+  --color-primary: #26231f;
+  --color-primary-hover: #3a3630;
+  --color-primary-foreground: #ffffff;
+  --color-accent: #a88652;
+  --color-accent-hover: #917245;
+  --color-accent-subtle: #f4eee5;
+
+  --color-success: #287a4b;
+  --color-success-background: #edf7f1;
+  --color-warning: #a66a16;
+  --color-warning-background: #fff7e8;
+  --color-danger: #b42318;
+  --color-danger-background: #fff0ee;
+  --color-info: #245ea8;
+  --color-info-background: #eef5ff;
+
+  --spacing: 0.25rem;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+
+  --shadow-sm: 0 1px 2px rgb(24 24 23 / 0.06);
+  --shadow-md: 0 8px 24px rgb(24 24 23 / 0.10);
+
+  --container-reading: 45rem;
+  --container-form: 40rem;
+  --container-page: 75rem;
+  --container-wide: 85rem;
+}
+
+:root {
+  --color-bg: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f4f0;
+  --color-text: #181817;
+  --color-text-muted: #6b6b67;
+  --color-border: #e4e2dc;
+  --color-border-strong: #c9c6be;
+
+  --color-primary: #26231f;
+  --color-primary-hover: #3a3630;
+  --color-primary-text: #ffffff;
+  --color-accent: #a88652;
+  --color-accent-hover: #917245;
+  --color-accent-subtle: #f4eee5;
+
+  --color-success: #287a4b;
+  --color-success-bg: #edf7f1;
+  --color-warning: #a66a16;
+  --color-warning-bg: #fff7e8;
+  --color-danger: #b42318;
+  --color-danger-bg: #fff0ee;
+  --color-info: #245ea8;
+  --color-info-bg: #eef5ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-info);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
