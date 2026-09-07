@@ -10,6 +10,7 @@
 /.next/
 /out/
 /.vercel/
+next-env.d.ts
 
 # Test and analysis output
 /coverage/
