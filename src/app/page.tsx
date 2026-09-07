@@ -10,10 +10,10 @@ export default function HomePage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <p className="text-sm font-medium uppercase tracking-wide text-accent">
+          <p className="text-label uppercase tracking-wide text-muted-foreground">
             Palermo Perfume System
           </p>
-          <h1 className="text-3xl font-bold leading-tight md:text-4xl">
+          <h1 className="text-h1 md:text-display">
             Application scaffold
           </h1>
           <p className="max-w-reading text-base leading-6 text-muted-foreground">
@@ -26,18 +26,18 @@ export default function HomePage() {
           <div className="flex items-start gap-4">
             <HeartPulse
               aria-hidden="true"
-              className="mt-0.5 shrink-0 text-success"
+              className="shrink-0 text-success"
               size={24}
               strokeWidth={1.75}
             />
             <div className="flex flex-col gap-2">
-              <h2 className="text-xl font-semibold">Health surface</h2>
+              <h2 className="text-h3">Health surface</h2>
               <p className="text-sm leading-5 text-muted-foreground">
                 The server exposes a minimal non-sensitive health endpoint for
                 local and later automated smoke validation.
               </p>
               <a
-                className="w-fit text-sm font-medium underline underline-offset-4"
+                className="flex min-h-11 w-fit items-center text-label underline underline-offset-4"
                 href="/api/health"
               >
                 Open /api/health
