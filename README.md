@@ -2,26 +2,64 @@
 
 Palermo Perfume System is a client-facing capstone project for an intelligent online perfume selling platform.
 
-The project is currently in the **Software Requirements Specification (SRS) phase**. Application implementation will begin only after SRS v1.0 is reviewed and frozen.
+Application implementation has begun with the foundation tracked in [#240](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/240), following the implementation-control baseline in [#238](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/238).
 
 ## Current phase
 
-**SRS development**
+**Application foundation**
 
-The current priorities are:
+The scaffold provides a minimal home page and `GET /api/health`. Contracts, authentication, database access and business features are subsequent issues. The health endpoint reports application liveness only; it does not check databases or providers.
 
-- validate and normalise the Palermo functional requirements;
-- define measurable non-functional requirements;
-- establish project scope and assumptions;
-- model system actors and use cases;
-- design the software and data architecture;
-- produce Mermaid-based system diagrams;
-- prepare the data dictionary, DPIA, test plan, and implementation plan;
-- maintain traceability between requirements, design, implementation, and testing.
+## Local setup
 
-No application scaffold should be introduced until the SRS baseline is approved.
+Use **Node.js 24.19.0** (`.nvmrc`) and **pnpm 11.24.0** (`packageManager` in `package.json`). Node version managers that support `.nvmrc` can select the pinned runtime; for example, with nvm already installed:
 
-## Planned technology stack
+```sh
+nvm install
+nvm use
+```
+
+Install the pinned pnpm version if needed, then install dependencies from the existing lockfile:
+
+```sh
+npm install --global pnpm@11.24.0
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Open <http://localhost:3000>. No environment variables or API keys are required for the scaffold; `.env.example` documents this. Add provider configuration only with its owning implementation issue.
+
+Use pnpm for project dependencies and keep `pnpm-lock.yaml` as the only project lockfile. Engine checks reject an incompatible runtime or package manager. `pnpm-workspace.yaml` records the existing release-age and dependency build-script policy.
+
+## Validation
+
+```sh
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm start
+```
+
+`typecheck` generates Next.js route types before running strict TypeScript, so it works before the first build. `next-env.d.ts` and `.next/` are generated and ignored. Lint checks include unsafe TypeScript values, unhandled promises and prohibited type suppressions. The current test suite covers only the health handler; it is not evidence of completed business features.
+
+With the development or production server running in another terminal:
+
+```sh
+curl --fail-with-body --include http://localhost:3000/api/health
+```
+
+Expected: HTTP 200, `Cache-Control: no-store`, and `{"status":"ok"}`. `pnpm start` requires a successful build; stop the development server first if using the same port.
+
+Inter is served through `next/font/google`; an uncached development or production build needs network access to download the font. No font API key is needed.
+
+## Implementation stack
+
+The scaffold pins Next.js, React and strict TypeScript in `package.json`. Shared styling uses **Tailwind CSS 4**, **Inter**, and **Lucide React** icons. Canonical design values and compatible utility aliases live in `src/app/globals.css`; feature components consume these tokens instead of introducing their own palette, font or icon system.
+
+The repository shape follows [the implementation handbook](docs/development/implementation-handbook.md): routes in `src/app`, shared UI in `src/components`, domain modules in `src/modules`, provider adapters in `src/integrations`, shared infrastructure in `src/lib`, and contracts in `src/contracts`. Empty directories mark future ownership boundaries, not implemented services.
+
+## Planned integrations
 
 The current implementation baseline is:
 
@@ -32,7 +70,7 @@ The current implementation baseline is:
 - Supabase PostgreSQL
 - Stripe sandbox for payment testing
 
-Additional services, hosting, authentication, AI integrations, deployment tooling, and supporting libraries will be selected through reviewed technical decisions.
+Vercel is the approved deployment platform under the implementation handbook. CI/deployment configuration belongs to #243. Authentication, AI, email and other integration details are implemented through their owning issues.
 
 ## Repository rules
 
@@ -92,6 +130,4 @@ These files are the requirements source of truth for the new project baseline.
 
 ## Implementation status
 
-Application development has **not started** under the reset baseline.
-
-The implementation phase begins after SRS v1.0 is frozen.
+The application foundation is implemented. Domain functionality, Prisma schema/migrations, provider integrations, CI and deployments remain separate work. SRS sources below `docs/` retain their requirements and planning context; their planned checks are not test-pass claims.
