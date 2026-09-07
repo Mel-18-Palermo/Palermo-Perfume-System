@@ -17,7 +17,7 @@
     "db:check": "tsx prisma/check.ts"
   },
   "engines": {
-    "node": "24.19.0",
+    "node": "24.x",
     "pnpm": "11.24.0"
   },
   "packageManager": "pnpm@11.24.0",
