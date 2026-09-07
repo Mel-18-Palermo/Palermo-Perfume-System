@@ -19,4 +19,7 @@ minimumReleaseAgeExclude:
 # unrs-resolver 1.12.2 is a transitive dependency with a required postinstall.
 # Approve only the reviewed version. A future version must be reviewed again.
 allowBuilds:
+  "@prisma/engines@7.10.0": true
+  "esbuild@0.28.2": true
+  "prisma@7.10.0": true
   "unrs-resolver@1.12.2": true

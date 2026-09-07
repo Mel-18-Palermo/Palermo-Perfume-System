@@ -11,6 +11,8 @@
 /out/
 /.vercel/
 next-env.d.ts
+/src/lib/db/generated/
+/supabase/.temp/
 
 # Test and analysis output
 /coverage/
