@@ -244,6 +244,11 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         }
       }),
     },
+    payment: {
+      initiate: run("payment.initiate", "CUSTOMER", input => input.orderId === fixtures.pendingOrder.id && checkoutStarted
+        ? success({ paymentId: fixtures.pendingOrder.id, providerReference: "payment-demo", clientSecret: null })
+        : failure("NOT_FOUND")),
+    },
     orders: {
       list: run("orders.list", "CUSTOMER", input => paginate([
         ...(settings.empty ? [] : [fixtures.order]), ...(checkoutStarted ? [fixtures.pendingOrder] : []),
