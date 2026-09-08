@@ -31,6 +31,11 @@ to this GitHub repository with `main` as its Production branch. The team has onl
 the technical owner, and the project starts with no service environment variables.
 The settings below describe the configuration to preserve when adding integrations.
 
+During initial setup, Vercel classified the first Git deployment from the issue
+branch as Production even though branch tracking was `main`. It contained only
+the scaffold and no service credentials. Verify the deployment API's `target`
+and Git ref when validating Preview; a successful build/status alone is insufficient.
+
 Import `Mel-18-Palermo/Palermo-Perfume-System` through Vercel's GitHub integration.
 Use the repository root, Next.js preset, Node **24.x**, and `main` as the Production
 branch. `vercel.json` enables automatic Git deployments on all branches and uses
