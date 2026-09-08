@@ -10,6 +10,8 @@ const MAX_CUSTOMISATION_LENGTH = 100;
 const include = { items: { include: { variant: { include: { perfume: { include: { primaryFamily: true } }, inventory: true } } } }, promotion: true } as const;
 type LoadedCart = Prisma.CartGetPayload<{ include: typeof include }>;
 
+class RevisionConflict extends Error {}
+
 function revision(value: number): Revision { return `cart-${value}`; }
 function parseRevision(value: Revision): number | null { const match = /^cart-([1-9][0-9]*)$/.exec(value); return match ? Number(match[1]) : null; }
 function validId(value: string): boolean { return /^[0-9a-f-]{10,64}$/i.test(value); }
@@ -59,7 +61,34 @@ export class CartService {
     if (actor.kind === "CUSTOMER" && cart.customerId !== actor.customerId) return failure("FORBIDDEN");
     return success(null);
   }
-  private async update(cart: LoadedCart, data: Prisma.CartUpdateInput): Promise<CartDto> { return this.dto(await this.db.cart.update({ where: { id: cart.id }, data: { ...data, revision: { increment: 1 } }, include })); }
+  private async mutate(
+    actor: CartActor,
+    input: CartMutation,
+    mutation: (tx: Prisma.TransactionClient) => Promise<unknown>,
+  ): Promise<ApiResult<CartDto>> {
+    const expectedRevision = parseRevision(input.expectedRevision);
+    if (expectedRevision === null) return failure("CONFLICT");
+    try {
+      await this.db.$transaction(async tx => {
+        const claimed = await tx.cart.updateMany({
+          where: {
+            id: input.cartId,
+            revision: expectedRevision,
+            status: "ACTIVE",
+            ...(actor.kind === "CUSTOMER" ? { customerId: actor.customerId } : { visitorSessionKey: actor.visitorSessionKey }),
+          },
+          data: { revision: { increment: 1 } },
+        });
+        if (claimed.count !== 1) throw new RevisionConflict();
+        await mutation(tx);
+      });
+    } catch (error) {
+      if (error instanceof RevisionConflict) return failure("CONFLICT");
+      throw error;
+    }
+    const current = await this.load(actor);
+    return current ? success(this.dto(current)) : failure("NOT_FOUND");
+  }
 
   async get(actor: CartActor): Promise<ApiResult<CartDto>> { if (actor.kind === "CUSTOMER" ? !validId(actor.customerId) : !validVisitorKey(actor.visitorSessionKey)) return failure("VALIDATION_ERROR"); return success(this.dto(await this.ensure(actor))); }
 
@@ -71,13 +100,11 @@ export class CartService {
     if ((input.customisation.personalisedLabel !== null && !variant.personalisedLabel) || (input.customisation.engravingName !== null && !variant.engravingName) || (input.customisation.giftMessage !== null && !variant.giftMessage) || (input.customisation.giftPackagingId !== null && !readOptions(variant.giftPackagingOptions).includes(input.customisation.giftPackagingId))) return failure("VALIDATION_ERROR");
     const existing = cart.items.find(item => item.variantId === variant.id && JSON.stringify([item.personalisedLabel, item.engravingName, item.giftMessage, item.giftPackagingId]) === JSON.stringify([input.customisation.personalisedLabel, input.customisation.engravingName, input.customisation.giftMessage, input.customisation.giftPackagingId]));
     if (existing && !validQuantity(existing.quantity + input.quantity)) return failure("VALIDATION_ERROR");
-    await this.db.cartItem.upsert({ where: { id: existing?.id ?? "00000000-0000-4000-8000-000000000000" }, update: { quantity: { increment: input.quantity } }, create: { cartId: cart.id, variantId: variant.id, quantity: input.quantity, personalisedLabel: input.customisation.personalisedLabel, engravingName: input.customisation.engravingName, giftMessage: input.customisation.giftMessage, giftPackagingId: input.customisation.giftPackagingId } });
-    await this.db.cart.update({ where: { id: cart.id }, data: { revision: { increment: 1 } } });
-    return success(this.dto(await this.db.cart.findUniqueOrThrow({ where: { id: cart.id }, include })));
+    return this.mutate(actor, input, tx => tx.cartItem.upsert({ where: { id: existing?.id ?? "00000000-0000-4000-8000-000000000000" }, update: { quantity: { increment: input.quantity } }, create: { cartId: cart.id, variantId: variant.id, quantity: input.quantity, personalisedLabel: input.customisation.personalisedLabel, engravingName: input.customisation.engravingName, giftMessage: input.customisation.giftMessage, giftPackagingId: input.customisation.giftPackagingId } }));
   }
-  async updateQuantity(actor: CartActor, input: CartMutation & { itemId: string; quantity: number }): Promise<ApiResult<CartDto>> { if (!validId(input.itemId) || !validQuantity(input.quantity)) return failure("VALIDATION_ERROR"); const cart = await this.ensure(actor); const checked = this.validateMutation(actor, input, cart); if (!checked.ok) return checked; if (!cart.items.some(item => item.id === input.itemId)) return failure("NOT_FOUND"); return success(await this.update(cart, { items: { update: { where: { id: input.itemId }, data: { quantity: input.quantity } } } })); }
-  async removeItem(actor: CartActor, input: CartMutation & { itemId: string }): Promise<ApiResult<CartDto>> { if (!validId(input.itemId)) return failure("VALIDATION_ERROR"); const cart = await this.ensure(actor); const checked = this.validateMutation(actor, input, cart); if (!checked.ok) return checked; if (!cart.items.some(item => item.id === input.itemId)) return failure("NOT_FOUND"); return success(await this.update(cart, { items: { delete: { id: input.itemId } } })); }
-  async applyPromotion(actor: CartActor, input: CartMutation & { code: string | null }): Promise<ApiResult<CartDto>> { if (input.code !== null && (typeof input.code !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(input.code))) return failure("VALIDATION_ERROR"); const cart = await this.ensure(actor); const checked = this.validateMutation(actor, input, cart); if (!checked.ok) return checked; if (input.code === null) return success(await this.update(cart, { promotion: { disconnect: true } })); const promotion = await this.db.promotion.findFirst({ where: { code: input.code.toUpperCase(), active: true } }); if (!promotion || (promotion.activeFrom && promotion.activeFrom > this.now()) || (promotion.activeUntil && promotion.activeUntil <= this.now())) return failure("VALIDATION_ERROR"); return success(await this.update(cart, { promotion: { connect: { id: promotion.id } } })); }
+  async updateQuantity(actor: CartActor, input: CartMutation & { itemId: string; quantity: number }): Promise<ApiResult<CartDto>> { if (!validId(input.itemId) || !validQuantity(input.quantity)) return failure("VALIDATION_ERROR"); const cart = await this.ensure(actor); const checked = this.validateMutation(actor, input, cart); if (!checked.ok) return checked; if (!cart.items.some(item => item.id === input.itemId)) return failure("NOT_FOUND"); return this.mutate(actor, input, tx => tx.cartItem.update({ where: { id: input.itemId }, data: { quantity: input.quantity } })); }
+  async removeItem(actor: CartActor, input: CartMutation & { itemId: string }): Promise<ApiResult<CartDto>> { if (!validId(input.itemId)) return failure("VALIDATION_ERROR"); const cart = await this.ensure(actor); const checked = this.validateMutation(actor, input, cart); if (!checked.ok) return checked; if (!cart.items.some(item => item.id === input.itemId)) return failure("NOT_FOUND"); return this.mutate(actor, input, tx => tx.cartItem.delete({ where: { id: input.itemId } })); }
+  async applyPromotion(actor: CartActor, input: CartMutation & { code: string | null }): Promise<ApiResult<CartDto>> { if (input.code !== null && (typeof input.code !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(input.code))) return failure("VALIDATION_ERROR"); const cart = await this.ensure(actor); const checked = this.validateMutation(actor, input, cart); if (!checked.ok) return checked; if (input.code === null) return this.mutate(actor, input, tx => tx.cart.update({ where: { id: cart.id }, data: { promotion: { disconnect: true } } })); const promotion = await this.db.promotion.findFirst({ where: { code: input.code.toUpperCase(), active: true } }); if (!promotion || (promotion.activeFrom && promotion.activeFrom > this.now()) || (promotion.activeUntil && promotion.activeUntil <= this.now())) return failure("VALIDATION_ERROR"); return this.mutate(actor, input, tx => tx.cart.update({ where: { id: cart.id }, data: { promotion: { connect: { id: promotion.id } } } })); }
 }
 
 export function cartApi(service: CartService, actor: CartActor): CartApi {
