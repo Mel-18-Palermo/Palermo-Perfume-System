@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminNavigation } from "./admin-navigation";
 
 export function AdminResponsiveNavigation() {
@@ -12,6 +12,18 @@ export function AdminResponsiveNavigation() {
     setIsOpen(false);
     triggerRef.current?.focus();
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   return (
     <>
@@ -26,12 +38,6 @@ export function AdminResponsiveNavigation() {
           aria-expanded={isOpen}
           aria-controls="admin-mobile-nav"
           onClick={() => setIsOpen(current => !current)}
-          onKeyDown={event => {
-            if (event.key === "Escape" && isOpen) {
-              event.preventDefault();
-              close();
-            }
-          }}
           className="min-h-12 w-full cursor-pointer rounded-md px-4 py-3 text-left text-label font-semibold"
         >
           {isOpen ? "▼" : "▶"} Admin menu
@@ -41,12 +47,6 @@ export function AdminResponsiveNavigation() {
             id="admin-mobile-nav"
             ref={navRef}
             className="pt-3"
-            onKeyDown={event => {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                close();
-              }
-            }}
             onClick={event => {
               if (event.target instanceof Element && event.target.closest("a")) {
                 close();
