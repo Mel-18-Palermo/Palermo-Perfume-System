@@ -7,6 +7,7 @@ import { ids, seedCore, seedId } from "../../prisma/seed-data";
 import { identityCases } from "./identity-cases";
 import { catalogueCases } from "./catalogue-cases";
 import { cartCases } from "./cart-cases";
+import { profileCases } from "./profile-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -16,6 +17,7 @@ const db = createDatabase(testUrl);
 identityCases(db);
 catalogueCases(db);
 cartCases(db);
+profileCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
