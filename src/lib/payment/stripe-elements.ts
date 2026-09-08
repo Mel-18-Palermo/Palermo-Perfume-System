@@ -5,7 +5,7 @@ let stripePromise: Promise<Stripe | null> | undefined;
 export function getStripeClient(): Promise<Stripe | null> {
   if (!stripePromise) {
     const publishableKey = process.env["NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"];
-    stripePromise = publishableKey ? loadStripe(publishableKey) : Promise.resolve(null);
+    stripePromise = publishableKey?.startsWith("pk_test_") ? loadStripe(publishableKey) : Promise.resolve(null);
   }
   return stripePromise;
 }
