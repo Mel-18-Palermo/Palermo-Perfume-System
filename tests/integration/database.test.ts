@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { assertDevelopmentDatabase, createDatabase, databaseConfiguration } from "../../src/lib/db/connection";
 import { ids, seedCore, seedId } from "../../prisma/seed-data";
 import { identityCases } from "./identity-cases";
+import { catalogueCases } from "./catalogue-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -12,6 +13,7 @@ const configuration = databaseConfiguration(testUrl);
 const pool = new Pool({ ...configuration.pool, max: 1 });
 const db = createDatabase(testUrl);
 identityCases(db);
+catalogueCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
