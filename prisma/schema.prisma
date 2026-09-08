@@ -221,6 +221,8 @@ model AdminAccount {
   createdAt  DateTime          @default(now()) @db.Timestamptz(3)
   role       AdminRole         @relation(fields: [roleId], references: [id], onDelete: Restrict)
   sessions   IdentitySession[]
+  batchesRecorded ProductionBatch[] @relation("BatchRecordedBy")
+  batchesReleased ProductionBatch[] @relation("BatchReleasedBy")
 
   @@index([roleId])
 }
@@ -571,15 +573,23 @@ model ProductionBatch {
   id               String             @id @default(uuid()) @db.Uuid
   variantId        String             @db.Uuid
   batchCode        String             @unique
+  recordIdempotencyKey String?        @unique
+  releaseIdempotencyKey String?       @unique
   producedQuantity Int
   status           BatchStatus        @default(RECORDED)
   productionDate   DateTime           @db.Timestamptz(3)
   releasedAt       DateTime?          @db.Timestamptz(3)
+  recordedByAdminId String?           @db.Uuid
+  releasedByAdminId String?           @db.Uuid
   variant          PerfumeVariant     @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  recordedBy       AdminAccount?      @relation("BatchRecordedBy", fields: [recordedByAdminId], references: [id], onDelete: Restrict)
+  releasedBy       AdminAccount?      @relation("BatchReleasedBy", fields: [releasedByAdminId], references: [id], onDelete: Restrict)
   movement         InventoryMovement?
 
   @@unique([id, variantId])
   @@index([variantId])
+  @@index([recordedByAdminId])
+  @@index([releasedByAdminId])
 }
 
 model InventoryMovement {
