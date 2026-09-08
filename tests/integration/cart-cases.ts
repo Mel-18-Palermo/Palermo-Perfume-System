@@ -76,5 +76,32 @@ export function cartCases(db: PrismaClient): void {
       const before = await db.inventoryReservation.count(); await service.addItem(visitor, { cartId: guest.data.id, expectedRevision: guest.data.revision, variantId: ids.woodyVariant, quantity: 1, customisation: { personalisedLabel: null, engravingName: null, giftMessage: null, giftPackagingId: null } });
       expect(await db.inventoryReservation.count()).toBe(before);
     });
+    it("allows exactly one simultaneous add to claim a shared revision", async () => {
+      await cleanup(); const empty = await service.get(customer); if (!empty.ok) throw new Error("cart setup failed");
+      const input = { cartId: empty.data.id, expectedRevision: empty.data.revision, variantId: ids.variant, quantity: 1, customisation: { personalisedLabel: null, engravingName: null, giftMessage: null, giftPackagingId: null } } as const;
+      const results = await Promise.all([service.addItem(customer, input), service.addItem(customer, input)]);
+      expect(results.filter(result => result.ok)).toHaveLength(1);
+      expect(results.filter(result => !result.ok).map(result => result.ok ? "" : result.error.code)).toEqual(["CONFLICT"]);
+      const persisted = await service.get(customer); if (!persisted.ok) throw new Error("cart read failed");
+      expect(persisted.data.revision).toBe("cart-2");
+      expect(persisted.data.items).toHaveLength(1);
+      expect(persisted.data.items[0]?.quantity).toBe(1);
+    });
+    it("serializes simultaneous update, remove and promotion mutations through one revision claim", async () => {
+      await cleanup(); const empty = await service.get(customer); if (!empty.ok) throw new Error("cart setup failed");
+      const added = await service.addItem(customer, { cartId: empty.data.id, expectedRevision: empty.data.revision, variantId: ids.variant, quantity: 1, customisation: { personalisedLabel: null, engravingName: null, giftMessage: null, giftPackagingId: null } });
+      if (!added.ok || !added.data.items[0]) throw new Error("cart setup failed");
+      const common = { cartId: added.data.id, expectedRevision: added.data.revision } as const;
+      const results = await Promise.all([
+        service.updateQuantity(customer, { ...common, itemId: added.data.items[0].id, quantity: 2 }),
+        service.removeItem(customer, { ...common, itemId: added.data.items[0].id }),
+        service.applyPromotion(customer, { ...common, code: null }),
+      ]);
+      expect(results.filter(result => result.ok)).toHaveLength(1);
+      expect(results.filter(result => !result.ok).every(result => !result.ok && result.error.code === "CONFLICT")).toBe(true);
+      const persisted = await service.get(customer); if (!persisted.ok) throw new Error("cart read failed");
+      expect(persisted.data.revision).toBe("cart-3");
+      expect(persisted.data.items.length === 0 || persisted.data.items[0]?.quantity === 1 || persisted.data.items[0]?.quantity === 2).toBe(true);
+    });
   });
 }

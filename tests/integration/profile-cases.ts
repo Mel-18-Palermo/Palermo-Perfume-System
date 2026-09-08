@@ -44,5 +44,22 @@ export function profileCases(db: PrismaClient): void {
       const cleared = await service.update(actor, { expectedRevision: current.data.revision, name: current.data.name, preferences: { favouriteNoteIds: [], preferredIntensityId: null, sensitivityAvoidance: "Avoid woody notes" } }); if (!cleared.ok) throw new Error("preference clear failed");
       expect(code(await service.generateIdentity(actor, { expectedRevision: cleared.data.revision }))).toBe("VALIDATION_ERROR");
     });
+    it("allows one simultaneous profile, delivery, billing or identity mutation to claim a revision", async () => {
+      const current = await service.get(actor); if (!current.ok) throw new Error("profile setup failed");
+      const prepared = await service.update(actor, { expectedRevision: current.data.revision, name: current.data.name, preferences: { favouriteNoteIds: [ids.note], preferredIntensityId: ids.intensity, sensitivityAvoidance: null } });
+      if (!prepared.ok) throw new Error("profile setup failed");
+      const results = await Promise.all([
+        service.update(actor, { expectedRevision: prepared.data.revision, name: "Revision winner", preferences: prepared.data.preferences }),
+        service.setDeliveryAddress(actor, { expectedRevision: prepared.data.revision, address: { ...address, line1: "Concurrent delivery" } }),
+        service.setBillingAddress(actor, { expectedRevision: prepared.data.revision, billing: { kind: "SEPARATE", address: { ...address, line1: "Concurrent billing" } } }),
+        service.generateIdentity(actor, { expectedRevision: prepared.data.revision }),
+      ]);
+      expect(results.filter(result => result.ok)).toHaveLength(1);
+      expect(results.filter(result => !result.ok)).toHaveLength(3);
+      expect(results.filter(result => !result.ok).every(result => !result.ok && result.error.code === "CONFLICT")).toBe(true);
+      const persisted = await service.get(actor); if (!persisted.ok) throw new Error("profile read failed");
+      const previousRevision = Number(prepared.data.revision.replace("profile-", ""));
+      expect(persisted.data.revision).toBe(`profile-${previousRevision + 1}`);
+    });
   });
 }
