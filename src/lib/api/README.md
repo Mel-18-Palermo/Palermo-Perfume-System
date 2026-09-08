@@ -4,7 +4,7 @@
 
 ## Use an adapter
 
-The default client in `src/lib/api/index.ts` returns `TEMPORARILY_UNAVAILABLE` for every operation until server adapters are supplied. It never silently falls back to synthetic success. The mock module is a separate import and is not imported by the default client.
+The default client in `src/lib/api/index.ts` uses the real server HTTP adapter for `auth`. Other modules return `TEMPORARILY_UNAVAILABLE` until their server adapters are supplied. It never silently falls back to synthetic success. The mock module is a separate import and is not imported by the default client.
 
 ```ts
 import { createApiClient } from "@/lib/api";

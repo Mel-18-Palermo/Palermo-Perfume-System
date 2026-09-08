@@ -20,12 +20,12 @@ const checkoutRequest: CheckoutRequest = {
 };
 
 describe("canonical client contract", () => {
-  it("uses one interface for injected mocks and real placeholders; defaults to unavailable", async () => {
+  it("uses one interface for injected mocks and explicit unavailable placeholders", async () => {
     expectTypeOf(createMockApi()).toEqualTypeOf<PalermoApi>();
     expectTypeOf(createUnavailableApi()).toEqualTypeOf<PalermoApi>();
     const mock = createMockApi();
     expect(createApiClient(mock)).toBe(mock);
-    expect(await api.auth.getSession()).toEqual(failure("TEMPORARILY_UNAVAILABLE"));
+    expect(await createUnavailableApi().auth.getSession()).toEqual(failure("TEMPORARILY_UNAVAILABLE"));
     expect(await api.checkout.submit(checkoutRequest)).toEqual(failure("TEMPORARILY_UNAVAILABLE"));
   });
 
