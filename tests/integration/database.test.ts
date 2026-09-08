@@ -1,15 +1,17 @@
 import "../../src/lib/db/load-env";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { assertDevelopmentDatabase, createDatabase, databaseConfiguration } from "../../src/lib/db/connection";
 import { ids, seedCore, seedId } from "../../prisma/seed-data";
+import { identityCases } from "./identity-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
 const configuration = databaseConfiguration(testUrl);
 const pool = new Pool({ ...configuration.pool, max: 1 });
 const db = createDatabase(testUrl);
+identityCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
@@ -25,7 +27,7 @@ beforeAll(async () => {
       EXECUTE format('DROP TYPE IF EXISTS palermo_test.%I CASCADE', object.typname);
     END LOOP;
   END $$`);
-  for (const path of ["202609080001_core", "202609080002_integrity"]) {
+  for (const path of (await readdir("prisma/migrations", { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort()) {
     await pool.query(await readFile(`prisma/migrations/${path}/migration.sql`, "utf8"));
   }
   await seedCore(db);
@@ -41,7 +43,7 @@ async function rejectsConstraint(sql: string, values: readonly unknown[], code: 
 }
 
 describe("Prisma/PostgreSQL milestone foundation", () => {
-  it("applies both migrations to a clean isolated schema and connects through Prisma", async () => {
+  it("applies every migration to a clean isolated schema and connects through Prisma", async () => {
     expect(await db.customer.count()).toBe(2);
     expect(await db.perfume.count()).toBe(2);
     expect(await db.order.count()).toBe(2);
