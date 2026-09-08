@@ -25,15 +25,18 @@ export type PerfumeDetail = PerfumeSummary & Readonly<{
   description: string; notes: readonly NoteAssignment[];
   variants: readonly PerfumeVariantSummary[]; suitability: SuitabilitySummary;
   images: readonly PerfumeImageSummary[]; longevity: Option | null; projection: Option | null;
+  collections?: readonly Option[];
 }>;
 /** OR within each list, AND across lists. Prices are minor units; no brand or sort filter. */
 export type CatalogueQuery = PageRequest & Readonly<{
   q?: string; note?: readonly EntityId[]; family?: readonly EntityId[];
+  collection?: readonly EntityId[];
   minPrice?: number; maxPrice?: number; intensity?: readonly EntityId[];
   occasion?: readonly EntityId[]; mood?: readonly EntityId[]; weather?: readonly EntityId[];
 }>;
 export type CatalogueFilters = Readonly<{
   note: readonly FragranceNoteSummary[]; family: readonly Option[]; intensity: readonly Option[];
+  collection?: readonly Option[];
   occasion: readonly Option[]; mood: readonly Option[]; weather: readonly Option[];
   currency: string;
 }>;
