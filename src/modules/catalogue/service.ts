@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from "../../lib/db/generated/client";
 import type { CatalogueFilters, CatalogueQuery, NoteAssignment, PerfumeDetail, PerfumeSummary, SuitabilitySummary } from "../../contracts/catalogue";
 import type { ApiResult, Option, Page } from "../../contracts/common";
 import { failure, success } from "../../lib/api/result";
+import { publicVariantAvailability } from "../commerce/availability";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
@@ -41,11 +42,6 @@ function suitability(perfume: LoadedPerfume): SuitabilitySummary {
   return grouped;
 }
 
-function availability(availability: LoadedPerfume["variants"][number]["availability"], inStock: boolean): "AVAILABLE" | "OUT_OF_STOCK" | "UNAVAILABLE" {
-  if (availability === "UNAVAILABLE") return "UNAVAILABLE";
-  return inStock ? availability : "OUT_OF_STOCK";
-}
-
 function summary(perfume: LoadedPerfume): PerfumeSummary {
   const visible = perfume.variants.filter(variant => variant.availability !== "UNAVAILABLE");
   const cheapest = [...visible].sort((a, b) => a.priceMinor - b.priceMinor)[0];
@@ -61,7 +57,7 @@ function summary(perfume: LoadedPerfume): PerfumeSummary {
 function detail(perfume: LoadedPerfume): PerfumeDetail {
   const variants = perfume.variants.filter(variant => variant.availability !== "UNAVAILABLE").map(variant => ({
     id: variant.id, sku: variant.sku, bottleSize: variant.bottleSize, concentration: variant.concentration,
-    price: money(variant.priceMinor, variant.currency), availability: availability(variant.availability, !variant.inventory || variant.inventory.onHand > variant.inventory.reserved),
+    price: money(variant.priceMinor, variant.currency), availability: publicVariantAvailability(variant.availability, variant.inventory),
     customisations: {
       personalisedLabel: variant.personalisedLabel, engravingName: variant.engravingName, giftMessage: variant.giftMessage,
       giftPackaging: Array.isArray(variant.giftPackagingOptions) ? variant.giftPackagingOptions.filter((value): value is { id: string; label: string } => typeof value === "object" && value !== null && "id" in value && "label" in value && typeof value.id === "string" && typeof value.label === "string").map(value => option(value.id, value.label)) : [],

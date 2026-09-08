@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from "../../../lib/db/generated/client";
 import type { CartApi, CartCustomisation, CartDto, CartMutation } from "../../../contracts/cart";
 import type { ApiResult, Revision } from "../../../contracts/common";
 import { failure, success } from "../../../lib/api/result";
+import { isVariantSellable } from "../availability";
 
 export type CartActor = Readonly<{ kind: "VISITOR"; visitorSessionKey: string } | { kind: "CUSTOMER"; customerId: string }>;
 const MAX_QUANTITY = 99;
@@ -32,7 +33,8 @@ export class CartService {
   private messages(cart: LoadedCart): CartDto["validationMessages"] {
     const messages: CartDto["validationMessages"][number][] = [];
     if (cart.items.some(item => item.variant.availability === "UNAVAILABLE")) messages.push({ code: "UNAVAILABLE", itemId: cart.items.find(item => item.variant.availability === "UNAVAILABLE")?.id ?? null, message: "An item is no longer available." });
-    if (cart.items.some(item => item.variant.inventory && item.variant.inventory.onHand - item.variant.inventory.reserved < item.quantity)) messages.push({ code: "INSUFFICIENT_STOCK", itemId: cart.items.find(item => item.variant.inventory && item.variant.inventory.onHand - item.variant.inventory.reserved < item.quantity)?.id ?? null, message: "Reduce the quantity before checkout." });
+    const insufficient = cart.items.find(item => item.variant.availability !== "UNAVAILABLE" && !isVariantSellable(item.variant.availability, item.variant.inventory, item.quantity));
+    if (insufficient) messages.push({ code: "INSUFFICIENT_STOCK", itemId: insufficient.id, message: "Reduce the quantity before checkout." });
     if (cart.promotion && (!cart.promotion.active || (cart.promotion.activeFrom && cart.promotion.activeFrom > this.now()) || (cart.promotion.activeUntil && cart.promotion.activeUntil <= this.now()))) messages.push({ code: "INVALID_PROMOTION", itemId: null, message: "The promotion is no longer valid." });
     if (cart.customerId === null) messages.push({ code: "AUTHENTICATION_REQUIRED", itemId: null, message: "Sign in before checkout." });
     return messages;
