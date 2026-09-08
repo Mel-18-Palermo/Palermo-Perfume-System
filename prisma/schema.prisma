@@ -130,6 +130,7 @@ model Customer {
   quizAttempts          QuizAttempt[]
   recommendations       RecommendationRun[]
   sessions              IdentitySession[]
+  wishlistItems         WishlistItem[]
 }
 
 model Address {
@@ -287,9 +288,21 @@ model Perfume {
   suitability     PerfumeSuitability[]
   collections     CollectionPerfume[]
   recommendations RecommendationItem[]
+  wishlistItems  WishlistItem[]
 
   @@index([primaryFamilyId, status])
   @@index([intensityId])
+}
+
+model WishlistItem {
+  customerId String  @db.Uuid
+  perfumeId  String  @db.Uuid
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  perfume    Perfume  @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, perfumeId])
+  @@index([perfumeId])
 }
 
 model PerfumeImage {
