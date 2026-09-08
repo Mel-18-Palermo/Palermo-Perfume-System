@@ -13,9 +13,9 @@ describe("Stripe payment transport", () => {
   it("verifies raw Stripe webhook signatures and maps PaymentIntent events", () => {
     const secret = "whsec_test_secret";
     const gateway = new StripePaymentGateway("sk_test_transport", secret);
-    const payload = JSON.stringify({ id: "evt_test", object: "event", api_version: "2026-01-28.clover", created: 1, livemode: false, pending_webhooks: 1, request: null, type: "payment_intent.succeeded", data: { object: { id: "pi_test", object: "payment_intent", amount: 1200, currency: "aud", metadata: { paymentId: "payment-test" }, client_secret: "pi_test_secret" } } });
+    const payload = JSON.stringify({ id: "evt_test", object: "event", api_version: "2026-01-28.clover", created: 1, livemode: false, pending_webhooks: 1, request: null, type: "payment_intent.succeeded", data: { object: { id: "pi_test", object: "payment_intent", amount: 1200, currency: "aud", metadata: { paymentId: "payment-test", attemptSequence: "3" }, client_secret: "pi_test_secret" } } });
     const signature = Stripe.webhooks.generateTestHeaderString({ payload, secret });
-    expect(gateway.parseWebhook(payload, signature)).toEqual({ paymentId: "payment-test", status: "SUCCEEDED", providerReference: "pi_test" });
+    expect(gateway.parseWebhook(payload, signature)).toEqual({ eventId: "evt_test", paymentId: "payment-test", status: "SUCCEEDED", providerReference: "pi_test", attemptSequence: 3 });
     expect(gateway.parseWebhook(payload, "invalid")).toBeNull();
   });
 
@@ -31,7 +31,7 @@ describe("Stripe payment transport", () => {
     expect(missing).toBeInstanceOf(UnavailablePaymentGateway);
     expect(partial).toBeInstanceOf(UnavailablePaymentGateway);
     expect(production).toBeInstanceOf(UnavailablePaymentGateway);
-    await expect(missing.createPayment({ paymentId: "payment", orderId: "order", amountMinor: 1200, currency: "AUD" }))
+    await expect(missing.createPayment({ paymentId: "payment", orderId: "order", amountMinor: 1200, currency: "AUD", attemptSequence: 1 }))
       .rejects.toBeInstanceOf(PaymentProviderUnavailableError);
   });
 

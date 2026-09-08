@@ -103,8 +103,16 @@ export function paymentCases(db: PrismaClient): void {
       paymentId: string,
       providerReference: string,
       status: "SUCCEEDED" | "FAILED",
+      options: Readonly<{ eventId?: string; attemptSequence?: number }> = {},
     ) {
-      const payload = JSON.stringify({ paymentId, status, providerReference });
+      const payment = await db.payment.findUniqueOrThrow({ where: { id: paymentId } });
+      const payload = JSON.stringify({
+        eventId: options.eventId ?? `evt_${randomUUID()}`,
+        paymentId,
+        status,
+        providerReference,
+        attemptSequence: options.attemptSequence ?? payment.attemptSequence,
+      });
       return paymentService.webhook(payload, signature(payload));
     }
 
@@ -119,6 +127,7 @@ export function paymentCases(db: PrismaClient): void {
       expect(initiated.providerReference).toMatch(/^sandbox_pi_/);
       const persisted = await db.payment.findUniqueOrThrow({ where: { id: record.paymentId } });
       expect(persisted.providerReference).toBe(initiated.providerReference);
+      expect(persisted.attemptSequence).toBe(1);
       expect(Object.keys(persisted)).not.toEqual(expect.arrayContaining(["pan", "cardNumber", "cvc", "cvv", "expiry"]));
     });
 
@@ -145,13 +154,17 @@ export function paymentCases(db: PrismaClient): void {
       const record = await setup();
       const paymentService = service();
       const initiated = value(await paymentService.initiate(ids.otherCustomer, record.orderId));
+      const eventId = `evt_${randomUUID()}`;
       const results = await Promise.all([
-        event(paymentService, record.paymentId, initiated.providerReference, "SUCCEEDED"),
-        event(paymentService, record.paymentId, initiated.providerReference, "SUCCEEDED"),
+        event(paymentService, record.paymentId, initiated.providerReference, "SUCCEEDED", { eventId }),
+        event(paymentService, record.paymentId, initiated.providerReference, "SUCCEEDED", { eventId }),
       ]);
       expect(results.every(result => result.ok && result.data.status === "SUCCEEDED")).toBe(true);
       expect(await db.order.findUniqueOrThrow({ where: { id: record.orderId } })).toMatchObject({ status: "CONFIRMED" });
-      expect(await db.payment.findUniqueOrThrow({ where: { id: record.paymentId } })).toMatchObject({ status: "SUCCEEDED" });
+      expect(await db.payment.findUniqueOrThrow({ where: { id: record.paymentId } })).toMatchObject({
+        status: "SUCCEEDED",
+        lastProviderEventId: eventId,
+      });
       expect(await db.inventoryReservation.findUniqueOrThrow({ where: { id: record.reservationId } })).toMatchObject({ status: "COMMITTED" });
       expect(await db.inventoryBalance.findUniqueOrThrow({ where: { variantId: record.variantId } })).toMatchObject({ onHand: 8, reserved: 0 });
       expect(await db.inventoryMovement.count({ where: { reference: `payment-${record.orderId}-${record.variantId}` } })).toBe(1);
@@ -167,7 +180,13 @@ export function paymentCases(db: PrismaClient): void {
       const record = await setup();
       const paymentService = service();
       const initiated = value(await paymentService.initiate(ids.otherCustomer, record.orderId));
-      const forgedPayload = JSON.stringify({ paymentId: record.paymentId, status: "SUCCEEDED", providerReference: initiated.providerReference });
+      const forgedPayload = JSON.stringify({
+        eventId: `evt_${randomUUID()}`,
+        paymentId: record.paymentId,
+        status: "SUCCEEDED",
+        providerReference: initiated.providerReference,
+        attemptSequence: 1,
+      });
       const forged = await paymentService.webhook(forgedPayload, "invalid");
       expect(forged.ok).toBe(false);
       if (!forged.ok) expect(forged.error.code).toBe("FORBIDDEN");
@@ -183,9 +202,11 @@ export function paymentCases(db: PrismaClient): void {
       const record = await setup();
       const paymentService = service();
       const initiated = value(await paymentService.initiate(ids.otherCustomer, record.orderId));
+      const oldAttemptSequence = 1;
+      const firstEventId = `evt_${randomUUID()}`;
       const failures = await Promise.all([
-        event(paymentService, record.paymentId, initiated.providerReference, "FAILED"),
-        event(paymentService, record.paymentId, initiated.providerReference, "FAILED"),
+        event(paymentService, record.paymentId, initiated.providerReference, "FAILED", { eventId: firstEventId, attemptSequence: oldAttemptSequence }),
+        event(paymentService, record.paymentId, initiated.providerReference, "FAILED", { attemptSequence: oldAttemptSequence }),
       ]);
       expect(failures.every(result => result.ok && result.data.status === "FAILED")).toBe(true);
       expect(await db.inventoryReservation.findUniqueOrThrow({ where: { id: record.reservationId } })).toMatchObject({ status: "RELEASED" });
@@ -193,10 +214,31 @@ export function paymentCases(db: PrismaClient): void {
       expect(await db.order.findUniqueOrThrow({ where: { id: record.orderId } })).toMatchObject({ status: "PLACED" });
 
       const retry = value(await paymentService.initiate(ids.otherCustomer, record.orderId));
-      expect(retry.providerReference).toBe(initiated.providerReference);
+      expect(retry.providerReference).not.toBe(initiated.providerReference);
+      expect(await db.payment.findUniqueOrThrow({ where: { id: record.paymentId } })).toMatchObject({
+        status: "PENDING",
+        attemptSequence: 2,
+      });
+      expect(await db.inventoryReservation.findUniqueOrThrow({ where: { id: record.reservationId } })).toMatchObject({ status: "ACTIVE" });
+      expect(await db.inventoryBalance.findUniqueOrThrow({ where: { variantId: record.variantId } })).toMatchObject({ onHand: 10, reserved: 2 });
+
+      for (const eventId of [firstEventId, `evt_${randomUUID()}`]) {
+        const oldFailure = await event(paymentService, record.paymentId, initiated.providerReference, "FAILED", {
+          eventId,
+          attemptSequence: oldAttemptSequence,
+        });
+        expect(oldFailure.ok).toBe(false);
+        if (!oldFailure.ok) expect(oldFailure.error.code).toBe("CONFLICT");
+      }
       expect(await db.inventoryReservation.findUniqueOrThrow({ where: { id: record.reservationId } })).toMatchObject({ status: "ACTIVE" });
       expect(await db.inventoryBalance.findUniqueOrThrow({ where: { variantId: record.variantId } })).toMatchObject({ onHand: 10, reserved: 2 });
       expect(value(await event(paymentService, record.paymentId, retry.providerReference, "SUCCEEDED")).status).toBe("SUCCEEDED");
+      const oldFailureAfterSuccess = await event(paymentService, record.paymentId, initiated.providerReference, "FAILED", {
+        attemptSequence: oldAttemptSequence,
+      });
+      expect(oldFailureAfterSuccess.ok).toBe(false);
+      expect(await db.order.findUniqueOrThrow({ where: { id: record.orderId } })).toMatchObject({ status: "CONFIRMED" });
+      expect(await db.invoice.count({ where: { orderId: record.orderId } })).toBe(1);
     });
 
     it("keeps a late success unresolved until an explicit retry re-establishes stock authority", async () => {
@@ -215,10 +257,45 @@ export function paymentCases(db: PrismaClient): void {
       expect(await db.inventoryMovement.count({ where: { reference: `payment-${record.orderId}-${record.variantId}` } })).toBe(0);
 
       const retry = value(await paymentService.initiate(ids.otherCustomer, record.orderId));
+      expect(retry.providerReference).not.toBe(initiated.providerReference);
+      expect(await db.inventoryReservation.findUniqueOrThrow({ where: { id: record.reservationId } })).toMatchObject({
+        status: "ACTIVE",
+        expiresAt: new Date("2026-09-08T00:31:00.000Z"),
+      });
       const recovered = value(await event(paymentService, record.paymentId, retry.providerReference, "SUCCEEDED"));
       expect(recovered.status).toBe("SUCCEEDED");
       expect(await db.inventoryBalance.findUniqueOrThrow({ where: { variantId: record.variantId } })).toMatchObject({ onHand: 8, reserved: 0 });
       expect(await db.inventoryMovement.count({ where: { reference: `payment-${record.orderId}-${record.variantId}` } })).toBe(1);
+    });
+
+    it("processes concurrent success and failure once without regressing a successful outcome", async () => {
+      const record = await setup();
+      const paymentService = service();
+      const initiated = value(await paymentService.initiate(ids.otherCustomer, record.orderId));
+      const results = await Promise.all([
+        event(paymentService, record.paymentId, initiated.providerReference, "SUCCEEDED"),
+        event(paymentService, record.paymentId, initiated.providerReference, "FAILED"),
+      ]);
+      const payment = await db.payment.findUniqueOrThrow({ where: { id: record.paymentId } });
+      const order = await db.order.findUniqueOrThrow({ where: { id: record.orderId } });
+      const movementCount = await db.inventoryMovement.count({ where: { reference: `payment-${record.orderId}-${record.variantId}` } });
+      const invoiceCount = await db.invoice.count({ where: { orderId: record.orderId } });
+
+      if (payment.status === "SUCCEEDED") {
+        expect(results.some(result => result.ok && result.data.status === "SUCCEEDED")).toBe(true);
+        expect(order.status).toBe("CONFIRMED");
+        expect(movementCount).toBe(1);
+        expect(invoiceCount).toBe(1);
+        const lateFailure = await event(paymentService, record.paymentId, initiated.providerReference, "FAILED");
+        expect(lateFailure.ok && lateFailure.data.status === "SUCCEEDED").toBe(true);
+        expect(await db.order.findUniqueOrThrow({ where: { id: record.orderId } })).toMatchObject({ status: "CONFIRMED" });
+        expect(await db.invoice.count({ where: { orderId: record.orderId } })).toBe(1);
+      } else {
+        expect(payment.status).toBe("FAILED");
+        expect(order.status).toBe("PLACED");
+        expect(movementCount).toBe(0);
+        expect(invoiceCount).toBe(0);
+      }
     });
 
     it("rolls back the complete success transaction when reservation proof is missing", async () => {

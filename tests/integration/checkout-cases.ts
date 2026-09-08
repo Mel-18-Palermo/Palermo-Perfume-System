@@ -160,9 +160,11 @@ export function checkoutCases(db: PrismaClient): void {
       if (first.status !== "READY_FOR_PAYMENT") return;
       const reservation = await db.inventoryReservation.findFirstOrThrow({ where: { orderId: first.orderId } });
       expect(first.expiresAt).toBe(reservation.expiresAt.toISOString());
+      const originalExpiry = reservation.expiresAt;
       now = new Date(clock.getTime() + 10 * 60 * 1000);
       const retry = outcome(await replayService.submit(ids.otherCustomer, input));
       expect(retry).toEqual(first);
+      expect((await db.inventoryReservation.findUniqueOrThrow({ where: { id: reservation.id } })).expiresAt).toEqual(originalExpiry);
       const conflict = outcome(await replayService.submit(ids.otherCustomer, { ...input, promotionCode: "DIFFERENT" }));
       expect(conflict.status).toBe("CHECKOUT_CONFLICT");
       expect(await db.order.count({ where: { customerId: ids.otherCustomer, idempotencyKey: input.idempotencyKey } })).toBe(1);
