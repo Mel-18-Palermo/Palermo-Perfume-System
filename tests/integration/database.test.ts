@@ -23,7 +23,6 @@ cartCases(db);
 profileCases(db);
 wishlistCases(db);
 discoveryCases(db);
-checkoutCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
@@ -144,3 +143,5 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
     await rejectsConstraint('UPDATE "RecommendationItem" SET rank=0 WHERE "runId"=$1', [ids.recommendation], "23514");
   });
 });
+
+checkoutCases(db);
