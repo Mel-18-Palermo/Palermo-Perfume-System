@@ -406,6 +406,17 @@ export class PaymentService {
           data: { status: "CONFIRMED" },
         });
         if (confirmed.count !== 1) throw new PaymentFault("CONFLICT");
+        await tx.invoice.create({
+          data: {
+            id: randomUUID(),
+            orderId: payment.orderId,
+            invoiceNumber: `PAL-INV-${payment.order.orderNumber}`,
+            totalMinor: payment.order.totalMinor,
+            currency: payment.order.currency,
+            paymentReferenceSnapshot: event.providerReference,
+            issuedAt: this.now(),
+          },
+        });
         return {
           kind: "DONE" as const,
           payment: await tx.payment.findUniqueOrThrow({ where: { id: payment.id } }),
