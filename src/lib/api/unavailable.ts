@@ -23,6 +23,7 @@ export function createUnavailableApi(): PalermoApi {
     wishlist: { get: unavailable, add: unavailable, remove: unavailable },
     checkout: { getDeliveryMethods: unavailable, submit: unavailable },
     orders: { list: unavailable, get: unavailable, getInvoice: unavailable, requestCancellation: unavailable },
+    payment: { initiate: unavailable },
     tracking: { get: unavailable },
     admin: {
       getDashboard: unavailable, listCatalogue: unavailable, getPerfume: unavailable,

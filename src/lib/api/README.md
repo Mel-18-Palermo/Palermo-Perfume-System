@@ -48,7 +48,7 @@ This issue selects presentation status names in those contracts; database enums 
 - Profile/cart/admin updates supply an `expectedRevision` (checkout uses `expectedCartRevision`). After success use the returned revision; variant writes use the parent catalogue revision and require reloading `getPerfume` before another edit. After `CONFLICT`, reload and confirm the latest state. A stale retry must not be blindly replayed as a new mutation.
 - Checkout and critical create/release/cancellation operations carry an `idempotencyKey`. Keep the key for retries of the same request and use a new key when its content changes. Persistent replay/transaction guarantees belong to the real backend, not these in-memory mocks.
 - Wishlist add/remove are idempotent set operations. Profile/address updates replace the specified editable fields. Billing reuse is explicit through `USE_DELIVERY`. Cancellation records a request; it does not cancel an order or promise a refund.
-- `READY_FOR_PAYMENT` returns an opaque Palermo payment attempt, order ID and expiry. It does not mean paid. Exact Stripe client-safe transport is deliberately left to #262; this issue exposes no credentials, fake Stripe client secret or invented provider URL.
+- `READY_FOR_PAYMENT` returns an opaque Palermo payment attempt, order ID and expiry. It does not mean paid. `api.payment.initiate` creates the server-side Stripe PaymentIntent and returns only its client-safe secret to the browser.
 
 ## Mock scenarios and limits
 
