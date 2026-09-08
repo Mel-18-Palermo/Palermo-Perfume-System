@@ -1,5 +1,5 @@
-import { AdminPlaceholder } from "@/modules/administration/ui/admin-placeholder";
+import { AdminDashboard } from "@/modules/administration/ui/admin-dashboard";
 
 export default function Page() {
-  return <AdminPlaceholder section="dashboard" />;
+  return <AdminDashboard />;
 }
