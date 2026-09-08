@@ -15,6 +15,7 @@ import { paymentCases } from "./payment-cases";
 import { inventoryCases } from "./inventory-cases";
 import { orderCases } from "./order-cases";
 import { adminCatalogueCases } from "./admin-catalogue-cases";
+import { availabilityCases } from "./availability-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -26,6 +27,7 @@ catalogueCases(db);
 cartCases(db);
 profileCases(db);
 wishlistCases(db);
+availabilityCases(db);
 discoveryCases(db);
 
 beforeAll(async () => {
