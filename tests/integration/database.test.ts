@@ -12,6 +12,7 @@ import { wishlistCases } from "./wishlist-cases";
 import { discoveryCases } from "./discovery-cases";
 import { checkoutCases } from "./checkout-cases";
 import { paymentCases } from "./payment-cases";
+import { inventoryCases } from "./inventory-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -147,3 +148,4 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
 
 checkoutCases(db);
 paymentCases(db);
+inventoryCases(db);
