@@ -10,6 +10,7 @@ import { cartCases } from "./cart-cases";
 import { profileCases } from "./profile-cases";
 import { wishlistCases } from "./wishlist-cases";
 import { discoveryCases } from "./discovery-cases";
+import { checkoutCases } from "./checkout-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -22,6 +23,7 @@ cartCases(db);
 profileCases(db);
 wishlistCases(db);
 discoveryCases(db);
+checkoutCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
