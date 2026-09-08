@@ -1,0 +1,4 @@
+import type { ApiResult } from "../../contracts/common";
+import type { CheckoutApi } from "../../contracts/checkout";
+async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> { try { const response = await fetch(`/api/checkout/${path}`, { ...init, headers: { "content-type": "application/json", ...(init?.headers ?? {}) }, credentials: "same-origin" }); return response.json() as Promise<ApiResult<T>>; } catch { return { ok: false, error: { code: "TEMPORARILY_UNAVAILABLE", message: "This service is temporarily unavailable. Try again later." } }; } }
+export function createCheckoutHttpClient(): CheckoutApi { return { getDeliveryMethods: () => request("delivery-methods", { method: "GET" }), submit: input => request("submit", { method: "POST", body: JSON.stringify(input) }) }; }
