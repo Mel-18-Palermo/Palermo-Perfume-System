@@ -10,7 +10,7 @@ export const ids = {
   cart: seedId(30), cartItem: seedId(31), visitorCart: seedId(32), delivery: seedId(40),
   paidOrder: seedId(41), pendingOrder: seedId(42), payment: seedId(43), pendingPayment: seedId(44),
   invoice: seedId(45), shipment: seedId(46), reservation: seedId(47), batch: seedId(48),
-  role: seedId(50), admin: seedId(51), permission: seedId(52),
+  role: seedId(50), admin: seedId(51), permission: seedId(52), inventoryPermission: seedId(53),
   quiz: seedId(60), question: seedId(61), option: seedId(62), attempt: seedId(63), recommendation: seedId(64),
 } as const;
 
@@ -35,8 +35,13 @@ async function seedRecords(tx: Prisma.TransactionClient): Promise<void> {
   await tx.permission.upsert({ where: { id: ids.permission }, update: {}, create: {
     id: ids.permission, code: "catalogue:manage", description: "Manage catalogue records",
   } });
+  await tx.permission.upsert({ where: { id: ids.inventoryPermission }, update: {}, create: {
+    id: ids.inventoryPermission, code: "inventory:manage", description: "Manage inventory and production batches",
+  } });
   await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.permission } }, update: {},
     create: { roleId: ids.role, permissionId: ids.permission } });
+  await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.inventoryPermission } }, update: {},
+    create: { roleId: ids.role, permissionId: ids.inventoryPermission } });
   await tx.adminAccount.upsert({ where: { id: ids.admin }, update: {}, create: {
     id: ids.admin, email: "admin@example.test", name: "Demo Administrator", roleId: ids.role, createdAt: seedTime,
   } });
