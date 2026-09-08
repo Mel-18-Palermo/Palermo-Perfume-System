@@ -33,10 +33,11 @@ jobs:
           cache: true
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
-      - name: Lint
-        run: pnpm lint
+      # Generate Prisma and Next types before type-aware ESLint on a clean checkout.
       - name: Type-check
         run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
       - name: Unit and contract tests
         run: pnpm test
       - name: Production build without service credentials
