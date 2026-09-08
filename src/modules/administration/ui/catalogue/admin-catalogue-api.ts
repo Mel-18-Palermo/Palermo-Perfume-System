@@ -1,7 +1,6 @@
 "use client";
 
-import { createApiClient } from "@/lib/api";
-import { createMockApi } from "@/lib/api/mocks";
+import { api, createApiClient } from "@/lib/api";
 import type { PalermoApi } from "@/contracts/api";
 
 /**
@@ -20,13 +19,13 @@ import type { PalermoApi } from "@/contracts/api";
  * Do not import this from a Server Component -- it must only run in the
  * browser so all client components share the exact same instance.
  */
-const adminMockApi: PalermoApi = createApiClient(createMockApi({ actor: "ADMIN" }));
+const adminApi: PalermoApi = createApiClient(api);
 
 export function getAdminCatalogueApi(): PalermoApi["admin"] {
-  return adminMockApi.admin;
+  return adminApi.admin;
 }
 
 /** Public catalogue filter options (family/note/intensity/occasion/mood/weather). */
 export function getCatalogueFilters() {
-  return adminMockApi.catalogue.getFilters(undefined);
+  return adminApi.catalogue.getFilters(undefined);
 }
