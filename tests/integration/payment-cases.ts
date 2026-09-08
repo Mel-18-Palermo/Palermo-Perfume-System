@@ -155,6 +155,12 @@ export function paymentCases(db: PrismaClient): void {
       expect(await db.inventoryReservation.findUniqueOrThrow({ where: { id: record.reservationId } })).toMatchObject({ status: "COMMITTED" });
       expect(await db.inventoryBalance.findUniqueOrThrow({ where: { variantId: record.variantId } })).toMatchObject({ onHand: 8, reserved: 0 });
       expect(await db.inventoryMovement.count({ where: { reference: `payment-${record.orderId}-${record.variantId}` } })).toBe(1);
+      expect(await db.invoice.count({ where: { orderId: record.orderId } })).toBe(1);
+      expect(await db.invoice.findUniqueOrThrow({ where: { orderId: record.orderId } })).toMatchObject({
+        totalMinor: 31000,
+        currency: "AUD",
+        paymentReferenceSnapshot: initiated.providerReference,
+      });
     });
 
     it("rejects forged signatures and mismatched provider references without state changes", async () => {
