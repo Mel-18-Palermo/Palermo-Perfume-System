@@ -24,7 +24,15 @@ Endpoints:
 - `GET /api/catalogue/:id` — public detail.
 - `GET /api/catalogue?filters=true` — active filter vocabulary.
 
-No admin writes, cart, checkout or recommendation provider is included. The
-service does not call external providers. Integration tests exercise list/detail,
+Administrator mutations are exposed through the server-only `/api/admin/catalogue/*`
+adapter. Every request requires an active administrator with `catalogue:manage`.
+Create, update and archive perfume records use canonical validation and
+`catalogue-N` optimistic revisions; archive sets `ARCHIVED` and `archivedAt`
+without deleting rows. Variant writes validate price/customisation fields and
+advance the parent revision, but never create inventory balances or movements.
+Stale revisions return `CONFLICT`; unauthenticated and forbidden requests are
+rejected at the route boundary.
+
+No cart, checkout or recommendation provider is included. The service does not call external providers. Integration tests exercise list/detail,
 filter combinations, archive/status isolation, malformed input and seeded query
 latency; the 42-test suite completes within the configured 120-second hook budget.
