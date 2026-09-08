@@ -14,7 +14,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "db:check": "tsx prisma/check.ts"
+    "db:check": "tsx prisma/check.ts",
+    "auth:check": "node --conditions=react-server --import tsx src/modules/identity/live-check.ts"
   },
   "engines": {
     "node": "24.x",
@@ -24,6 +25,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "@supabase/supabase-js": "2.115.0",
     "lucide-react": "1.34.0",
     "next": "16.3.3",
     "pg": "8.23.0",
