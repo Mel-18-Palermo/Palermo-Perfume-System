@@ -123,7 +123,13 @@ export class CheckoutService {
           currency,
           deliveryAddressSnapshot: this.snapshot(delivery),
           billingAddressSnapshot: this.snapshot(billing),
-          deliveryMethodSnapshot: { id: method.id, name: method.name, chargeMinor: method.chargeMinor, currency: method.currency },
+          deliveryMethodSnapshot: {
+            id: method.id,
+            name: method.name,
+            chargeMinor: method.chargeMinor,
+            currency: method.currency,
+            displayInformation: method.displayInformation,
+          },
           items: { create: cart.items.map(item => ({ variantId: item.variantId, skuSnapshot: item.variant.sku, nameSnapshot: item.variant.perfume.name, unitPriceMinor: item.variant.priceMinor, quantity: item.quantity, personalisedLabel: item.personalisedLabel, engravingName: item.engravingName, giftMessage: item.giftMessage, giftPackagingId: item.giftPackagingId })) },
         } });
         for (const item of cart.items) {

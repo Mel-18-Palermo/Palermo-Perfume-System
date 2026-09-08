@@ -467,6 +467,7 @@ model Order {
   deliveryMethodSnapshot  Json
   placedAt                DateTime               @default(now()) @db.Timestamptz(3)
   cancellationRequestedAt DateTime?              @db.Timestamptz(3)
+  cancellationIdempotencyKey String?             @unique
   customer                Customer               @relation(fields: [customerId], references: [id], onDelete: Restrict)
   promotion               Promotion?             @relation(fields: [promotionId], references: [id], onDelete: Restrict)
   deliveryMethod          DeliveryMethod         @relation(fields: [deliveryMethodId], references: [id], onDelete: Restrict)
