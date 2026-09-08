@@ -1,5 +1,5 @@
-import { AdminInventory } from "@/modules/administration/ui/admin-inventory";
+import { AdminPlaceholder } from "@/modules/administration/ui/admin-placeholder";
 
 export default function Page() {
-  return <AdminInventory />;
+  return <AdminPlaceholder section="inventory" />;
 }
