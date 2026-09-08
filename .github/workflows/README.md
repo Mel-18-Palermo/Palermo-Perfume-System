@@ -26,6 +26,11 @@ Record both failed and successful run URLs in the implementation PR.
 
 ## Vercel project settings (technical owner only)
 
+The configured project is `pawan-sedaras-projects/palermo-perfume-system`, linked
+to this GitHub repository with `main` as its Production branch. The team has only
+the technical owner, and the project starts with no service environment variables.
+The settings below describe the configuration to preserve when adding integrations.
+
 Import `Mel-18-Palermo/Palermo-Perfume-System` through Vercel's GitHub integration.
 Use the repository root, Next.js preset, Node **24.x**, and `main` as the Production
 branch. `vercel.json` enables automatic Git deployments on all branches and uses
