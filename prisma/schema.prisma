@@ -509,6 +509,7 @@ model Payment {
   provider          String        @default("STRIPE_SANDBOX")
   providerReference String?       @unique
   attemptSequence   Int           @default(0)
+  lastProviderEventId String?      @unique
   updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
   order             Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
 }
