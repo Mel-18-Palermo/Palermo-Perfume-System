@@ -5,9 +5,11 @@ import { failure, success } from "../../../lib/api/result";
 import type { Prisma, PrismaClient } from "../../../lib/db/generated/client";
 
 export type PaymentEvent = Readonly<{
+  eventId: string;
   paymentId: string;
   status: "SUCCEEDED" | "FAILED";
   providerReference: string;
+  attemptSequence: number;
 }>;
 export type PaymentGateway = Readonly<{
   createPayment(input: {
@@ -15,6 +17,7 @@ export type PaymentGateway = Readonly<{
     orderId: string;
     amountMinor: number;
     currency: string;
+    attemptSequence: number;
   }): Promise<{ providerReference: string; clientSecret: string | null }>;
   parseWebhook(payload: string, signature: string): PaymentEvent | null;
 }>;
@@ -57,9 +60,10 @@ export class SandboxPaymentGateway implements PaymentGateway {
     orderId: string;
     amountMinor: number;
     currency: string;
+    attemptSequence: number;
   }): Promise<{ providerReference: string; clientSecret: null }> {
     return {
-      providerReference: `sandbox_pi_${input.orderId.replaceAll("-", "").slice(0, 24)}`,
+      providerReference: `sandbox_pi_${input.orderId.replaceAll("-", "").slice(0, 20)}_${input.attemptSequence}`,
       clientSecret: null,
     };
   }
@@ -71,9 +75,12 @@ export class SandboxPaymentGateway implements PaymentGateway {
     if (left.length !== right.length || !timingSafeEqual(left, right)) return null;
     try {
       const event = JSON.parse(payload) as Partial<PaymentEvent>;
-      return typeof event.paymentId === "string"
+      return typeof event.eventId === "string"
+        && typeof event.paymentId === "string"
         && (event.status === "SUCCEEDED" || event.status === "FAILED")
         && typeof event.providerReference === "string"
+        && Number.isSafeInteger(event.attemptSequence)
+        && (event.attemptSequence ?? -1) >= 0
         ? event as PaymentEvent
         : null;
     } catch {
@@ -97,13 +104,18 @@ export class StripePaymentGateway implements PaymentGateway {
     orderId: string;
     amountMinor: number;
     currency: string;
+    attemptSequence: number;
   }): Promise<{ providerReference: string; clientSecret: string }> {
     const intent = await this.stripe.paymentIntents.create({
       amount: input.amountMinor,
       currency: input.currency.toLowerCase(),
       automatic_payment_methods: { enabled: true },
-      metadata: { paymentId: input.paymentId, orderId: input.orderId },
-    }, { idempotencyKey: `palermo-payment-${input.orderId}` });
+      metadata: {
+        paymentId: input.paymentId,
+        orderId: input.orderId,
+        attemptSequence: String(input.attemptSequence),
+      },
+    }, { idempotencyKey: `palermo-payment-${input.paymentId}-${input.attemptSequence}` });
     if (!intent.client_secret) throw new Error("Stripe PaymentIntent did not return a client secret.");
     return { providerReference: intent.id, clientSecret: intent.client_secret };
   }
@@ -114,11 +126,14 @@ export class StripePaymentGateway implements PaymentGateway {
       if (event.type !== "payment_intent.succeeded" && event.type !== "payment_intent.payment_failed") return null;
       const intent = event.data.object as Stripe.PaymentIntent;
       const paymentId = intent.metadata.paymentId;
-      if (!paymentId) return null;
+      const attemptSequence = Number(intent.metadata.attemptSequence ?? "0");
+      if (!paymentId || !Number.isSafeInteger(attemptSequence) || attemptSequence < 0) return null;
       return {
+        eventId: event.id,
         paymentId,
         status: event.type === "payment_intent.succeeded" ? "SUCCEEDED" : "FAILED",
         providerReference: intent.id,
+        attemptSequence,
       };
     } catch {
       return null;
@@ -152,6 +167,25 @@ function requiredQuantities(order: Readonly<{
     required.set(item.variantId, (required.get(item.variantId) ?? 0) + item.quantity);
   }
   return required;
+}
+
+function hasCurrentReservations(order: OrderForPayment, now: Date): boolean {
+  const required = requiredQuantities(order);
+  return required.size > 0
+    && order.reservations.length === required.size
+    && [...required].every(([variantId, quantity]) => order.reservations.some(reservation =>
+      reservation.variantId === variantId
+      && reservation.quantity === quantity
+      && reservation.status === "ACTIVE"
+      && reservation.expiresAt > now));
+}
+
+function matchesCurrentAttempt(
+  payment: Readonly<{ providerReference: string | null; attemptSequence: number }>,
+  event: PaymentEvent,
+): boolean {
+  return payment.providerReference === event.providerReference
+    && payment.attemptSequence === event.attemptSequence;
 }
 
 export class PaymentService {
@@ -243,6 +277,14 @@ export class PaymentService {
     }
     if (!order.payment || order.status !== "PLACED") return failure("CONFLICT");
 
+    const reuseCurrentAttempt = order.payment.status === "PENDING"
+      && order.payment.attemptSequence > 0
+      && order.payment.providerReference !== null
+      && hasCurrentReservations(order, this.now());
+    const attemptSequence = reuseCurrentAttempt
+      ? order.payment.attemptSequence
+      : order.payment.attemptSequence + 1;
+
     let created: { providerReference: string; clientSecret: string | null };
     try {
       created = await this.gateway.createPayment({
@@ -250,6 +292,7 @@ export class PaymentService {
         orderId,
         amountMinor: order.totalMinor,
         currency: order.currency,
+        attemptSequence,
       });
     } catch (error) {
       return failure(error instanceof PaymentProviderUnavailableError
@@ -265,17 +308,31 @@ export class PaymentService {
           include: { payment: true, items: true, reservations: true },
         });
         if (!current?.payment || current.payment.status === "SUCCEEDED") throw new PaymentFault("CONFLICT");
-        if (current.payment.providerReference && current.payment.providerReference !== created.providerReference) {
-          throw new PaymentFault("CONFLICT");
-        }
+        const currentReservations = hasCurrentReservations(current, this.now());
+        const sameAttempt = current.payment.status === "PENDING"
+          && current.payment.attemptSequence === attemptSequence
+          && current.payment.providerReference === created.providerReference
+          && currentReservations;
+        const advancingAttempt = current.payment.attemptSequence + 1 === attemptSequence
+          && (current.payment.status !== "PENDING"
+            || current.payment.providerReference === null
+            || current.payment.attemptSequence === 0
+            || !currentReservations);
+        if (!sameAttempt && !advancingAttempt) throw new PaymentFault("CONFLICT");
         await this.ensureActiveReservations(tx, current);
         const updated = await tx.payment.updateMany({
           where: {
             id: paymentId,
+            attemptSequence: current.payment.attemptSequence,
             status: { in: ["PENDING", "FAILED", "EXPIRED"] },
-            OR: [{ providerReference: null }, { providerReference: created.providerReference }],
+            providerReference: current.payment.providerReference,
           },
-          data: { status: "PENDING", providerReference: created.providerReference },
+          data: {
+            status: "PENDING",
+            providerReference: created.providerReference,
+            attemptSequence,
+            ...(advancingAttempt ? { lastProviderEventId: null } : {}),
+          },
         });
         if (updated.count !== 1) throw new PaymentFault("CONFLICT");
       });
@@ -297,18 +354,21 @@ export class PaymentService {
         include: { order: { include: { reservations: true } } },
       });
       if (!payment) return { kind: "NOT_FOUND" as const };
-      if (payment.providerReference && payment.providerReference !== event.providerReference) {
-        return { kind: "CONFLICT" as const };
-      }
+      if (!matchesCurrentAttempt(payment, event)) return { kind: "CONFLICT" as const };
       if (payment.status === "SUCCEEDED") return { kind: "DONE" as const, payment };
       if (payment.status === "FAILED") return { kind: "DONE" as const, payment };
       const claimed = await tx.payment.updateMany({
         where: {
           id: payment.id,
           status: "PENDING",
-          OR: [{ providerReference: null }, { providerReference: event.providerReference }],
+          providerReference: event.providerReference,
+          attemptSequence: event.attemptSequence,
         },
-        data: { status: "FAILED", providerReference: event.providerReference },
+        data: {
+          status: "FAILED",
+          providerReference: event.providerReference,
+          lastProviderEventId: event.eventId,
+        },
       });
       if (claimed.count !== 1) return { kind: "RACE" as const, paymentId: payment.id };
       for (const reservation of payment.order.reservations) {
@@ -351,9 +411,7 @@ export class PaymentService {
           include: { order: { include: { items: true, reservations: true } } },
         });
         if (!payment) return { kind: "NOT_FOUND" as const };
-        if (payment.providerReference && payment.providerReference !== event.providerReference) {
-          return { kind: "CONFLICT" as const };
-        }
+        if (!matchesCurrentAttempt(payment, event)) return { kind: "CONFLICT" as const };
         if (payment.status === "SUCCEEDED") return { kind: "DONE" as const, payment };
         if (payment.status !== "PENDING" || payment.order.status !== "PLACED") {
           return { kind: "CONFLICT" as const };
@@ -372,9 +430,14 @@ export class PaymentService {
           where: {
             id: payment.id,
             status: "PENDING",
-            OR: [{ providerReference: null }, { providerReference: event.providerReference }],
+            providerReference: event.providerReference,
+            attemptSequence: event.attemptSequence,
           },
-          data: { status: "SUCCEEDED", providerReference: event.providerReference },
+          data: {
+            status: "SUCCEEDED",
+            providerReference: event.providerReference,
+            lastProviderEventId: event.eventId,
+          },
         });
         if (claimed.count !== 1) return { kind: "RACE" as const, paymentId: payment.id };
 
