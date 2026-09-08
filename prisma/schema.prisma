@@ -121,6 +121,7 @@ model Customer {
   deactivatedAt         DateTime?           @db.Timestamptz(3)
   createdAt             DateTime            @default(now()) @db.Timestamptz(3)
   revision              Int                 @default(1)
+  authVersion           Int                 @default(0)
   billingSameAsDelivery Boolean             @default(true)
   addresses             Address[]
   profile               FragranceProfile?
@@ -128,6 +129,7 @@ model Customer {
   orders                Order[]
   quizAttempts          QuizAttempt[]
   recommendations       RecommendationRun[]
+  sessions              IdentitySession[]
 }
 
 model Address {
@@ -209,16 +211,33 @@ model RolePermission {
 }
 
 model AdminAccount {
-  id         String    @id @default(uuid()) @db.Uuid
-  authUserId String?   @unique @db.Uuid
-  email      String    @unique
+  id         String            @id @default(uuid()) @db.Uuid
+  authUserId String?           @unique @db.Uuid
+  email      String            @unique
   name       String
-  active     Boolean   @default(true)
-  roleId     String    @db.Uuid
-  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
-  role       AdminRole @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  active     Boolean           @default(true)
+  roleId     String            @db.Uuid
+  createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  role       AdminRole         @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  sessions   IdentitySession[]
 
   @@index([roleId])
+}
+
+// Only hashes of opaque browser credentials are stored; no provider/password tokens.
+model IdentitySession {
+  tokenHash   String        @id @db.Char(64)
+  customerId  String?       @db.Uuid
+  adminId     String?       @db.Uuid
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  expiresAt   DateTime      @db.Timestamptz(3)
+  authVersion Int           @default(0)
+  customer    Customer?     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  admin       AdminAccount? @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([adminId])
+  @@index([expiresAt])
 }
 
 model FragranceFamily {
