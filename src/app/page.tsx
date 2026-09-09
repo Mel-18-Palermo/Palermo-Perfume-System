@@ -1,51 +1,36 @@
-import { CircleCheck, HeartPulse } from "lucide-react";
+import * as React from "react";
+import { CustomerShell } from "@/components/layout/customer-shell";
+import { CatalogueView } from "@/modules/catalogue/catalogue-view";
+import { getCatalogueService } from "@/modules/catalogue/runtime";
+import type { PerfumeSummary, CatalogueFilters } from "@/contracts/catalogue";
 
-export default function HomePage() {
+export default async function Home() {
+  let initialItems: readonly PerfumeSummary[] = [];
+  let filters: CatalogueFilters | null = null;
+
+  try {
+    const catalogueService = getCatalogueService();
+    const [listResult, filterResult] = await Promise.all([
+      catalogueService.list({ page: 1, pageSize: 24 }),
+      catalogueService.getFilters(),
+    ]);
+
+    if (listResult.ok) {
+      initialItems = listResult.data.items;
+    }
+    if (filterResult.ok) {
+      filters = filterResult.data;
+    }
+  } catch {
+    initialItems = [];
+    filters = null;
+  }
+
   return (
-    <main className="min-h-dvh bg-background px-4 py-10 text-foreground md:px-6 md:py-16 lg:px-8">
-      <section className="mx-auto flex max-w-reading flex-col gap-6">
-        <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-          <CircleCheck aria-hidden="true" size={20} strokeWidth={1.75} />
-          <span>Implementation foundation active</span>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <p className="text-label uppercase tracking-wide text-muted-foreground">
-            Palermo Perfume System
-          </p>
-          <h1 className="text-h1 md:text-display">
-            Application scaffold
-          </h1>
-          <p className="max-w-reading text-base leading-6 text-muted-foreground">
-            The Next.js, React and strict TypeScript foundation is ready for
-            contract, persistence and feature implementation.
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-border bg-surface p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <HeartPulse
-              aria-hidden="true"
-              className="shrink-0 text-success"
-              size={24}
-              strokeWidth={1.75}
-            />
-            <div className="flex flex-col gap-2">
-              <h2 className="text-h3">Health surface</h2>
-              <p className="text-sm leading-5 text-muted-foreground">
-                The server exposes a minimal non-sensitive health endpoint for
-                local and later automated smoke validation.
-              </p>
-              <a
-                className="flex min-h-11 w-fit items-center text-label underline underline-offset-4"
-                href="/api/health"
-              >
-                Open /api/health
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+    <CustomerShell>
+      <React.Suspense fallback={<div className="p-8 text-center text-text-muted">Loading catalogue...</div>}>
+        <CatalogueView initialItems={initialItems} initialFilters={filters} />
+      </React.Suspense>
+    </CustomerShell>
   );
 }
