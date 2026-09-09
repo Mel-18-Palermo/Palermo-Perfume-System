@@ -11,12 +11,12 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const variantStyles: Record<string, string> = {
-    neutral: "bg-surface-muted text-foreground border-border",
-    accent: "bg-accent-subtle text-accent border-accent/20",
-    success: "bg-success-background text-success border-success/20",
-    warning: "bg-warning-background text-warning border-warning/20",
-    danger: "bg-danger-background text-danger border-danger/20",
-    info: "bg-info-background text-info border-info/20",
+    neutral: "bg-surface-muted text-text border-border",
+    accent: "bg-accent-subtle text-text border-accent/40",
+    success: "bg-success-background text-text border-success/30",
+    warning: "bg-warning-background text-text border-warning/40",
+    danger: "bg-danger-background text-text border-danger/30",
+    info: "bg-info-background text-text border-info/30",
   };
 
   return (
