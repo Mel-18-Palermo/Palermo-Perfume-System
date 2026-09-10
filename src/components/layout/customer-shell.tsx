@@ -9,15 +9,15 @@ import type { CartDto } from "@/contracts/cart";
 
 export interface CustomerShellProps {
   children: React.ReactNode;
-  cart?: CartDto | null;
-  session?: Session | null;
+  cart: CartDto | null;
+  session: Session | null;
   isLoading?: boolean;
 }
 
 export function CustomerShell({
   children,
-  cart = null,
-  session = null,
+  cart,
+  session,
   isLoading = false,
 }: CustomerShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);

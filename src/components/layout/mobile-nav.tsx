@@ -8,11 +8,11 @@ import type { Session } from "@/contracts/auth";
 export interface MobileNavProps {
   isOpen: boolean;
   onClose: () => void;
-  session?: Session | null;
+  session: Session | null;
   isLoading?: boolean;
 }
 
-export function MobileNav({ isOpen, onClose, session = null, isLoading = false }: MobileNavProps) {
+export function MobileNav({ isOpen, onClose, session, isLoading = false }: MobileNavProps) {
   const user = session?.user;
 
   return (

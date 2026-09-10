@@ -8,12 +8,12 @@ import type { CartDto } from "@/contracts/cart";
 
 export interface StoreHeaderProps {
   onOpenMobileNav: () => void;
-  cart?: CartDto | null;
-  session?: Session | null;
+  cart: CartDto | null;
+  session: Session | null;
   isLoading?: boolean;
 }
 
-export function StoreHeader({ onOpenMobileNav, cart = null, session = null, isLoading = false }: StoreHeaderProps) {
+export function StoreHeader({ onOpenMobileNav, cart, session, isLoading = false }: StoreHeaderProps) {
   const itemCount = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) ?? 0;
   const user = session?.user;
 
