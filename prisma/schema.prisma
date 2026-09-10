@@ -1,0 +1,714 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/db/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  DEACTIVATED
+}
+
+enum AddressType {
+  DELIVERY
+  BILLING
+}
+
+enum CatalogueStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum Availability {
+  AVAILABLE
+  OUT_OF_STOCK
+  UNAVAILABLE
+}
+
+enum NoteLayer {
+  TOP
+  MIDDLE
+  BASE
+}
+
+enum IdentityStatus {
+  CURRENT
+  STALE
+}
+
+enum CollectionType {
+  GENERAL
+  SEASONAL
+  LIMITED_EDITION
+}
+
+enum SuitabilityCategory {
+  OCCASION
+  MOOD
+  WEATHER
+  DAYPART
+  SEASON
+}
+
+enum CartStatus {
+  ACTIVE
+  CONVERTED
+  EXPIRED
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  EXPIRED
+}
+
+enum ShipmentStatus {
+  PENDING
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  COMMITTED
+  RELEASED
+  EXPIRED
+}
+
+enum BatchStatus {
+  RECORDED
+  RELEASED
+}
+
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+enum QuizStatus {
+  STARTED
+  COMPLETED
+}
+
+enum RecommendationStatus {
+  PENDING
+  SUCCEEDED
+  FALLBACK
+  FAILED
+}
+
+model Customer {
+  id                    String              @id @default(uuid()) @db.Uuid
+  authUserId            String?             @unique @db.Uuid
+  name                  String
+  email                 String              @unique
+  status                AccountStatus       @default(PENDING_VERIFICATION)
+  emailVerifiedAt       DateTime?           @db.Timestamptz(3)
+  deactivatedAt         DateTime?           @db.Timestamptz(3)
+  createdAt             DateTime            @default(now()) @db.Timestamptz(3)
+  revision              Int                 @default(1)
+  authVersion           Int                 @default(0)
+  billingSameAsDelivery Boolean             @default(true)
+  addresses             Address[]
+  profile               FragranceProfile?
+  carts                 Cart[]
+  orders                Order[]
+  quizAttempts          QuizAttempt[]
+  recommendations       RecommendationRun[]
+  sessions              IdentitySession[]
+  wishlistItems         WishlistItem[]
+}
+
+model Address {
+  id            String      @id @default(uuid()) @db.Uuid
+  customerId    String      @db.Uuid
+  type          AddressType
+  recipientName String
+  line1         String
+  line2         String?
+  suburb        String
+  state         String
+  postcode      String
+  country       String      @db.Char(2)
+  updatedAt     DateTime    @updatedAt @db.Timestamptz(3)
+  customer      Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, type])
+}
+
+model FragranceProfile {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  customerId           String                 @unique @db.Uuid
+  preferredIntensityId String?                @db.Uuid
+  sensitivityAvoidance String?
+  updatedAt            DateTime               @updatedAt @db.Timestamptz(3)
+  customer             Customer               @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  preferredIntensity   Intensity?             @relation(fields: [preferredIntensityId], references: [id], onDelete: Restrict)
+  favouriteNotes       ProfileFavouriteNote[]
+  identity             FragranceIdentity?
+  recommendations      RecommendationRun[]
+}
+
+model ProfileFavouriteNote {
+  profileId String           @db.Uuid
+  noteId    String           @db.Uuid
+  profile   FragranceProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  note      FragranceNote    @relation(fields: [noteId], references: [id], onDelete: Restrict)
+
+  @@id([profileId, noteId])
+  @@index([noteId])
+}
+
+model FragranceIdentity {
+  id              String           @id @default(uuid()) @db.Uuid
+  profileId       String           @unique @db.Uuid
+  primaryFamilyId String           @db.Uuid
+  explanation     String
+  status          IdentityStatus   @default(CURRENT)
+  generatedAt     DateTime         @default(now()) @db.Timestamptz(3)
+  profile         FragranceProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  primaryFamily   FragranceFamily  @relation(fields: [primaryFamilyId], references: [id], onDelete: Restrict)
+
+  @@index([primaryFamilyId])
+}
+
+model AdminRole {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String           @unique
+  active      Boolean          @default(true)
+  accounts    AdminAccount[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  code        String           @unique
+  description String
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  role         AdminRole  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model AdminAccount {
+  id         String            @id @default(uuid()) @db.Uuid
+  authUserId String?           @unique @db.Uuid
+  email      String            @unique
+  name       String
+  active     Boolean           @default(true)
+  roleId     String            @db.Uuid
+  createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  role       AdminRole         @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  sessions   IdentitySession[]
+  batchesRecorded ProductionBatch[] @relation("BatchRecordedBy")
+  batchesReleased ProductionBatch[] @relation("BatchReleasedBy")
+
+  @@index([roleId])
+}
+
+// Only hashes of opaque browser credentials are stored; no provider/password tokens.
+model IdentitySession {
+  tokenHash   String        @id @db.Char(64)
+  customerId  String?       @db.Uuid
+  adminId     String?       @db.Uuid
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  expiresAt   DateTime      @db.Timestamptz(3)
+  authVersion Int           @default(0)
+  customer    Customer?     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  admin       AdminAccount? @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([adminId])
+  @@index([expiresAt])
+}
+
+model FragranceFamily {
+  id          String              @id @default(uuid()) @db.Uuid
+  name        String              @unique
+  description String?
+  active      Boolean             @default(true)
+  perfumes    Perfume[]
+  identities  FragranceIdentity[]
+}
+
+model FragranceNote {
+  id          String                 @id @default(uuid()) @db.Uuid
+  name        String                 @unique
+  description String?
+  active      Boolean                @default(true)
+  perfumes    PerfumeNote[]
+  favourites  ProfileFavouriteNote[]
+}
+
+model Intensity {
+  id       String             @id @default(uuid()) @db.Uuid
+  name     String             @unique
+  active   Boolean            @default(true)
+  perfumes Perfume[]
+  profiles FragranceProfile[]
+}
+
+model Perfume {
+  id              String               @id @default(uuid()) @db.Uuid
+  slug            String               @unique
+  name            String
+  description     String
+  primaryFamilyId String               @db.Uuid
+  intensityId     String?              @db.Uuid
+  longevity       String?
+  projection      String?
+  status          CatalogueStatus      @default(ACTIVE)
+  revision        Int                  @default(1)
+  createdAt       DateTime             @default(now()) @db.Timestamptz(3)
+  archivedAt      DateTime?            @db.Timestamptz(3)
+  primaryFamily   FragranceFamily      @relation(fields: [primaryFamilyId], references: [id], onDelete: Restrict)
+  intensity       Intensity?           @relation(fields: [intensityId], references: [id], onDelete: Restrict)
+  variants        PerfumeVariant[]
+  images          PerfumeImage[]
+  notes           PerfumeNote[]
+  suitability     PerfumeSuitability[]
+  collections     CollectionPerfume[]
+  recommendations RecommendationItem[]
+  wishlistItems  WishlistItem[]
+
+  @@index([primaryFamilyId, status])
+  @@index([intensityId])
+}
+
+model WishlistItem {
+  customerId String  @db.Uuid
+  perfumeId  String  @db.Uuid
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  perfume    Perfume  @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, perfumeId])
+  @@index([perfumeId])
+}
+
+model PerfumeImage {
+  id        String  @id @default(uuid()) @db.Uuid
+  perfumeId String  @db.Uuid
+  url       String
+  alt       String
+  sortOrder Int     @default(0)
+  perfume   Perfume @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@index([perfumeId, sortOrder])
+}
+
+model PerfumeNote {
+  perfumeId String        @db.Uuid
+  noteId    String        @db.Uuid
+  layer     NoteLayer
+  perfume   Perfume       @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  note      FragranceNote @relation(fields: [noteId], references: [id], onDelete: Restrict)
+
+  @@id([perfumeId, noteId, layer])
+  @@index([noteId])
+}
+
+model PerfumeVariant {
+  id                   String                 @id @default(uuid()) @db.Uuid
+  perfumeId            String                 @db.Uuid
+  sku                  String                 @unique
+  bottleSize           String
+  concentration        String
+  priceMinor           Int
+  currency             String                 @db.Char(3)
+  availability         Availability           @default(AVAILABLE)
+  personalisedLabel    Boolean                @default(false)
+  engravingName        Boolean                @default(false)
+  giftMessage          Boolean                @default(false)
+  giftPackagingOptions Json                   @default("[]")
+  perfume              Perfume                @relation(fields: [perfumeId], references: [id], onDelete: Restrict)
+  cartItems            CartItem[]
+  orderItems           OrderItem[]
+  inventory            InventoryBalance?
+  reservations         InventoryReservation[]
+  movements            InventoryMovement[]
+  batches              ProductionBatch[]
+
+  @@index([perfumeId])
+}
+
+model Collection {
+  id       String              @id @default(uuid()) @db.Uuid
+  name     String
+  type     CollectionType      @default(GENERAL)
+  active   Boolean             @default(true)
+  perfumes CollectionPerfume[]
+}
+
+model CollectionPerfume {
+  collectionId String     @db.Uuid
+  perfumeId    String     @db.Uuid
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  perfume      Perfume    @relation(fields: [perfumeId], references: [id], onDelete: Restrict)
+
+  @@id([collectionId, perfumeId])
+  @@index([perfumeId])
+}
+
+model SuitabilityTag {
+  id       String               @id @default(uuid()) @db.Uuid
+  category SuitabilityCategory
+  value    String
+  active   Boolean              @default(true)
+  perfumes PerfumeSuitability[]
+
+  @@unique([category, value])
+}
+
+model PerfumeSuitability {
+  perfumeId String         @db.Uuid
+  tagId     String         @db.Uuid
+  perfume   Perfume        @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  tag       SuitabilityTag @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@id([perfumeId, tagId])
+  @@index([tagId])
+}
+
+model Promotion {
+  id            String       @id @default(uuid()) @db.Uuid
+  code          String       @unique
+  discountType  DiscountType
+  // FIXED: minor units; PERCENTAGE: integer basis points, 10000 = 100%.
+  discountValue Int
+  currency      String?      @db.Char(3)
+  eligibility   Json         @default("{}")
+  active        Boolean      @default(false)
+  activeFrom    DateTime?    @db.Timestamptz(3)
+  activeUntil   DateTime?    @db.Timestamptz(3)
+  carts         Cart[]
+  orders        Order[]
+}
+
+model Cart {
+  id                String     @id @default(uuid()) @db.Uuid
+  customerId        String?    @db.Uuid
+  visitorSessionKey String?    @unique
+  promotionId       String?    @db.Uuid
+  status            CartStatus @default(ACTIVE)
+  revision          Int        @default(1)
+  updatedAt         DateTime   @updatedAt @db.Timestamptz(3)
+  customer          Customer?  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  promotion         Promotion? @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  items             CartItem[]
+
+  @@index([customerId, status])
+  @@index([promotionId])
+}
+
+model CartItem {
+  id                String         @id @default(uuid()) @db.Uuid
+  cartId            String         @db.Uuid
+  variantId         String         @db.Uuid
+  quantity          Int
+  personalisedLabel String?
+  engravingName     String?
+  giftMessage       String?
+  giftPackagingId   String?
+  cart              Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant           PerfumeVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([cartId])
+  @@index([variantId])
+}
+
+model DeliveryMethod {
+  id                 String  @id @default(uuid()) @db.Uuid
+  name               String
+  chargeMinor        Int
+  currency           String  @db.Char(3)
+  displayInformation String?
+  active             Boolean @default(true)
+  orders             Order[]
+}
+
+model Order {
+  id                      String                 @id @default(uuid()) @db.Uuid
+  customerId              String                 @db.Uuid
+  orderNumber             String                 @unique
+  idempotencyKey          String
+  requestFingerprint      String
+  promotionId             String?                @db.Uuid
+  deliveryMethodId        String                 @db.Uuid
+  status                  OrderStatus            @default(PLACED)
+  subtotalMinor           Int
+  discountTotalMinor      Int
+  deliveryChargeMinor     Int
+  totalMinor              Int
+  currency                String                 @db.Char(3)
+  deliveryAddressSnapshot Json
+  billingAddressSnapshot  Json
+  deliveryMethodSnapshot  Json
+  placedAt                DateTime               @default(now()) @db.Timestamptz(3)
+  cancellationRequestedAt DateTime?              @db.Timestamptz(3)
+  cancellationIdempotencyKey String?             @unique
+  customer                Customer               @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  promotion               Promotion?             @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  deliveryMethod          DeliveryMethod         @relation(fields: [deliveryMethodId], references: [id], onDelete: Restrict)
+  items                   OrderItem[]
+  payment                 Payment?
+  invoice                 Invoice?
+  shipment                Shipment?
+  reservations            InventoryReservation[]
+
+  @@unique([customerId, idempotencyKey])
+  @@index([customerId, placedAt])
+  @@index([promotionId])
+  @@index([deliveryMethodId])
+}
+
+model OrderItem {
+  id                String         @id @default(uuid()) @db.Uuid
+  orderId           String         @db.Uuid
+  variantId         String         @db.Uuid
+  skuSnapshot       String
+  nameSnapshot      String
+  unitPriceMinor    Int
+  quantity          Int
+  personalisedLabel String?
+  engravingName     String?
+  giftMessage       String?
+  giftPackagingId   String?
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  variant           PerfumeVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([variantId])
+}
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  orderId           String        @unique @db.Uuid
+  status            PaymentStatus @default(PENDING)
+  provider          String        @default("STRIPE_SANDBOX")
+  providerReference String?       @unique
+  attemptSequence   Int           @default(0)
+  lastProviderEventId String?      @unique
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+}
+
+model Invoice {
+  id                       String   @id @default(uuid()) @db.Uuid
+  orderId                  String   @unique @db.Uuid
+  invoiceNumber            String   @unique
+  totalMinor               Int
+  currency                 String   @db.Char(3)
+  paymentReferenceSnapshot String
+  issuedAt                 DateTime @default(now()) @db.Timestamptz(3)
+  order                    Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+}
+
+model Shipment {
+  id                 String          @id @default(uuid()) @db.Uuid
+  orderId            String          @unique @db.Uuid
+  trackingReference  String?         @unique
+  status             ShipmentStatus  @default(PENDING)
+  confirmationSource String?
+  deliveredAt        DateTime?       @db.Timestamptz(3)
+  updatedAt          DateTime        @updatedAt @db.Timestamptz(3)
+  order              Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  events             TrackingEvent[]
+}
+
+model TrackingEvent {
+  id          String         @id @default(uuid()) @db.Uuid
+  shipmentId  String         @db.Uuid
+  status      ShipmentStatus
+  description String
+  occurredAt  DateTime       @default(now()) @db.Timestamptz(3)
+  shipment    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Restrict)
+
+  @@index([shipmentId, occurredAt])
+}
+
+model InventoryBalance {
+  variantId         String         @id @db.Uuid
+  onHand            Int            @default(0)
+  reserved          Int            @default(0)
+  lowStockThreshold Int            @default(0)
+  updatedAt         DateTime       @updatedAt @db.Timestamptz(3)
+  variant           PerfumeVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+}
+
+model InventoryReservation {
+  id        String            @id @default(uuid()) @db.Uuid
+  variantId String            @db.Uuid
+  orderId   String            @db.Uuid
+  quantity  Int
+  status    ReservationStatus @default(ACTIVE)
+  expiresAt DateTime          @db.Timestamptz(3)
+  variant   PerfumeVariant    @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  order     Order             @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, variantId])
+  @@index([variantId, status])
+  @@index([status, expiresAt])
+}
+
+model ProductionBatch {
+  id               String             @id @default(uuid()) @db.Uuid
+  variantId        String             @db.Uuid
+  batchCode        String             @unique
+  recordIdempotencyKey String?        @unique
+  releaseIdempotencyKey String?       @unique
+  producedQuantity Int
+  status           BatchStatus        @default(RECORDED)
+  productionDate   DateTime           @db.Timestamptz(3)
+  releasedAt       DateTime?          @db.Timestamptz(3)
+  recordedByAdminId String?           @db.Uuid
+  releasedByAdminId String?           @db.Uuid
+  variant          PerfumeVariant     @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  recordedBy       AdminAccount?      @relation("BatchRecordedBy", fields: [recordedByAdminId], references: [id], onDelete: Restrict)
+  releasedBy       AdminAccount?      @relation("BatchReleasedBy", fields: [releasedByAdminId], references: [id], onDelete: Restrict)
+  movement         InventoryMovement?
+
+  @@unique([id, variantId])
+  @@index([variantId])
+  @@index([recordedByAdminId])
+  @@index([releasedByAdminId])
+}
+
+model InventoryMovement {
+  id                String           @id @default(uuid()) @db.Uuid
+  variantId         String           @db.Uuid
+  productionBatchId String?          @unique @db.Uuid
+  quantityDelta     Int
+  reason            String
+  reference         String           @unique
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  variant           PerfumeVariant   @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  productionBatch   ProductionBatch? @relation(fields: [productionBatchId, variantId], references: [id, variantId], onDelete: Restrict)
+
+  @@unique([productionBatchId, variantId])
+  @@index([variantId, createdAt])
+}
+
+model Quiz {
+  id        String         @id @default(uuid()) @db.Uuid
+  version   String
+  active    Boolean        @default(true)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@unique([id, version])
+}
+
+model QuizQuestion {
+  id            String         @id @default(uuid()) @db.Uuid
+  quizId        String         @db.Uuid
+  prompt        String
+  sortOrder     Int
+  required      Boolean        @default(true)
+  minSelections Int            @default(1)
+  maxSelections Int            @default(1)
+  quiz          Quiz           @relation(fields: [quizId], references: [id], onDelete: Restrict)
+  options       QuizOption[]
+  responses     QuizResponse[]
+
+  @@unique([id, quizId])
+  @@unique([quizId, sortOrder])
+}
+
+model QuizOption {
+  id         String         @id @default(uuid()) @db.Uuid
+  questionId String         @db.Uuid
+  label      String
+  value      String
+  sortOrder  Int
+  question   QuizQuestion   @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  responses  QuizResponse[]
+
+  @@unique([id, questionId])
+  @@unique([questionId, sortOrder])
+}
+
+model QuizAttempt {
+  id                String              @id @default(uuid()) @db.Uuid
+  quizId            String              @db.Uuid
+  quizVersion       String
+  customerId        String?             @db.Uuid
+  visitorSessionKey String?
+  status            QuizStatus          @default(STARTED)
+  startedAt         DateTime            @default(now()) @db.Timestamptz(3)
+  completedAt       DateTime?           @db.Timestamptz(3)
+  quiz              Quiz                @relation(fields: [quizId, quizVersion], references: [id, version], onDelete: Restrict)
+  customer          Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  responses         QuizResponse[]
+  recommendations   RecommendationRun[]
+
+  @@unique([id, quizId])
+  @@index([quizId, quizVersion])
+  @@index([customerId])
+}
+
+model QuizResponse {
+  attemptId  String       @db.Uuid
+  quizId     String       @db.Uuid
+  questionId String       @db.Uuid
+  optionId   String       @db.Uuid
+  attempt    QuizAttempt  @relation(fields: [attemptId, quizId], references: [id, quizId], onDelete: Restrict)
+  question   QuizQuestion @relation(fields: [questionId, quizId], references: [id, quizId], onDelete: Restrict)
+  option     QuizOption   @relation(fields: [optionId, questionId], references: [id, questionId], onDelete: Restrict)
+
+  @@id([attemptId, questionId, optionId])
+  @@index([questionId, quizId])
+  @@index([optionId, questionId])
+}
+
+model RecommendationRun {
+  id                String               @id @default(uuid()) @db.Uuid
+  customerId        String?              @db.Uuid
+  quizAttemptId     String?              @db.Uuid
+  profileId         String?              @db.Uuid
+  status            RecommendationStatus @default(PENDING)
+  providerReference String?
+  createdAt         DateTime             @default(now()) @db.Timestamptz(3)
+  customer          Customer?            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quizAttempt       QuizAttempt?         @relation(fields: [quizAttemptId], references: [id], onDelete: Restrict)
+  profile           FragranceProfile?    @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  items             RecommendationItem[]
+
+  @@index([customerId])
+  @@index([quizAttemptId])
+  @@index([profileId])
+}
+
+model RecommendationItem {
+  runId       String            @db.Uuid
+  perfumeId   String            @db.Uuid
+  rank        Int
+  explanation String
+  run         RecommendationRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  perfume     Perfume           @relation(fields: [perfumeId], references: [id], onDelete: Restrict)
+
+  @@id([runId, perfumeId])
+  @@unique([runId, rank])
+  @@index([perfumeId])
+}

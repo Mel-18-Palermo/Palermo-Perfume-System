@@ -1,0 +1,9 @@
+import { NextResponse } from "next/server";
+import { readSessionCookie } from "@/lib/auth/http";
+import { getIdentityService } from "@/lib/auth/runtime";
+import { getCheckoutService } from "@/modules/commerce/checkout/runtime";
+import { checkoutApi } from "@/modules/commerce/checkout/service";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export async function GET(request: Request, context: { params: Promise<{ operation: string }> }): Promise<Response> { if ((await context.params).operation !== "delivery-methods") return NextResponse.json({ ok: false, error: { code: "NOT_FOUND", message: "Checkout operation not found." } }, { status: 404 }); return NextResponse.json(await getCheckoutService().getDeliveryMethods(), { headers: { "cache-control": "no-store" } }); }
+export async function POST(request: Request, context: { params: Promise<{ operation: string }> }): Promise<Response> { if (request.headers.get("origin") !== new URL(request.url).origin) return NextResponse.json({ ok: false, error: { code: "FORBIDDEN", message: "A same-origin request is required." } }, { status: 403 }); const principal = await getIdentityService().principal(readSessionCookie(request)); if (principal?.user.role !== "CUSTOMER") return NextResponse.json({ ok: false, error: { code: "UNAUTHENTICATED", message: "Sign in to continue." } }, { status: 401 }); if ((await context.params).operation !== "submit") return NextResponse.json({ ok: false, error: { code: "NOT_FOUND", message: "Checkout operation not found." } }, { status: 404 }); let input: unknown; try { input = await request.json(); } catch { return NextResponse.json({ ok: false, error: { code: "VALIDATION_ERROR", message: "Use valid JSON." } }, { status: 400 }); } const result = await checkoutApi(getCheckoutService(), principal.user.id).submit(input as never); return NextResponse.json(result, { status: result.ok ? 200 : 400, headers: { "cache-control": "no-store" } }); }

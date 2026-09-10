@@ -1,0 +1,5 @@
+import type { PaymentApi } from "../../contracts/payment";
+import type { PaymentInitiation } from "../../contracts/payment";
+import type { ApiResult } from "../../contracts/common";
+function valid<T>(value: unknown): value is ApiResult<T> { return typeof value === "object" && value !== null && "ok" in value && (((value as { ok?: unknown }).ok) === true || ((value as { ok?: unknown }).ok) === false); }
+export function createPaymentHttpClient(fetcher: typeof fetch = fetch): PaymentApi { return { initiate: async input => { try { const response = await fetcher("/api/payment/initiate", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(input), cache: "no-store" }); const value: unknown = await response.json(); return valid<PaymentInitiation>(value) ? value : { ok: false, error: { code: "INTEGRATION_ERROR", message: "The payment response was invalid." } }; } catch { return { ok: false, error: { code: "TEMPORARILY_UNAVAILABLE", message: "The payment service is temporarily unavailable." } }; } } }; }

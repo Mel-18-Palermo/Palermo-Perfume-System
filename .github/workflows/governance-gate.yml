@@ -1,0 +1,62 @@
+name: Governance gate
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  pull_request_review:
+    types: [submitted, dismissed, edited]
+
+# This workflow reads PR metadata and reviews only. It never checks out or executes PR code.
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: governance-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    name: Governance gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Verify author and current-head approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API_URL: ${{ github.api_url }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$PR_AUTHOR" == "HexCodeYT" ]]; then
+            echo "HexCodeYT-authored PR: no external approval required."
+            exit 0
+          fi
+
+          reviews_json="$(curl --fail --silent --show-error \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "${API_URL}/repos/${REPOSITORY}/pulls/${PR_NUMBER}/reviews?per_page=100")"
+
+          current_head_approval="$(jq -r --arg sha "$HEAD_SHA" '
+            [ .[]
+              | select(.user.login == "HexCodeYT")
+              | select(.commit_id == $sha)
+            ]
+            | if length == 0 then ""
+              else .[-1].state
+              end
+          ' <<<"$reviews_json")"
+
+          if [[ "$current_head_approval" == "APPROVED" ]]; then
+            echo "Current PR head ${HEAD_SHA} has an APPROVED review from HexCodeYT."
+            exit 0
+          fi
+
+          echo "Governance authorization missing: current PR head ${HEAD_SHA} requires an APPROVED HexCodeYT review."
+          exit 1
