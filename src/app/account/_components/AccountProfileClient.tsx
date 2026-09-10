@@ -8,81 +8,213 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/empty-state";
+} from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { EmptyState } from "../../../components/ui/empty-state";
 import { AddressForm } from "./AddressForm";
-import { fetchMockProfile, fetchMockProfileError, MOCK_FRAGRANCE_NOTES } from "../_lib/mock-data";
-import type { CustomerProfile, FragranceIntensity } from "../_lib/types";
+import { api } from "../../../lib/api";
+import type {
+  CustomerProfile,
+  AddressInput,
+  FragrancePreferences,
+} from "../../../contracts/profile";
+import type { CatalogueFilters } from "../../../contracts/catalogue";
 
 type LoadState = "loading" | "loaded" | "error";
 
 export function AccountProfileClient() {
   const [state, setState] = React.useState<LoadState>("loading");
   const [profile, setProfile] = React.useState<CustomerProfile | null>(null);
+  const [filters, setFilters] = React.useState<CatalogueFilters | null>(null);
+  const [errorMessage, setErrorMessage] = React.useState("");
+  const [conflictNotice, setConflictNotice] = React.useState("");
+
   const [nameDraft, setNameDraft] = React.useState("");
   const [nameError, setNameError] = React.useState("");
+  const [savingName, setSavingName] = React.useState(false);
+
+  const [prefsDraft, setPrefsDraft] = React.useState<FragrancePreferences | null>(null);
+  const [prefsError, setPrefsError] = React.useState("");
+  const [savingPrefs, setSavingPrefs] = React.useState(false);
+
+  const [showSeparateBilling, setShowSeparateBilling] = React.useState(false);
+  const [identityError, setIdentityError] = React.useState("");
+  const [generatingIdentity, setGeneratingIdentity] = React.useState(false);
   const [deactivateOpen, setDeactivateOpen] = React.useState(false);
 
-  const load = React.useCallback(() => {
+  const load = React.useCallback(async () => {
     setState("loading");
-    fetchMockProfile()
-      .then((p) => {
-        setProfile(p);
-        setNameDraft(p.name);
-        setState("loaded");
-      })
-      .catch(() => setState("error"));
+    setErrorMessage("");
+    const [profileResult, filtersResult] = await Promise.all([
+      api.profile.get(),
+      api.catalogue.getFilters(),
+    ]);
+
+    if (!profileResult.ok) {
+      setErrorMessage(profileResult.error.message);
+      setState("error");
+      return;
+    }
+    if (!filtersResult.ok) {
+      setErrorMessage(filtersResult.error.message);
+      setState("error");
+      return;
+    }
+
+    setProfile(profileResult.data);
+    setFilters(filtersResult.data);
+    setNameDraft(profileResult.data.name);
+    setPrefsDraft(profileResult.data.preferences);
+    setShowSeparateBilling(!profileResult.data.billingSameAsDelivery);
+    setState("loaded");
   }, []);
 
   React.useEffect(() => {
     load();
   }, [load]);
 
-  function simulateError() {
-    setState("loading");
-    fetchMockProfileError().catch(() => setState("error"));
+  function handleConflict(message?: string) {
+    setConflictNotice(
+      message ?? "Your profile changed elsewhere. We've reloaded the latest version."
+    );
+    load();
   }
 
-  function handleSaveName(e: React.FormEvent) {
+  async function handleSaveName(e: React.FormEvent) {
     e.preventDefault();
+    if (!profile) return;
     if (!nameDraft.trim()) {
       setNameError("Name cannot be empty.");
       return;
     }
     setNameError("");
-    setProfile((prev) => (prev ? { ...prev, name: nameDraft.trim() } : prev));
+    setSavingName(true);
+    const result = await api.profile.update({
+      expectedRevision: profile.revision,
+      name: nameDraft.trim(),
+      preferences: profile.preferences,
+    });
+    setSavingName(false);
+
+    if (result.ok) {
+      setProfile(result.data);
+      setNameDraft(result.data.name);
+      setPrefsDraft(result.data.preferences);
+    } else if (result.error.code === "CONFLICT") {
+      handleConflict();
+    } else if (result.error.code === "VALIDATION_ERROR") {
+      setNameError(result.error.fieldErrors?.name?.[0] ?? result.error.message);
+    } else {
+      setErrorMessage(result.error.message);
+    }
   }
 
   function toggleNote(noteId: string) {
-    setProfile((prev) => {
+    setPrefsDraft((prev) => {
       if (!prev) return prev;
-      const has = prev.fragrancePreferences.favouriteNoteIds.includes(noteId);
+      const has = prev.favouriteNoteIds.includes(noteId);
       const favouriteNoteIds = has
-        ? prev.fragrancePreferences.favouriteNoteIds.filter((id) => id !== noteId)
-        : [...prev.fragrancePreferences.favouriteNoteIds, noteId];
-      return {
-        ...prev,
-        fragrancePreferences: { ...prev.fragrancePreferences, favouriteNoteIds },
-      };
+        ? prev.favouriteNoteIds.filter((id) => id !== noteId)
+        : [...prev.favouriteNoteIds, noteId];
+      return { ...prev, favouriteNoteIds };
     });
   }
 
-  function setIntensity(value: FragranceIntensity) {
-    setProfile((prev) =>
-      prev
-        ? { ...prev, fragrancePreferences: { ...prev.fragrancePreferences, preferredIntensity: value } }
-        : prev
-    );
+  function setIntensity(intensityId: string) {
+    setPrefsDraft((prev) => (prev ? { ...prev, preferredIntensityId: intensityId } : prev));
   }
 
   function setSensitivity(value: string) {
-    setProfile((prev) =>
-      prev
-        ? { ...prev, fragrancePreferences: { ...prev.fragrancePreferences, sensitivityNotes: value } }
-        : prev
-    );
+    setPrefsDraft((prev) => (prev ? { ...prev, sensitivityAvoidance: value || null } : prev));
+  }
+
+  async function handleSavePreferences() {
+    if (!profile || !prefsDraft) return;
+    setPrefsError("");
+    setSavingPrefs(true);
+    const result = await api.profile.update({
+      expectedRevision: profile.revision,
+      name: profile.name,
+      preferences: prefsDraft,
+    });
+    setSavingPrefs(false);
+
+    if (result.ok) {
+      setProfile(result.data);
+      setPrefsDraft(result.data.preferences);
+    } else if (result.error.code === "CONFLICT") {
+      handleConflict();
+    } else if (result.error.code === "VALIDATION_ERROR") {
+      setPrefsError(result.error.message);
+    } else {
+      setErrorMessage(result.error.message);
+    }
+  }
+
+  async function handleSaveDeliveryAddress(address: AddressInput) {
+    if (!profile) return;
+    const result = await api.profile.setDeliveryAddress({
+      expectedRevision: profile.revision,
+      address,
+    });
+    if (result.ok) {
+      setProfile(result.data);
+      setShowSeparateBilling(!result.data.billingSameAsDelivery);
+    } else if (result.error.code === "CONFLICT") {
+      handleConflict();
+    } else {
+      setErrorMessage(result.error.message);
+    }
+  }
+
+  async function handleUseDeliveryForBilling() {
+    if (!profile) return;
+    const result = await api.profile.setBillingAddress({
+      expectedRevision: profile.revision,
+      billing: { kind: "USE_DELIVERY" },
+    });
+    if (result.ok) {
+      setProfile(result.data);
+      setShowSeparateBilling(false);
+    } else if (result.error.code === "CONFLICT") {
+      handleConflict();
+    } else {
+      setErrorMessage(result.error.message);
+    }
+  }
+
+  async function handleSaveSeparateBilling(address: AddressInput) {
+    if (!profile) return;
+    const result = await api.profile.setBillingAddress({
+      expectedRevision: profile.revision,
+      billing: { kind: "SEPARATE", address },
+    });
+    if (result.ok) {
+      setProfile(result.data);
+    } else if (result.error.code === "CONFLICT") {
+      handleConflict();
+    } else {
+      setErrorMessage(result.error.message);
+    }
+  }
+
+  async function handleGenerateIdentity() {
+    if (!profile) return;
+    setIdentityError("");
+    setGeneratingIdentity(true);
+    const result = await api.profile.generateIdentity({ expectedRevision: profile.revision });
+    setGeneratingIdentity(false);
+
+    if (result.ok) {
+      setProfile(result.data);
+    } else if (result.error.code === "CONFLICT") {
+      handleConflict();
+    } else if (result.error.code === "VALIDATION_ERROR") {
+      setIdentityError(result.error.message);
+    } else {
+      setErrorMessage(result.error.message);
+    }
   }
 
   if (state === "loading") {
@@ -99,20 +231,42 @@ export function AccountProfileClient() {
     return (
       <EmptyState
         title="We couldn't load your account"
-        description="Something went wrong while fetching your profile. Please try again."
+        description={errorMessage || "Something went wrong while fetching your profile. Please try again."}
         action={<Button onClick={load}>Try again</Button>}
       />
     );
   }
 
-  if (!profile) return null;
-
-  const hasPositivePreference =
-    profile.fragrancePreferences.favouriteNoteIds.length > 0 ||
-    !!profile.fragrancePreferences.preferredIntensity;
+  if (!profile || !filters || !prefsDraft) return null;
 
   return (
     <div className="space-y-6">
+      {conflictNotice && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          {conflictNotice}
+          <button
+            type="button"
+            onClick={() => setConflictNotice("")}
+            className="ml-3 underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div
+          role="alert"
+          className="rounded-md border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger"
+        >
+          {errorMessage}
+        </div>
+      )}
+
       {/* Account overview */}
       <Card>
         <CardHeader>
@@ -131,11 +285,6 @@ export function AccountProfileClient() {
             <span className="font-medium">{profile.accountStatus}</span>
           </p>
         </CardContent>
-        <CardFooter>
-          <Button variant="ghost" size="sm" onClick={simulateError}>
-            Simulate error (dev)
-          </Button>
-        </CardFooter>
       </Card>
 
       {/* Profile form (FR-PROFILE-001) */}
@@ -151,10 +300,13 @@ export function AccountProfileClient() {
                 label="Full name"
                 value={nameDraft}
                 error={nameError}
+                disabled={savingName}
                 onChange={(e) => setNameDraft(e.target.value)}
               />
             </div>
-            <Button type="submit">Save profile</Button>
+            <Button type="submit" isLoading={savingName}>
+              Save profile
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -169,7 +321,7 @@ export function AccountProfileClient() {
           <AddressForm
             title="delivery address"
             value={profile.deliveryAddress}
-            onSave={(addr) => setProfile((prev) => (prev ? { ...prev, deliveryAddress: addr } : prev))}
+            onSave={handleSaveDeliveryAddress}
           />
         </CardContent>
       </Card>
@@ -184,19 +336,23 @@ export function AccountProfileClient() {
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
-              checked={profile.billingSameAsDelivery}
-              onChange={(e) =>
-                setProfile((prev) => (prev ? { ...prev, billingSameAsDelivery: e.target.checked } : prev))
-              }
+              checked={!showSeparateBilling}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  handleUseDeliveryForBilling();
+                } else {
+                  setShowSeparateBilling(true);
+                }
+              }}
               className="h-4 w-4 rounded border-border"
             />
             Same as delivery address
           </label>
-          {!profile.billingSameAsDelivery && (
+          {showSeparateBilling && (
             <AddressForm
               title="billing address"
-              value={profile.billingAddress}
-              onSave={(addr) => setProfile((prev) => (prev ? { ...prev, billingAddress: addr } : prev))}
+              value={profile.billingSameAsDelivery ? null : profile.billingAddress}
+              onSave={handleSaveSeparateBilling}
             />
           )}
         </CardContent>
@@ -215,8 +371,8 @@ export function AccountProfileClient() {
           <div>
             <p className="mb-2 text-xs font-medium text-foreground">Favourite notes</p>
             <div className="flex flex-wrap gap-2">
-              {MOCK_FRAGRANCE_NOTES.map((note) => {
-                const selected = profile.fragrancePreferences.favouriteNoteIds.includes(note.id);
+              {filters.note.map((note) => {
+                const selected = prefsDraft.favouriteNoteIds.includes(note.id);
                 return (
                   <button
                     key={note.id}
@@ -238,20 +394,20 @@ export function AccountProfileClient() {
 
           <div>
             <p className="mb-2 text-xs font-medium text-foreground">Preferred intensity</p>
-            <div className="flex gap-2">
-              {(["light", "moderate", "strong"] as FragranceIntensity[]).map((level) => (
+            <div className="flex flex-wrap gap-2">
+              {filters.intensity.map((option) => (
                 <button
-                  key={level}
+                  key={option.id}
                   type="button"
-                  onClick={() => setIntensity(level)}
-                  aria-pressed={profile.fragrancePreferences.preferredIntensity === level}
-                  className={`rounded-md border px-3 py-1.5 text-xs capitalize transition-colors ${
-                    profile.fragrancePreferences.preferredIntensity === level
+                  onClick={() => setIntensity(option.id)}
+                  aria-pressed={prefsDraft.preferredIntensityId === option.id}
+                  className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
+                    prefsDraft.preferredIntensityId === option.id
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-surface text-foreground hover:bg-surface-muted"
                   }`}
                 >
-                  {level}
+                  {option.label}
                 </button>
               ))}
             </div>
@@ -263,7 +419,7 @@ export function AccountProfileClient() {
             </label>
             <textarea
               id="sensitivity"
-              value={profile.fragrancePreferences.sensitivityNotes ?? ""}
+              value={prefsDraft.sensitivityAvoidance ?? ""}
               onChange={(e) => setSensitivity(e.target.value)}
               rows={3}
               placeholder="e.g. strong musk, very sweet vanilla"
@@ -273,9 +429,17 @@ export function AccountProfileClient() {
               This is a personal preference note, not medical or health information.
             </p>
           </div>
+
+          {prefsError && (
+            <p role="alert" className="text-xs text-danger">
+              {prefsError}
+            </p>
+          )}
         </CardContent>
         <CardFooter>
-          <Button size="sm">Save preferences</Button>
+          <Button size="sm" isLoading={savingPrefs} onClick={handleSavePreferences}>
+            Save preferences
+          </Button>
         </CardFooter>
       </Card>
 
@@ -283,21 +447,16 @@ export function AccountProfileClient() {
       <Card>
         <CardHeader>
           <CardTitle>Your Fragrance Identity</CardTitle>
-          <CardDescription>Generated automatically from your preferences above.</CardDescription>
+          <CardDescription>Generated from your preferences above.</CardDescription>
         </CardHeader>
-        <CardContent>
-          {!hasPositivePreference ? (
-            <EmptyState
-              title="Not enough information yet"
-              description="Select at least one favourite note or a preferred intensity to generate your Fragrance Identity."
-            />
-          ) : profile.fragranceIdentity ? (
+        <CardContent className="space-y-2">
+          {profile.fragranceIdentity ? (
             <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground">
-                {profile.fragranceIdentity.primaryFamily}
+                {profile.fragranceIdentity.primaryFamily.label}
               </p>
               <p className="text-sm text-muted-foreground">{profile.fragranceIdentity.explanation}</p>
-              {profile.fragranceIdentity.isStale && (
+              {profile.fragranceIdentity.status === "STALE" && (
                 <p className="text-xs font-medium text-danger">
                   Your preferences changed — regenerate to see an updated result.
                 </p>
@@ -309,15 +468,20 @@ export function AccountProfileClient() {
               description="Generate your Fragrance Identity based on your current preferences."
             />
           )}
+          {identityError && (
+            <p role="alert" className="text-xs text-danger">
+              {identityError}
+            </p>
+          )}
         </CardContent>
         <CardFooter>
-          <Button size="sm" disabled={!hasPositivePreference}>
+          <Button size="sm" isLoading={generatingIdentity} onClick={handleGenerateIdentity}>
             Regenerate Fragrance Identity
           </Button>
         </CardFooter>
       </Card>
 
-      {/* Account deactivation — presentation only, per issue scope (FR-AUTH-007 server logic is separate) */}
+      {/* Account deactivation — presentation only, per #253 scope */}
       <Card>
         <CardHeader>
           <CardTitle>Deactivate account</CardTitle>
@@ -333,11 +497,11 @@ export function AccountProfileClient() {
           ) : (
             <div className="space-y-3 rounded-md border border-danger/30 bg-danger/5 p-4">
               <p className="text-sm text-foreground">
-                Are you sure you want to deactivate your account? You won&apos;t be able to log in
-                until it is reactivated by support.
+                Are you sure you want to deactivate your account? You will not be able to log in
+                while your account is deactivated.
               </p>
               <div className="flex gap-2">
-                <Button variant="danger" size="sm">
+                <Button variant="danger" size="sm" disabled>
                   Yes, deactivate
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setDeactivateOpen(false)}>
@@ -345,8 +509,8 @@ export function AccountProfileClient() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Note: this is a presentation-only confirmation for this task. Deactivation server
-                logic is implemented separately (FR-AUTH-007).
+                This confirmation is presentation-only for this task; deactivation is completed
+                separately (FR-AUTH-007).
               </p>
             </div>
           )}
