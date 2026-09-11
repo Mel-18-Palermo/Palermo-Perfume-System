@@ -1,8 +1,8 @@
 ﻿import * as React from "react";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
+  label?: string | undefined;
+  error?: string | undefined;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
