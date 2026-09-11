@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { CatalogueView } from "@/modules/catalogue/catalogue-view";
 import { getCatalogueService } from "@/modules/catalogue/runtime";
@@ -27,7 +27,7 @@ export default async function Home() {
   }
 
   return (
-    <CustomerShell>
+    <CustomerShell cart={null} session={null}>
       <React.Suspense fallback={<div className="p-8 text-center text-text-muted">Loading catalogue...</div>}>
         <CatalogueView initialItems={initialItems} initialFilters={filters} />
       </React.Suspense>
