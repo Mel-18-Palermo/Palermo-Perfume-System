@@ -22,7 +22,7 @@ const alertStyles: Record<AlertVariant, { container: string; text: string; icon:
   warning: {
     container: "bg-warning-background border-warning/40",
     text: "text-text",
-    icon: <AlertTriangle className="h-4 w-4 text-warning-border shrink-0" aria-hidden="true" />,
+    icon: <AlertTriangle className="h-4 w-4 text-warning shrink-0" aria-hidden="true" />,
   },
   danger: {
     container: "bg-danger-background border-danger/30",
