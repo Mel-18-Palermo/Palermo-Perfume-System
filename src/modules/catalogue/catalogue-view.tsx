@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import Image from "next/image";
@@ -75,8 +75,13 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
     try {
       const res = await api.catalogue.list(query);
       if (!res.ok) {
-        setError(res.error.message || "Failed to load catalogue.");
-        setItems([]);
+        if (searchQuery.trim() || selectedFamily || selectedIntensity || selectedOccasion || selectedMood || selectedWeather) {
+          setError(null);
+          setItems([]);
+        } else {
+          setError(res.error.message || "Failed to load catalogue.");
+          setItems([]);
+        }
       } else {
         setItems(res.data.items);
       }
@@ -88,8 +93,13 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load catalogue.");
-      setItems([]);
+      if (searchQuery.trim() || selectedFamily || selectedIntensity || selectedOccasion || selectedMood || selectedWeather) {
+        setError(null);
+        setItems([]);
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to load catalogue.");
+        setItems([]);
+      }
     } finally {
       setLoading(false);
     }
