@@ -45,17 +45,34 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
   const selectedOccasion = searchParams.get("occasion") ?? "";
   const selectedMood = searchParams.get("mood") ?? "";
   const selectedWeather = searchParams.get("weather") ?? "";
+  const selectedNote = searchParams.get("note") ?? "";
+  const selectedCollection = searchParams.get("collection") ?? "";
+  const minPrice = searchParams.get("minPrice") ?? "";
+  const maxPrice = searchParams.get("maxPrice") ?? "";
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
+    if (value.trim()) {
+      params.set(key, value.trim());
     } else {
       params.delete(key);
     }
     params.delete("page");
-    router.replace(`?${params.toString()}`, { scroll: false });
+    router.replace("?" + params.toString(), { scroll: false });
   };
+
+  const hasActiveFilters = Boolean(
+    searchQuery ||
+    selectedFamily ||
+    selectedIntensity ||
+    selectedOccasion ||
+    selectedMood ||
+    selectedWeather ||
+    selectedNote ||
+    selectedCollection ||
+    minPrice ||
+    maxPrice
+  );
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -70,12 +87,16 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
       ...(selectedOccasion ? { occasion: [selectedOccasion] } : {}),
       ...(selectedMood ? { mood: [selectedMood] } : {}),
       ...(selectedWeather ? { weather: [selectedWeather] } : {}),
+      ...(selectedNote ? { note: [selectedNote] } : {}),
+      ...(selectedCollection ? { collection: [selectedCollection] } : {}),
+      ...(minPrice && !isNaN(Number(minPrice)) ? { minPrice: Math.round(Number(minPrice) * 100) } : {}),
+      ...(maxPrice && !isNaN(Number(maxPrice)) ? { maxPrice: Math.round(Number(maxPrice) * 100) } : {}),
     };
 
     try {
       const res = await api.catalogue.list(query);
       if (!res.ok) {
-        if (searchQuery.trim() || selectedFamily || selectedIntensity || selectedOccasion || selectedMood || selectedWeather) {
+        if (hasActiveFilters) {
           setError(null);
           setItems([]);
         } else {
@@ -93,7 +114,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
         }
       }
     } catch (err) {
-      if (searchQuery.trim() || selectedFamily || selectedIntensity || selectedOccasion || selectedMood || selectedWeather) {
+      if (hasActiveFilters) {
         setError(null);
         setItems([]);
       } else {
@@ -103,7 +124,20 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedFamily, selectedIntensity, selectedOccasion, selectedMood, selectedWeather, filters]);
+  }, [
+    searchQuery,
+    selectedFamily,
+    selectedIntensity,
+    selectedOccasion,
+    selectedMood,
+    selectedWeather,
+    selectedNote,
+    selectedCollection,
+    minPrice,
+    maxPrice,
+    hasActiveFilters,
+    filters,
+  ]);
 
   React.useEffect(() => {
     let ignore = false;
@@ -143,6 +177,46 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
           ))}
         </select>
       </div>
+
+      <div>
+        <label htmlFor="filter-note" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
+          Fragrance Note
+        </label>
+        <select
+          id="filter-note"
+          value={selectedNote}
+          onChange={(e) => updateParam("note", e.target.value)}
+          className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <option value="">All Notes</option>
+          {filters?.note?.map((n) => (
+            <option key={n.id} value={n.id}>
+              {n.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {filters?.collection && filters.collection.length > 0 && (
+        <div>
+          <label htmlFor="filter-collection" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
+            Collection
+          </label>
+          <select
+            id="filter-collection"
+            value={selectedCollection}
+            onChange={(e) => updateParam("collection", e.target.value)}
+            className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <option value="">All Collections</option>
+            {filters.collection.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label htmlFor="filter-intensity" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
@@ -220,7 +294,31 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
         </select>
       </div>
 
-      {(selectedFamily || selectedIntensity || selectedOccasion || selectedMood || selectedWeather || searchQuery) && (
+      <div>
+        <span className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
+          Price Range ($)
+        </span>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            id="filter-min-price"
+            type="number"
+            placeholder="Min"
+            min="0"
+            value={minPrice}
+            onChange={(e) => updateParam("minPrice", e.target.value)}
+          />
+          <Input
+            id="filter-max-price"
+            type="number"
+            placeholder="Max"
+            min="0"
+            value={maxPrice}
+            onChange={(e) => updateParam("maxPrice", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {hasActiveFilters && (
         <Button variant="outline" size="sm" onClick={clearFilters} className="w-full">
           Reset Filters
         </Button>
@@ -341,7 +439,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
                       </p>
                     </div>
                     <Link
-                      href={`/catalogue/${perfume.id}`}
+                      href={"/catalogue/" + perfume.id}
                       className="inline-flex items-center justify-center rounded-md border border-border bg-surface hover:bg-surface-muted text-text text-sm font-medium min-h-[44px] px-4 transition-colors"
                     >
                       View Details
