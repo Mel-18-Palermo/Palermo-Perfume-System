@@ -25,6 +25,13 @@ export function MobileNav({ isOpen, onClose, session, isLoading = false }: Mobil
         >
           Catalogue
         </Link>
+        <Link
+          href="/wishlist"
+          onClick={onClose}
+          className="flex min-h-[44px] items-center text-base font-medium text-text hover:underline transition-colors"
+        >
+          Wishlist
+        </Link>
         <div className="pt-4 border-t border-border">
           {isLoading ? (
             <span className="text-xs text-text-muted">Loading account...</span>
