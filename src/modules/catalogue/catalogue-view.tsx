@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import Image from "next/image";
@@ -17,8 +17,9 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Drawer } from "@/components/ui/drawer";
 
 interface CatalogueViewProps {
-  initialItems?: readonly PerfumeSummary[];
+  initialItems?: readonly PerfumeSummary[] | null;
   initialFilters?: CatalogueFilters | null;
+  initialError?: string | null;
 }
 
 function formatPrice(money: MoneyValue): string {
@@ -29,14 +30,18 @@ function formatPrice(money: MoneyValue): string {
   }).format(amount);
 }
 
-export function CatalogueView({ initialItems = [], initialFilters = null }: CatalogueViewProps) {
+export function CatalogueView({
+  initialItems = null,
+  initialFilters = null,
+  initialError = null,
+}: CatalogueViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [items, setItems] = React.useState<readonly PerfumeSummary[]>(initialItems);
+  const [items, setItems] = React.useState<readonly PerfumeSummary[]>(initialItems ?? []);
   const [filters, setFilters] = React.useState<CatalogueFilters | null>(initialFilters);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(initialError);
   const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
 
   const searchQuery = searchParams.get("q") ?? "";
@@ -98,18 +103,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
       if (res.ok) {
         setItems(res.data.items);
       } else {
-        // Fallback filter over initialItems when database is unreachable locally
-        let filtered = [...initialItems];
-        if (searchQuery.trim()) {
-          filtered = filtered.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
-        }
-        if (selectedFamily) {
-          filtered = filtered.filter(item => item.primaryFamily.id === selectedFamily);
-        }
-        if (selectedIntensity) {
-          filtered = filtered.filter(item => item.intensity?.id === selectedIntensity);
-        }
-        setItems(filtered);
+        setError(res.error?.message || "Failed to load catalogue. Please check your connection and try again.");
       }
 
       if (!filters) {
@@ -118,18 +112,8 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
           setFilters(filterRes.data);
         }
       }
-    } catch {
-      let filtered = [...initialItems];
-      if (searchQuery.trim()) {
-        filtered = filtered.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      }
-      if (selectedFamily) {
-        filtered = filtered.filter(item => item.primaryFamily.id === selectedFamily);
-      }
-      if (selectedIntensity) {
-        filtered = filtered.filter(item => item.intensity?.id === selectedIntensity);
-      }
-      setItems(filtered);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred while loading the catalogue.");
     } finally {
       setLoading(false);
     }
@@ -144,7 +128,6 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
     selectedCollection,
     minPrice,
     maxPrice,
-    initialItems,
     filters,
   ]);
 
@@ -448,7 +431,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
                       </p>
                     </div>
                     <Link
-                      href={"/catalogue/" + perfume.id}
+                      href={"/product/" + perfume.id}
                       className="inline-flex items-center justify-center rounded-md border border-border bg-surface hover:bg-surface-muted text-text text-sm font-medium min-h-[44px] px-4 transition-colors"
                     >
                       View Details
