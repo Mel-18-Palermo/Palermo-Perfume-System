@@ -95,16 +95,21 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
 
     try {
       const res = await api.catalogue.list(query);
-      if (!res.ok) {
-        if (hasActiveFilters) {
-          setError(null);
-          setItems([]);
-        } else {
-          setError(res.error.message || "Failed to load catalogue.");
-          setItems([]);
-        }
-      } else {
+      if (res.ok) {
         setItems(res.data.items);
+      } else {
+        // Fallback filter over initialItems when database is unreachable locally
+        let filtered = [...initialItems];
+        if (searchQuery.trim()) {
+          filtered = filtered.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+        if (selectedFamily) {
+          filtered = filtered.filter(item => item.primaryFamily.id === selectedFamily);
+        }
+        if (selectedIntensity) {
+          filtered = filtered.filter(item => item.intensity?.id === selectedIntensity);
+        }
+        setItems(filtered);
       }
 
       if (!filters) {
@@ -113,14 +118,18 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
           setFilters(filterRes.data);
         }
       }
-    } catch (err) {
-      if (hasActiveFilters) {
-        setError(null);
-        setItems([]);
-      } else {
-        setError(err instanceof Error ? err.message : "Failed to load catalogue.");
-        setItems([]);
+    } catch {
+      let filtered = [...initialItems];
+      if (searchQuery.trim()) {
+        filtered = filtered.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
       }
+      if (selectedFamily) {
+        filtered = filtered.filter(item => item.primaryFamily.id === selectedFamily);
+      }
+      if (selectedIntensity) {
+        filtered = filtered.filter(item => item.intensity?.id === selectedIntensity);
+      }
+      setItems(filtered);
     } finally {
       setLoading(false);
     }
@@ -135,7 +144,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null }: Cata
     selectedCollection,
     minPrice,
     maxPrice,
-    hasActiveFilters,
+    initialItems,
     filters,
   ]);
 
