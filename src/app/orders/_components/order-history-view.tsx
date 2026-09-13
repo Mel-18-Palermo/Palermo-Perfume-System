@@ -7,14 +7,15 @@ import { CustomerShell } from "@/components/layout/customer-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 import type { AppError } from "@/contracts/common";
 import type { OrderSummary } from "@/contracts/orders";
 import { formatDate, formatMoney } from "./format";
-import { ordersPresentationApi } from "./orders-api-client";
+import { OrderErrorView } from "./order-error-view";
+import { safeResult } from "./safe-result";
 import { OrderStatusBadge, PaymentStatusBadge } from "./status-badges";
 
 const PAGE_SIZE = 10;
@@ -36,8 +37,8 @@ export function OrderHistoryView() {
     let active = true;
     async function loadShell() {
       const [sessionResult, cartResult] = await Promise.all([
-        ordersPresentationApi.auth.getSession(),
-        ordersPresentationApi.cart.get(),
+        safeResult(() => api.auth.getSession()),
+        safeResult(() => api.cart.get()),
       ]);
       if (!active) return;
       setShell({
@@ -56,7 +57,7 @@ export function OrderHistoryView() {
     async function run() {
       setIsLoading(true);
       setError(null);
-      const result = await ordersPresentationApi.orders.list({ page, pageSize: PAGE_SIZE });
+      const result = await safeResult(() => api.orders.list({ page, pageSize: PAGE_SIZE }));
       if (!active) return;
       if (result.ok) {
         setItems(result.data.items);
@@ -88,11 +89,7 @@ export function OrderHistoryView() {
           )}
 
           {!isLoading && error && (
-            <ErrorState
-              title="We couldn't load your orders"
-              message={error.message}
-              onRetry={() => setReloadToken(current => current + 1)}
-            />
+            <OrderErrorView error={error} onRetry={() => setReloadToken(current => current + 1)} />
           )}
 
           {!isLoading && !error && items && items.length === 0 && (

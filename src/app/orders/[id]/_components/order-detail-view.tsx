@@ -8,15 +8,16 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 import type { AppError } from "@/contracts/common";
 import type { OrderDetail } from "@/contracts/orders";
 import type { ShipmentTrackingDto } from "@/contracts/tracking";
 import { formatDate, formatMoney } from "@/app/orders/_components/format";
-import { ordersPresentationApi } from "@/app/orders/_components/orders-api-client";
+import { OrderErrorView } from "@/app/orders/_components/order-error-view";
+import { safeResult } from "@/app/orders/_components/safe-result";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/app/orders/_components/status-badges";
 import { TrackingTimeline } from "@/app/orders/_components/tracking-timeline";
 
@@ -24,10 +25,16 @@ export interface OrderDetailViewProps {
   orderId: string;
 }
 
-type LoadState =
+type OrderState =
   | { status: "loading" }
   | { status: "error"; error: AppError }
-  | { status: "ready"; order: OrderDetail; tracking: ShipmentTrackingDto | null };
+  | { status: "ready"; order: OrderDetail };
+
+type TrackingState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "error"; error: AppError }
+  | { status: "ready"; tracking: ShipmentTrackingDto };
 
 export function OrderDetailView({ orderId }: OrderDetailViewProps) {
   const router = useRouter();
@@ -35,27 +42,22 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
     session: null,
     cart: null,
   });
-  const [state, setState] = React.useState<LoadState>({ status: "loading" });
+  const [orderState, setOrderState] = React.useState<OrderState>({ status: "loading" });
+  const [trackingState, setTrackingState] = React.useState<TrackingState>({ status: "idle" });
   const [reloadToken, setReloadToken] = React.useState(0);
+  const [trackingReloadToken, setTrackingReloadToken] = React.useState(0);
 
   React.useEffect(() => {
     let active = true;
     async function run() {
-      setState({ status: "loading" });
-      const orderResult = await ordersPresentationApi.orders.get({ id: orderId });
+      setOrderState({ status: "loading" });
+      const result = await safeResult(() => api.orders.get({ id: orderId }));
       if (!active) return;
-      if (!orderResult.ok) {
-        setState({ status: "error", error: orderResult.error });
-        return;
+      if (result.ok) {
+        setOrderState({ status: "ready", order: result.data });
+      } else {
+        setOrderState({ status: "error", error: result.error });
       }
-      const order = orderResult.data;
-      if (!order.shipmentId) {
-        setState({ status: "ready", order, tracking: null });
-        return;
-      }
-      const trackingResult = await ordersPresentationApi.tracking.get({ orderId: order.id });
-      if (!active) return;
-      setState({ status: "ready", order, tracking: trackingResult.ok ? trackingResult.data : null });
     }
     void run();
     return () => {
@@ -63,12 +65,38 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
     };
   }, [orderId, reloadToken]);
 
+  const shipmentId = orderState.status === "ready" ? orderState.order.shipmentId : null;
+  const readyOrderId = orderState.status === "ready" ? orderState.order.id : null;
+
+  React.useEffect(() => {
+    if (!readyOrderId) return;
+    let active = true;
+    async function run(resolvedOrderId: string) {
+      if (!shipmentId) {
+        setTrackingState({ status: "idle" });
+        return;
+      }
+      setTrackingState({ status: "loading" });
+      const result = await safeResult(() => api.tracking.get({ orderId: resolvedOrderId }));
+      if (!active) return;
+      if (result.ok) {
+        setTrackingState({ status: "ready", tracking: result.data });
+      } else {
+        setTrackingState({ status: "error", error: result.error });
+      }
+    }
+    void run(readyOrderId);
+    return () => {
+      active = false;
+    };
+  }, [readyOrderId, shipmentId, trackingReloadToken]);
+
   React.useEffect(() => {
     let active = true;
     async function loadShell() {
       const [sessionResult, cartResult] = await Promise.all([
-        ordersPresentationApi.auth.getSession(),
-        ordersPresentationApi.cart.get(),
+        safeResult(() => api.auth.getSession()),
+        safeResult(() => api.cart.get()),
       ]);
       if (!active) return;
       setShell({
@@ -90,7 +118,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
           Back to orders
         </Button>
 
-        {state.status === "loading" && (
+        {orderState.status === "loading" && (
           <div className="mt-4 space-y-4" aria-busy="true" aria-label="Loading order">
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-40 w-full" />
@@ -98,7 +126,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
           </div>
         )}
 
-        {state.status === "error" && state.error.code === "NOT_FOUND" && (
+        {orderState.status === "error" && orderState.error.code === "NOT_FOUND" && (
           <div className="mt-4">
             <EmptyState
               icon={<PackageX className="h-5 w-5" aria-hidden="true" />}
@@ -113,29 +141,25 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
           </div>
         )}
 
-        {state.status === "error" && state.error.code !== "NOT_FOUND" && (
+        {orderState.status === "error" && orderState.error.code !== "NOT_FOUND" && (
           <div className="mt-4">
-            <ErrorState
-              title="We couldn't load this order"
-              message={state.error.message}
-              onRetry={() => setReloadToken(current => current + 1)}
-            />
+            <OrderErrorView error={orderState.error} onRetry={() => setReloadToken(current => current + 1)} />
           </div>
         )}
 
-        {state.status === "ready" && (
+        {orderState.status === "ready" && (
           <div className="mt-4 space-y-6">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-h1 text-text">{state.order.orderNumber}</h1>
-                <OrderStatusBadge status={state.order.status} />
-                <PaymentStatusBadge status={state.order.paymentStatus} />
+                <h1 className="text-h1 text-text">{orderState.order.orderNumber}</h1>
+                <OrderStatusBadge status={orderState.order.status} />
+                <PaymentStatusBadge status={orderState.order.paymentStatus} />
               </div>
-              <p className="mt-1 text-sm text-text-muted">Placed {formatDate(state.order.placedAt)}</p>
-              {state.order.cancellationRequest && (
+              <p className="mt-1 text-sm text-text-muted">Placed {formatDate(orderState.order.placedAt)}</p>
+              {orderState.order.cancellationRequest && (
                 <Alert variant="warning" title="Cancellation requested" className="mt-3">
-                  Requested {formatDate(state.order.cancellationRequest.requestedAt)}. This does not change the order
-                  status shown above until confirmed.
+                  Requested {formatDate(orderState.order.cancellationRequest.requestedAt)}. This does not change the
+                  order status shown above until confirmed.
                 </Alert>
               )}
             </div>
@@ -146,7 +170,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
               </CardHeader>
               <CardContent className="p-0">
                 <ul className="divide-y divide-border">
-                  {state.order.items.map(item => (
+                  {orderState.order.items.map(item => (
                     <li key={item.id} className="flex items-center justify-between gap-4 p-5">
                       <div>
                         <p className="text-sm font-medium text-text">{item.title}</p>
@@ -161,15 +185,15 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                 <div className="space-y-1 border-t border-border p-5 text-sm">
                   <div className="flex items-center justify-between text-text-muted">
                     <span>Subtotal</span>
-                    <span>{formatMoney(state.order.subtotal)}</span>
+                    <span>{formatMoney(orderState.order.subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between text-text-muted">
                     <span>Discount</span>
-                    <span>{formatMoney(state.order.discountTotal)}</span>
+                    <span>{formatMoney(orderState.order.discountTotal)}</span>
                   </div>
                   <div className="flex items-center justify-between font-semibold text-text">
                     <span>Total</span>
-                    <span>{formatMoney(state.order.total)}</span>
+                    <span>{formatMoney(orderState.order.total)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -181,14 +205,14 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                   <CardTitle>Delivery address</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-text-muted">
-                  <p className="text-text">{state.order.deliveryAddress.recipientName}</p>
-                  <p>{state.order.deliveryAddress.line1}</p>
-                  {state.order.deliveryAddress.line2 && <p>{state.order.deliveryAddress.line2}</p>}
+                  <p className="text-text">{orderState.order.deliveryAddress.recipientName}</p>
+                  <p>{orderState.order.deliveryAddress.line1}</p>
+                  {orderState.order.deliveryAddress.line2 && <p>{orderState.order.deliveryAddress.line2}</p>}
                   <p>
-                    {state.order.deliveryAddress.suburb} {state.order.deliveryAddress.state}{" "}
-                    {state.order.deliveryAddress.postcode}
+                    {orderState.order.deliveryAddress.suburb} {orderState.order.deliveryAddress.state}{" "}
+                    {orderState.order.deliveryAddress.postcode}
                   </p>
-                  <p>{state.order.deliveryAddress.country}</p>
+                  <p>{orderState.order.deliveryAddress.country}</p>
                 </CardContent>
               </Card>
               <Card>
@@ -196,8 +220,10 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                   <CardTitle>Delivery method</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-text-muted">
-                  <p className="text-text">{state.order.deliveryMethod.name}</p>
-                  {state.order.deliveryMethod.displayInformation && <p>{state.order.deliveryMethod.displayInformation}</p>}
+                  <p className="text-text">{orderState.order.deliveryMethod.name}</p>
+                  {orderState.order.deliveryMethod.displayInformation && (
+                    <p>{orderState.order.deliveryMethod.displayInformation}</p>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -207,13 +233,24 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                 <CardTitle>Shipment tracking</CardTitle>
               </CardHeader>
               <CardContent>
-                {state.tracking ? (
-                  <TrackingTimeline tracking={state.tracking} />
-                ) : (
+                {trackingState.status === "idle" && (
                   <p className="text-sm text-text-muted">
                     Tracking is not available for this order yet. It appears once the order is dispatched.
                   </p>
                 )}
+                {trackingState.status === "loading" && (
+                  <div className="space-y-3" aria-busy="true" aria-label="Loading tracking">
+                    <Skeleton className="h-6 w-40" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                )}
+                {trackingState.status === "error" && (
+                  <OrderErrorView
+                    error={trackingState.error}
+                    onRetry={() => setTrackingReloadToken(current => current + 1)}
+                  />
+                )}
+                {trackingState.status === "ready" && <TrackingTimeline tracking={trackingState.tracking} />}
               </CardContent>
             </Card>
           </div>
