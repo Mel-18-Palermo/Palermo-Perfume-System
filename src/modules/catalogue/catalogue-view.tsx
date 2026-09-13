@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import Image from "next/image";
@@ -30,11 +30,9 @@ function formatPrice(money: MoneyValue): string {
   }).format(amount);
 }
 
-export function CatalogueView({
-  initialItems = null,
-  initialFilters = null,
-  initialError = null,
-}: CatalogueViewProps) {
+type ListDimension = "family" | "note" | "collection" | "intensity" | "occasion" | "mood" | "weather";
+
+export function CatalogueView({ initialItems = [], initialFilters = null, initialError = null }: CatalogueViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -45,15 +43,29 @@ export function CatalogueView({
   const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
 
   const searchQuery = searchParams.get("q") ?? "";
-  const selectedFamily = searchParams.get("family") ?? "";
-  const selectedIntensity = searchParams.get("intensity") ?? "";
-  const selectedOccasion = searchParams.get("occasion") ?? "";
-  const selectedMood = searchParams.get("mood") ?? "";
-  const selectedWeather = searchParams.get("weather") ?? "";
-  const selectedNote = searchParams.get("note") ?? "";
-  const selectedCollection = searchParams.get("collection") ?? "";
   const minPrice = searchParams.get("minPrice") ?? "";
   const maxPrice = searchParams.get("maxPrice") ?? "";
+
+  const selectedFamilies = searchParams.getAll("family");
+  const selectedNotes = searchParams.getAll("note");
+  const selectedCollections = searchParams.getAll("collection");
+  const selectedIntensities = searchParams.getAll("intensity");
+  const selectedOccasions = searchParams.getAll("occasion");
+  const selectedMoods = searchParams.getAll("mood");
+  const selectedWeathers = searchParams.getAll("weather");
+
+  const toggleListParam = (key: string, id: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const current = params.getAll(key);
+    params.delete(key);
+    if (current.includes(id)) {
+      current.filter((item) => item !== id).forEach((val) => params.append(key, val));
+    } else {
+      [...current, id].forEach((val) => params.append(key, val));
+    }
+    params.delete("page");
+    router.replace("?" + params.toString(), { scroll: false });
+  };
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -68,13 +80,13 @@ export function CatalogueView({
 
   const hasActiveFilters = Boolean(
     searchQuery ||
-    selectedFamily ||
-    selectedIntensity ||
-    selectedOccasion ||
-    selectedMood ||
-    selectedWeather ||
-    selectedNote ||
-    selectedCollection ||
+    selectedFamilies.length > 0 ||
+    selectedNotes.length > 0 ||
+    selectedCollections.length > 0 ||
+    selectedIntensities.length > 0 ||
+    selectedOccasions.length > 0 ||
+    selectedMoods.length > 0 ||
+    selectedWeathers.length > 0 ||
     minPrice ||
     maxPrice
   );
@@ -87,23 +99,24 @@ export function CatalogueView({
       page: 1,
       pageSize: 24,
       ...(searchQuery.trim() ? { q: searchQuery.trim() } : {}),
-      ...(selectedFamily ? { family: [selectedFamily] } : {}),
-      ...(selectedIntensity ? { intensity: [selectedIntensity] } : {}),
-      ...(selectedOccasion ? { occasion: [selectedOccasion] } : {}),
-      ...(selectedMood ? { mood: [selectedMood] } : {}),
-      ...(selectedWeather ? { weather: [selectedWeather] } : {}),
-      ...(selectedNote ? { note: [selectedNote] } : {}),
-      ...(selectedCollection ? { collection: [selectedCollection] } : {}),
+      ...(selectedFamilies.length > 0 ? { family: selectedFamilies } : {}),
+      ...(selectedNotes.length > 0 ? { note: selectedNotes } : {}),
+      ...(selectedCollections.length > 0 ? { collection: selectedCollections } : {}),
+      ...(selectedIntensities.length > 0 ? { intensity: selectedIntensities } : {}),
+      ...(selectedOccasions.length > 0 ? { occasion: selectedOccasions } : {}),
+      ...(selectedMoods.length > 0 ? { mood: selectedMoods } : {}),
+      ...(selectedWeathers.length > 0 ? { weather: selectedWeathers } : {}),
       ...(minPrice && !isNaN(Number(minPrice)) ? { minPrice: Math.round(Number(minPrice) * 100) } : {}),
       ...(maxPrice && !isNaN(Number(maxPrice)) ? { maxPrice: Math.round(Number(maxPrice) * 100) } : {}),
     };
 
     try {
       const res = await api.catalogue.list(query);
-      if (res.ok) {
-        setItems(res.data.items);
+      if (!res.ok) {
+        setError(res.error.message || "Failed to load catalogue.");
+        setItems([]);
       } else {
-        setError(res.error?.message || "Failed to load catalogue. Please check your connection and try again.");
+        setItems(res.data.items);
       }
 
       if (!filters) {
@@ -113,19 +126,20 @@ export function CatalogueView({
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred while loading the catalogue.");
+      setError(err instanceof Error ? err.message : "Failed to load catalogue.");
+      setItems([]);
     } finally {
       setLoading(false);
     }
   }, [
     searchQuery,
-    selectedFamily,
-    selectedIntensity,
-    selectedOccasion,
-    selectedMood,
-    selectedWeather,
-    selectedNote,
-    selectedCollection,
+    selectedFamilies,
+    selectedNotes,
+    selectedCollections,
+    selectedIntensities,
+    selectedOccasions,
+    selectedMoods,
+    selectedWeathers,
     minPrice,
     maxPrice,
     filters,
@@ -149,166 +163,87 @@ export function CatalogueView({
     router.replace("?", { scroll: false });
   };
 
+  const renderCheckboxGroup = (
+    title: string,
+    key: ListDimension,
+    options?: readonly { id: string; label: string }[],
+    selected: readonly string[] = []
+  ) => {
+    if (!options || options.length === 0) return null;
+    return (
+      <fieldset className="space-y-2">
+        <legend className="block text-xs font-semibold uppercase tracking-wider text-text mb-1">
+          {title}
+        </legend>
+        <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+          {options.map((opt) => {
+            const isChecked = selected.includes(opt.id);
+            return (
+              <label
+                key={opt.id}
+                className="flex items-center gap-2 text-sm text-text cursor-pointer select-none"
+              >
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => toggleListParam(key, opt.id)}
+                  className="rounded border-border text-accent focus:ring-accent h-4 w-4"
+                />
+                <span>{opt.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+    );
+  };
+
   const filterControls = (
-    <div className="space-y-4">
-      <div>
-        <label htmlFor="filter-family" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
-          Fragrance Family
-        </label>
-        <select
-          id="filter-family"
-          value={selectedFamily}
-          onChange={(e) => updateParam("family", e.target.value)}
-          className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <option value="">All Families</option>
-          {filters?.family?.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.label}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="space-y-5">
+      {renderCheckboxGroup("Fragrance Family", "family", filters?.family, selectedFamilies)}
+      {renderCheckboxGroup("Fragrance Note", "note", filters?.note, selectedNotes)}
+      {filters?.collection &&
+        renderCheckboxGroup("Collection", "collection", filters.collection, selectedCollections)}
+      {renderCheckboxGroup("Intensity", "intensity", filters?.intensity, selectedIntensities)}
+      {renderCheckboxGroup("Occasion", "occasion", filters?.occasion, selectedOccasions)}
+      {renderCheckboxGroup("Mood", "mood", filters?.mood, selectedMoods)}
+      {renderCheckboxGroup("Weather", "weather", filters?.weather, selectedWeathers)}
 
-      <div>
-        <label htmlFor="filter-note" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
-          Fragrance Note
-        </label>
-        <select
-          id="filter-note"
-          value={selectedNote}
-          onChange={(e) => updateParam("note", e.target.value)}
-          className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <option value="">All Notes</option>
-          {filters?.note?.map((n) => (
-            <option key={n.id} value={n.id}>
-              {n.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {filters?.collection && filters.collection.length > 0 && (
-        <div>
-          <label htmlFor="filter-collection" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
-            Collection
-          </label>
-          <select
-            id="filter-collection"
-            value={selectedCollection}
-            onChange={(e) => updateParam("collection", e.target.value)}
-            className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <option value="">All Collections</option>
-            {filters.collection.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      <div>
-        <label htmlFor="filter-intensity" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
-          Intensity
-        </label>
-        <select
-          id="filter-intensity"
-          value={selectedIntensity}
-          onChange={(e) => updateParam("intensity", e.target.value)}
-          className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <option value="">All Intensities</option>
-          {filters?.intensity?.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="filter-occasion" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
-          Occasion
-        </label>
-        <select
-          id="filter-occasion"
-          value={selectedOccasion}
-          onChange={(e) => updateParam("occasion", e.target.value)}
-          className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <option value="">All Occasions</option>
-          {filters?.occasion?.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="filter-mood" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
-          Mood
-        </label>
-        <select
-          id="filter-mood"
-          value={selectedMood}
-          onChange={(e) => updateParam("mood", e.target.value)}
-          className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <option value="">All Moods</option>
-          {filters?.mood?.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="filter-weather" className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
-          Weather
-        </label>
-        <select
-          id="filter-weather"
-          value={selectedWeather}
-          onChange={(e) => updateParam("weather", e.target.value)}
-          className="w-full min-h-[44px] rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <option value="">All Weather</option>
-          {filters?.weather?.map((w) => (
-            <option key={w.id} value={w.id}>
-              {w.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <span className="block text-xs font-semibold uppercase tracking-wider text-text mb-1.5">
+      <fieldset className="space-y-2">
+        <legend className="block text-xs font-semibold uppercase tracking-wider text-text mb-1">
           Price Range ($)
-        </span>
+        </legend>
         <div className="grid grid-cols-2 gap-2">
-          <Input
-            id="filter-min-price"
-            type="number"
-            placeholder="Min"
-            min="0"
-            value={minPrice}
-            onChange={(e) => updateParam("minPrice", e.target.value)}
-          />
-          <Input
-            id="filter-max-price"
-            type="number"
-            placeholder="Max"
-            min="0"
-            value={maxPrice}
-            onChange={(e) => updateParam("maxPrice", e.target.value)}
-          />
+          <div>
+            <label htmlFor="filter-min-price" className="sr-only">
+              Minimum price
+            </label>
+            <Input
+              id="filter-min-price"
+              aria-label="Minimum price"
+              type="number"
+              placeholder="Min"
+              min="0"
+              value={minPrice}
+              onChange={(e) => updateParam("minPrice", e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="filter-max-price" className="sr-only">
+              Maximum price
+            </label>
+            <Input
+              id="filter-max-price"
+              aria-label="Maximum price"
+              type="number"
+              placeholder="Max"
+              min="0"
+              value={maxPrice}
+              onChange={(e) => updateParam("maxPrice", e.target.value)}
+            />
+          </div>
         </div>
-      </div>
+      </fieldset>
 
       {hasActiveFilters && (
         <Button variant="outline" size="sm" onClick={clearFilters} className="w-full">
@@ -330,7 +265,12 @@ export function CatalogueView({
 
         <div className="flex items-center gap-3">
           <div className="w-full md:w-72">
+            <label htmlFor="catalogue-search-input" className="sr-only">
+              Search fragrances
+            </label>
             <Input
+              id="catalogue-search-input"
+              aria-label="Search fragrances"
               type="search"
               placeholder="Search fragrances..."
               value={searchQuery}
@@ -360,7 +300,7 @@ export function CatalogueView({
           onClose={() => setMobileFiltersOpen(false)}
           title="Filter Fragrances"
         >
-          <div className="p-2">
+          <div className="p-4">
             {filterControls}
           </div>
         </Drawer>
