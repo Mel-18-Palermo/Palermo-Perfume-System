@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ShoppingBag, Heart, Menu } from "lucide-react";
+import { ShoppingBag, Menu } from "lucide-react";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 
@@ -57,15 +57,6 @@ export function StoreHeader({ onOpenMobileNav, cart, session, isLoading = false 
               Sign In
             </Link>
           )}
-
-          <Link
-            href="/wishlist"
-            className="min-h-[44px] min-w-[44px] px-3 py-2 inline-flex items-center justify-center gap-2 rounded-md text-text hover:bg-surface-muted text-sm font-medium transition-colors"
-            aria-label="View wishlist"
-          >
-            <Heart className="h-4 w-4 text-text" aria-hidden="true" />
-            <span className="hidden sm:inline">Wishlist</span>
-          </Link>
 
           <Link
             href="/cart"

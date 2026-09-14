@@ -136,7 +136,7 @@ export function WishlistView({ previewState }: WishlistViewProps = {}) {
           title="Your wishlist is empty"
           description="Save perfumes you love while browsing the catalogue and they will appear here."
           action={
-            <Link href="/catalogue" className={primaryLinkStyles}>
+            <Link href="/" className={primaryLinkStyles}>
               Browse the catalogue
             </Link>
           }
