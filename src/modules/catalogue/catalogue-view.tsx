@@ -35,6 +35,7 @@ type ListDimension = "family" | "note" | "collection" | "intensity" | "occasion"
 export function CatalogueView({ initialItems = [], initialFilters = null, initialError = null }: CatalogueViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
 
   const [items, setItems] = React.useState<readonly PerfumeSummary[]>(initialItems ?? []);
   const [filters, setFilters] = React.useState<CatalogueFilters | null>(initialFilters);
@@ -95,25 +96,38 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
     setLoading(true);
     setError(null);
 
+    const sp = new URLSearchParams(searchParamsString);
+    const q = sp.get("q") ?? "";
+    const minP = sp.get("minPrice") ?? "";
+    const maxP = sp.get("maxPrice") ?? "";
+
+    const families = sp.getAll("family");
+    const notes = sp.getAll("note");
+    const collections = sp.getAll("collection");
+    const intensities = sp.getAll("intensity");
+    const occasions = sp.getAll("occasion");
+    const moods = sp.getAll("mood");
+    const weathers = sp.getAll("weather");
+
     const query: CatalogueQuery = {
       page: 1,
       pageSize: 24,
-      ...(searchQuery.trim() ? { q: searchQuery.trim() } : {}),
-      ...(selectedFamilies.length > 0 ? { family: selectedFamilies } : {}),
-      ...(selectedNotes.length > 0 ? { note: selectedNotes } : {}),
-      ...(selectedCollections.length > 0 ? { collection: selectedCollections } : {}),
-      ...(selectedIntensities.length > 0 ? { intensity: selectedIntensities } : {}),
-      ...(selectedOccasions.length > 0 ? { occasion: selectedOccasions } : {}),
-      ...(selectedMoods.length > 0 ? { mood: selectedMoods } : {}),
-      ...(selectedWeathers.length > 0 ? { weather: selectedWeathers } : {}),
-      ...(minPrice && !isNaN(Number(minPrice)) ? { minPrice: Math.round(Number(minPrice) * 100) } : {}),
-      ...(maxPrice && !isNaN(Number(maxPrice)) ? { maxPrice: Math.round(Number(maxPrice) * 100) } : {}),
+      ...(q.trim() ? { q: q.trim() } : {}),
+      ...(families.length > 0 ? { family: families } : {}),
+      ...(notes.length > 0 ? { note: notes } : {}),
+      ...(collections.length > 0 ? { collection: collections } : {}),
+      ...(intensities.length > 0 ? { intensity: intensities } : {}),
+      ...(occasions.length > 0 ? { occasion: occasions } : {}),
+      ...(moods.length > 0 ? { mood: moods } : {}),
+      ...(weathers.length > 0 ? { weather: weathers } : {}),
+      ...(minP && !isNaN(Number(minP)) ? { minPrice: Math.round(Number(minP) * 100) } : {}),
+      ...(maxP && !isNaN(Number(maxP)) ? { maxPrice: Math.round(Number(maxP) * 100) } : {}),
     };
 
     try {
       const res = await api.catalogue.list(query);
       if (!res.ok) {
-        setError(res.error.message || "Failed to load catalogue.");
+        setError("Failed to load catalogue items. Please try again.");
         setItems([]);
       } else {
         setItems(res.data.items);
@@ -125,25 +139,13 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
           setFilters(filterRes.data);
         }
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load catalogue.");
+    } catch {
+      setError("Unable to load catalogue. Please check your connection and try again.");
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, [
-    searchQuery,
-    selectedFamilies,
-    selectedNotes,
-    selectedCollections,
-    selectedIntensities,
-    selectedOccasions,
-    selectedMoods,
-    selectedWeathers,
-    minPrice,
-    maxPrice,
-    filters,
-  ]);
+  }, [searchParamsString, filters]);
 
   React.useEffect(() => {
     let ignore = false;
@@ -198,7 +200,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
     );
   };
 
-  const filterControls = (
+  const renderFilterControls = (prefix: string = "filter") => (
     <div className="space-y-5">
       {renderCheckboxGroup("Fragrance Family", "family", filters?.family, selectedFamilies)}
       {renderCheckboxGroup("Fragrance Note", "note", filters?.note, selectedNotes)}
@@ -215,11 +217,11 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
         </legend>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label htmlFor="filter-min-price" className="sr-only">
+            <label htmlFor={`${prefix}-min-price`} className="sr-only">
               Minimum price
             </label>
             <Input
-              id="filter-min-price"
+              id={`${prefix}-min-price`}
               aria-label="Minimum price"
               type="number"
               placeholder="Min"
@@ -229,11 +231,11 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
             />
           </div>
           <div>
-            <label htmlFor="filter-max-price" className="sr-only">
+            <label htmlFor={`${prefix}-max-price`} className="sr-only">
               Maximum price
             </label>
             <Input
-              id="filter-max-price"
+              id={`${prefix}-max-price`}
               aria-label="Maximum price"
               type="number"
               placeholder="Max"
@@ -291,7 +293,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
         <aside className="hidden md:block md:col-span-1 border-r border-border pr-6">
           <div className="sticky top-24">
             <h2 className="text-sm font-bold uppercase tracking-wider text-text mb-4">Filter By</h2>
-            {filterControls}
+            {renderFilterControls("desktop")}
           </div>
         </aside>
 
@@ -301,7 +303,7 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
           title="Filter Fragrances"
         >
           <div className="p-4">
-            {filterControls}
+            {renderFilterControls("mobile")}
           </div>
         </Drawer>
 
