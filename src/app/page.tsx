@@ -1,7 +1,6 @@
 ﻿import * as React from "react";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { CatalogueView } from "@/modules/catalogue/catalogue-view";
-import { getCatalogueService } from "@/modules/catalogue/runtime";
 import { api } from "@/lib/api";
 import type { PerfumeSummary, CatalogueFilters } from "@/contracts/catalogue";
 import type { Session } from "@/contracts/auth";
@@ -15,10 +14,9 @@ export default async function Home() {
   let initialError: string | null = null;
 
   try {
-    const catalogueService = getCatalogueService();
     const [listResult, filterResult, sessionResult, cartResult] = await Promise.all([
-      catalogueService.list({ page: 1, pageSize: 24 }),
-      catalogueService.getFilters(),
+      api.catalogue.list({ page: 1, pageSize: 24 }).catch(() => ({ ok: false as const, error: { message: "Failed to load catalogue" } })),
+      api.catalogue.getFilters().catch(() => ({ ok: false as const, error: { message: "Failed to load filters" } })),
       api.auth.getSession().catch(() => ({ ok: false as const })),
       api.cart.get().catch(() => ({ ok: false as const })),
     ]);
@@ -26,7 +24,7 @@ export default async function Home() {
     if (listResult.ok) {
       initialItems = listResult.data.items;
     } else {
-      initialError = "Failed to load catalogue items";
+      initialError = "Failed to load catalogue items. Please try again.";
     }
 
     if (filterResult.ok) {
@@ -40,8 +38,8 @@ export default async function Home() {
     if (cartResult.ok) {
       cart = cartResult.data;
     }
-  } catch (err) {
-    initialError = err instanceof Error ? err.message : "Failed to load catalogue";
+  } catch {
+    initialError = "Unable to load catalogue. Please check your connection and try again.";
   }
 
   return (
