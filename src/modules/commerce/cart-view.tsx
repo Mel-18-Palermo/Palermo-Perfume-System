@@ -21,21 +21,36 @@ function formatMoney(value?: MoneyValue | null): string {
 
 export interface CartViewProps {
   initialCart?: CartDto | null;
+  initialLoading?: boolean;
+  onCartChange?: (cart: CartDto | null) => void;
 }
 
-export function CartView({ initialCart = null }: CartViewProps) {
+export function CartView({
+  initialCart = null,
+  initialLoading = false,
+  onCartChange,
+}: CartViewProps) {
   const [cart, setCart] = React.useState<CartDto | null>(initialCart);
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<boolean>(initialLoading);
   const [pendingItemId, setPendingItemId] = React.useState<string | null>(null);
   const [isMutating, setIsMutating] = React.useState<boolean>(false);
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [isStaleRecovering, setIsStaleRecovering] = React.useState<boolean>(false);
 
+  const updateCartState = React.useCallback(
+    (nextCart: CartDto | null) => {
+      setCart(nextCart);
+      onCartChange?.(nextCart);
+    },
+    [onCartChange]
+  );
+
   const refreshCart = React.useCallback(async () => {
     try {
       const res = await api.cart.get();
       if (res.ok) {
-        setCart(res.data);
+        updateCartState(res.data);
+        setServerError(null);
       } else {
         setServerError(res.error.message || "Unable to load cart.");
       }
@@ -45,16 +60,19 @@ export function CartView({ initialCart = null }: CartViewProps) {
       setLoading(false);
       setIsStaleRecovering(false);
     }
-  }, []);
+  }, [updateCartState]);
 
   React.useEffect(() => {
     let active = true;
-    if (!initialCart) {
-      api.cart.get()
+
+    if (!initialCart && initialLoading) {
+      void api.cart
+        .get()
         .then((res) => {
           if (!active) return;
           if (res.ok) {
-            setCart(res.data);
+            updateCartState(res.data);
+            setServerError(null);
           } else {
             setServerError(res.error.message || "Unable to load cart.");
           }
@@ -71,7 +89,7 @@ export function CartView({ initialCart = null }: CartViewProps) {
     return () => {
       active = false;
     };
-  }, [initialCart]);
+  }, [initialCart, initialLoading, updateCartState]);
 
   const handleUpdateQuantity = async (itemId: string, currentQty: number, delta: number) => {
     if (!cart || isMutating) return;
@@ -94,11 +112,12 @@ export function CartView({ initialCart = null }: CartViewProps) {
       });
 
       if (res.ok) {
-        setCart(res.data);
+        updateCartState(res.data);
+        setServerError(null);
       } else {
-        if (res.error.code === "VALIDATION_ERROR" || res.error.message?.toLowerCase().includes("revision")) {
+        if (res.error.code === "CONFLICT") {
           setIsStaleRecovering(true);
-          setServerError("Your cart was modified in another window. Refreshing latest authoritative state...");
+          setServerError("Your cart was modified in another session. Refreshing latest state...");
           await refreshCart();
         } else {
           setServerError(res.error.message || "Failed to update quantity.");
@@ -126,11 +145,12 @@ export function CartView({ initialCart = null }: CartViewProps) {
       });
 
       if (res.ok) {
-        setCart(res.data);
+        updateCartState(res.data);
+        setServerError(null);
       } else {
-        if (res.error.code === "VALIDATION_ERROR" || res.error.message?.toLowerCase().includes("revision")) {
+        if (res.error.code === "CONFLICT") {
           setIsStaleRecovering(true);
-          setServerError("Your cart was modified in another window. Refreshing latest authoritative state...");
+          setServerError("Your cart was modified in another session. Refreshing latest state...");
           await refreshCart();
         } else {
           setServerError(res.error.message || "Failed to remove item.");
@@ -159,8 +179,11 @@ export function CartView({ initialCart = null }: CartViewProps) {
           title="Your Shopping Bag is Empty"
           description="Explore our haute parfumerie collection to select your signature fragrance."
           action={
-            <Link href="/" className="inline-block mt-4">
-              <Button size="lg">Explore Fragrance Catalogue</Button>
+            <Link
+              href="/"
+              className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90"
+            >
+              Explore Fragrance Catalogue
             </Link>
           }
         />
@@ -260,7 +283,7 @@ export function CartView({ initialCart = null }: CartViewProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-9 w-9 min-h-[36px] min-w-[36px] p-0"
+                        className="h-11 w-11 min-h-[44px] min-w-[44px] p-0 text-base"
                         onClick={() => void handleUpdateQuantity(item.id, item.quantity, -1)}
                         disabled={isMutating || isStaleRecovering}
                         aria-label={`Decrease quantity of ${item.title}`}
@@ -273,7 +296,7 @@ export function CartView({ initialCart = null }: CartViewProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-9 w-9 min-h-[36px] min-w-[36px] p-0"
+                        className="h-11 w-11 min-h-[44px] min-w-[44px] p-0 text-base"
                         onClick={() => void handleUpdateQuantity(item.id, item.quantity, 1)}
                         disabled={isMutating || isStaleRecovering}
                         aria-label={`Increase quantity of ${item.title}`}
@@ -327,9 +350,12 @@ export function CartView({ initialCart = null }: CartViewProps) {
               <Button
                 className="w-full min-h-[44px]"
                 size="lg"
-                disabled={!cart.checkoutEligible || isMutating || isStaleRecovering || cart.items.length === 0}
+                disabled
+                aria-disabled="true"
               >
-                {!cart.checkoutEligible ? "Cart Ineligible for Checkout" : "Proceed to Checkout"}
+                {!cart.checkoutEligible
+                  ? "Cart Ineligible for Checkout"
+                  : "Checkout Unavailable (Coming Soon)"}
               </Button>
             </CardFooter>
           </Card>
