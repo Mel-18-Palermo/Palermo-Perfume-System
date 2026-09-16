@@ -181,7 +181,8 @@ export function CartView({
           action={
             <Link
               href="/"
-              className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-md bg-black px-6 py-3 text-base font-semibold text-white shadow hover:bg-neutral-800 focus-visible:outline-none"
+              className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-md px-6 py-3 text-base font-semibold transition-colors"
+              style={{ backgroundColor: "#111827", color: "#ffffff" }}
             >
               Explore Fragrance Catalogue
             </Link>
