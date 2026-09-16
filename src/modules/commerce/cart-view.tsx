@@ -181,7 +181,7 @@ export function CartView({
           action={
             <Link
               href="/"
-              className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90"
+              className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-surface shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               Explore Fragrance Catalogue
             </Link>
