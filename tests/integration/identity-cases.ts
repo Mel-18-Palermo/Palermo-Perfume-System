@@ -137,9 +137,9 @@ export function identityCases(db: PrismaClient): void {
       await expect(service.verify({ token: verification })).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
     });
     it("denies anonymous and customer requests at the permission boundary", async () => {
-      await expect(service.requirePermission(undefined, "catalogue.read")).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+      await expect(service.requirePermission(undefined, "catalogue:manage")).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
       const login = await active();
-      await expect(service.requirePermission(login.token, "catalogue.read")).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(service.requirePermission(login.token, "catalogue:manage")).rejects.toMatchObject({ code: "FORBIDDEN" });
     });
     it("loads current admin permissions from DB and immediately respects role/account deactivation", async () => {
       provider.identity = { ...provider.identity, verified: true };
@@ -147,7 +147,7 @@ export function identityCases(db: PrismaClient): void {
       const admin = await db.adminAccount.create({ data: { name: "Synthetic Admin", email, authUserId: provider.identity.id, roleId: role.id } });
       const login = await service.login(input, "ADMIN");
       expect((await service.requirePermission(login.token, "catalogue.read")).user.role).toBe("ADMIN");
-      await expect(service.requirePermission(login.token, "admin.manage")).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(service.requirePermission(login.token, "catalogue:manage")).rejects.toMatchObject({ code: "FORBIDDEN" });
       await expect(service.requireCustomer(login.token)).rejects.toMatchObject({ code: "FORBIDDEN" });
       await db.rolePermission.deleteMany({ where: { roleId: role.id } });
       await expect(service.requirePermission(login.token, "catalogue.read")).rejects.toMatchObject({ code: "FORBIDDEN" });
