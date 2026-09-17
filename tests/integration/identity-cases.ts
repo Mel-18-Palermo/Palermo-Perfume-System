@@ -139,8 +139,10 @@ export function identityCases(db: PrismaClient): void {
     });
     it("denies anonymous and customer requests at the permission boundary", async () => {
       await expect(service.requirePermission(undefined, "catalogue:manage")).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+      await expect(service.requirePermission(undefined, "reporting:read")).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
       const login = await active();
       await expect(service.requirePermission(login.token, "catalogue:manage")).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(service.requirePermission(login.token, "reporting:read")).rejects.toMatchObject({ code: "FORBIDDEN" });
     });
     it("loads current admin permissions from DB and immediately respects role/account deactivation", async () => {
       provider.identity = { ...provider.identity, verified: true };
