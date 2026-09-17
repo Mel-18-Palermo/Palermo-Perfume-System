@@ -10,6 +10,7 @@ import { cartCases } from "./cart-cases";
 import { profileCases } from "./profile-cases";
 import { wishlistCases } from "./wishlist-cases";
 import { discoveryCases } from "./discovery-cases";
+import { discoveryCompletionCases } from "./discovery-completion-cases";
 import { checkoutCases } from "./checkout-cases";
 import { paymentCases } from "./payment-cases";
 import { inventoryCases } from "./inventory-cases";
@@ -29,6 +30,7 @@ profileCases(db);
 wishlistCases(db);
 availabilityCases(db);
 discoveryCases(db);
+discoveryCompletionCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
