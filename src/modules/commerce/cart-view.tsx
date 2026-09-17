@@ -21,21 +21,37 @@ function formatMoney(value?: MoneyValue | null): string {
 
 export interface CartViewProps {
   initialCart?: CartDto | null;
+  initialError?: string | null;
   initialLoading?: boolean;
   onCartChange?: (cart: CartDto | null) => void;
 }
 
 export function CartView({
   initialCart = null,
+  initialError = null,
   initialLoading = false,
   onCartChange,
 }: CartViewProps) {
   const [cart, setCart] = React.useState<CartDto | null>(initialCart);
-  const [loading, setLoading] = React.useState<boolean>(initialLoading);
+  const [prevInitialCart, setPrevInitialCart] = React.useState<CartDto | null>(initialCart);
+
+  const [serverError, setServerError] = React.useState<string | null>(initialError);
+  const [prevInitialError, setPrevInitialError] = React.useState<string | null>(initialError);
+
   const [pendingItemId, setPendingItemId] = React.useState<string | null>(null);
   const [isMutating, setIsMutating] = React.useState<boolean>(false);
-  const [serverError, setServerError] = React.useState<string | null>(null);
   const [isStaleRecovering, setIsStaleRecovering] = React.useState<boolean>(false);
+
+  // Adjust state during render when props change (idiomatic React without useEffect cascading render)
+  if (initialCart !== prevInitialCart) {
+    setPrevInitialCart(initialCart);
+    setCart(initialCart);
+  }
+
+  if (initialError !== prevInitialError) {
+    setPrevInitialError(initialError);
+    setServerError(initialError);
+  }
 
   const updateCartState = React.useCallback(
     (nextCart: CartDto | null) => {
@@ -57,39 +73,9 @@ export function CartView({
     } catch {
       setServerError("Unable to load shopping cart. Please check your connection.");
     } finally {
-      setLoading(false);
       setIsStaleRecovering(false);
     }
   }, [updateCartState]);
-
-  React.useEffect(() => {
-    let active = true;
-
-    if (!initialCart && initialLoading) {
-      void api.cart
-        .get()
-        .then((res) => {
-          if (!active) return;
-          if (res.ok) {
-            updateCartState(res.data);
-            setServerError(null);
-          } else {
-            setServerError(res.error.message || "Unable to load cart.");
-          }
-        })
-        .catch(() => {
-          if (!active) return;
-          setServerError("Unable to load shopping cart. Please check your connection.");
-        })
-        .finally(() => {
-          if (active) setLoading(false);
-        });
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [initialCart, initialLoading, updateCartState]);
 
   const handleUpdateQuantity = async (itemId: string, currentQty: number, delta: number) => {
     if (!cart || isMutating) return;
@@ -164,10 +150,27 @@ export function CartView({
     }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-16 text-center text-text-muted">
+      <div className="container mx-auto max-w-4xl px-4 py-16 text-center text-sm text-text-muted" role="status">
         Loading shopping bag...
+      </div>
+    );
+  }
+
+  // Explicitly surface initial request failures instead of masking them with an empty cart
+  if (serverError && (!cart || cart.items.length === 0)) {
+    return (
+      <div className="container mx-auto max-w-4xl px-4 py-12">
+        <Alert variant="danger" role="alert">
+          <p className="font-semibold">Cart Error</p>
+          <p className="text-sm">{serverError}</p>
+        </Alert>
+        <div className="mt-6 text-center">
+          <Button variant="outline" onClick={() => void refreshCart()}>
+            Retry Loading Bag
+          </Button>
+        </div>
       </div>
     );
   }
@@ -181,8 +184,7 @@ export function CartView({
           action={
             <Link
               href="/"
-              className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-md px-6 py-3 text-base font-semibold transition-colors"
-              style={{ backgroundColor: "#111827", color: "#ffffff" }}
+              className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Explore Fragrance Catalogue
             </Link>
@@ -195,7 +197,14 @@ export function CartView({
   const totalItemCount = cart.items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div
+      className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8"
+      aria-busy={isMutating}
+    >
+      <div className="sr-only" role="status" aria-live="polite">
+        {isMutating ? "Updating shopping bag items..." : isStaleRecovering ? "Refreshing cart data..." : ""}
+      </div>
+
       <div className="border-b border-border pb-6">
         <h1 className="text-3xl font-bold tracking-tight text-text">Shopping Bag</h1>
         <p className="mt-1 text-sm text-text-muted">
@@ -343,7 +352,7 @@ export function CartView({
                 <span>Total</span>
                 <span>{formatMoney(cart.pricing.total)}</span>
               </div>
-              <p className="text-[11px] text-text-muted">
+              <p className="text-xs text-text-muted">
                 Delivery options and calculated shipping costs are quoted separately at checkout.
               </p>
             </CardContent>
