@@ -2,16 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
-import { createCatalogueHttpClient } from "@/lib/catalogue/client";
+import { api } from "@/lib/api";
 import type { PerfumeDetail, PerfumeVariantSummary, NoteAssignment } from "@/contracts/catalogue";
 import type { MoneyValue } from "@/contracts/common";
-
-const catalogueClient = createCatalogueHttpClient();
 
 function formatMoney(value?: MoneyValue | null): string {
   if (!value) return "$0.00";
@@ -34,14 +31,14 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
   React.useEffect(() => {
     let active = true;
 
-    catalogueClient
+    api.catalogue
       .get({ id })
       .then((res) => {
         if (!active) return;
         if (res.ok) {
           setPerfume(res.data);
           const firstAvailable = res.data.variants.find((v) => v.availability === "AVAILABLE");
-          setSelectedVariantId(firstAvailable?.id ?? res.data.variants[0]?.id ?? null);
+          setSelectedVariantId(firstAvailable ? firstAvailable.id : null);
         } else {
           if (res.error.code === "NOT_FOUND") {
             setPerfume(null);
@@ -65,7 +62,7 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
 
   if (loading) {
     return (
-      <div className="container mx-auto max-w-5xl px-4 py-16 text-center text-text-muted">
+      <div className="container mx-auto max-w-5xl px-4 py-16 text-center text-sm text-text-muted">
         Loading fragrance profile...
       </div>
     );
@@ -79,8 +76,11 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
           <p className="text-sm">{errorMessage}</p>
         </Alert>
         <div className="mt-6 text-center">
-          <Link href="/catalogue">
-            <Button variant="outline">Return to Catalogue</Button>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface-muted transition-colors"
+          >
+            Return to Catalogue
           </Link>
         </div>
       </div>
@@ -94,8 +94,11 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
           title="Fragrance Not Found"
           description="The perfume profile you requested does not exist or is currently unavailable."
           action={
-            <Link href="/catalogue" className="inline-block mt-4">
-              <Button size="lg">Explore Fragrance Catalogue</Button>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors mt-4"
+            >
+              Explore Fragrance Catalogue
             </Link>
           }
         />
@@ -104,7 +107,7 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
   }
 
   const selectedVariant: PerfumeVariantSummary | undefined =
-    perfume.variants.find((v) => v.id === selectedVariantId) ?? perfume.variants[0];
+    perfume.variants.find((v) => v.id === selectedVariantId);
 
   const topNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "TOP");
   const middleNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "MIDDLE");
@@ -117,7 +120,7 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
       <nav aria-label="Breadcrumb" className="mb-6">
         <ol className="flex items-center space-x-2 text-sm text-text-muted">
           <li>
-            <Link href="/catalogue" className="hover:text-text transition-colors">
+            <Link href="/" className="hover:text-text transition-colors">
               Catalogue
             </Link>
           </li>
@@ -145,13 +148,11 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
               />
             ) : (
               <div className="text-center p-6 space-y-2">
-                <div className="mx-auto w-12 h-12 rounded-full border border-border flex items-center justify-center text-text-muted">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                <div className="mx-auto w-12 h-12 rounded-full border border-border flex items-center justify-center text-text-muted font-mono text-xs">
+                  [IMG]
                 </div>
                 <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Imagery Unavailable</p>
-                <p className="text-[11px] text-text-muted">Bottle photography currently being prepared for this fragrance profile.</p>
+                <p className="text-xs text-text-muted">Bottle photography currently being prepared for this fragrance profile.</p>
               </div>
             )}
           </div>
@@ -186,7 +187,7 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
                   return (
                     <label
                       key={v.id}
-                      className={`relative flex cursor-pointer rounded-lg border p-4 shadow-sm focus:outline-none transition-colors ${
+                      className={`relative flex cursor-pointer rounded-lg border p-4 shadow-sm transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 ${
                         isSelected
                           ? "border-primary bg-primary/5 ring-1 ring-primary"
                           : "border-border bg-surface hover:bg-surface-muted/50"
@@ -278,14 +279,20 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
             <div className="space-y-3 pt-2 text-xs text-text-muted">
               <h3 className="font-semibold text-text uppercase tracking-wider">Atmospheric Suitability</h3>
               <div className="flex flex-wrap gap-2">
-                {perfume.suitability.season.map((s) => (
-                  <Badge key={s.id} variant="neutral" className="text-[11px]">{s.label}</Badge>
+                {perfume.suitability.season?.map((s) => (
+                  <Badge key={s.id} variant="neutral" className="text-xs">{s.label}</Badge>
                 ))}
-                {perfume.suitability.occasion.map((o) => (
-                  <Badge key={o.id} variant="neutral" className="text-[11px]">{o.label}</Badge>
+                {perfume.suitability.occasion?.map((o) => (
+                  <Badge key={o.id} variant="neutral" className="text-xs">{o.label}</Badge>
                 ))}
-                {perfume.suitability.daypart.map((d) => (
-                  <Badge key={d.id} variant="neutral" className="text-[11px]">{d.label}</Badge>
+                {perfume.suitability.daypart?.map((d) => (
+                  <Badge key={d.id} variant="neutral" className="text-xs">{d.label}</Badge>
+                ))}
+                {perfume.suitability.mood?.map((m) => (
+                  <Badge key={m.id} variant="neutral" className="text-xs">{m.label}</Badge>
+                ))}
+                {perfume.suitability.weather?.map((w) => (
+                  <Badge key={w.id} variant="neutral" className="text-xs">{w.label}</Badge>
                 ))}
               </div>
             </div>
