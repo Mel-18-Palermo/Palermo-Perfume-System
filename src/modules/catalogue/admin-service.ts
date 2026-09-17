@@ -5,9 +5,13 @@ import type { PerfumeDetail, PerfumeVariantSummary, SuitabilitySummary } from ".
 import type { ApiResult, Option, PageRequest, Page } from "../../contracts/common";
 import { failure, success } from "../../lib/api/result";
 
-const id = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f-]{10,64}$/i.test(value);
+const id = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const text = (value: unknown, max: number): value is string => typeof value === "string" && value.trim().length > 0 && value.length <= max;
-const revision = (value: unknown): number | null => typeof value === "string" && /^catalogue-[1-9][0-9]*$/.test(value) ? Number(value.slice(10)) : null;
+const revision = (value: unknown): number | null => {
+  if (typeof value !== "string" || !/^catalogue-[1-9][0-9]*$/.test(value)) return null;
+  const number = Number(value.slice(10));
+  return Number.isSafeInteger(number) ? number : null;
+};
 const option = (value: { id: string; name?: string; value?: string }): Option => ({ id: value.id, label: value.name ?? value.value ?? value.id });
 const money = (amountMinor: number, currency: string) => ({ amountMinor, currency });
 const validOption = (value: unknown): value is Option => typeof value === "object" && value !== null

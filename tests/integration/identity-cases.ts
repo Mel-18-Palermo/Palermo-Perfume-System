@@ -5,6 +5,7 @@ import type { IdentityProvider, ProviderIdentity, RecoveryGrant } from "../../sr
 import { AuthFault } from "../../src/lib/auth/errors";
 import { IdentityService, SESSION_SECONDS } from "../../src/modules/identity/service";
 import { handleAuthRequest, SESSION_COOKIE } from "../../src/lib/auth/http";
+import { ids } from "../../prisma/seed-data";
 
 const password = "synthetic-only-password-244";
 const email = "auth-test-customer@example.test";
@@ -148,6 +149,8 @@ export function identityCases(db: PrismaClient): void {
       const login = await service.login(input, "ADMIN");
       expect((await service.requirePermission(login.token, "catalogue.read")).user.role).toBe("ADMIN");
       await expect(service.requirePermission(login.token, "catalogue:manage")).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await db.rolePermission.create({ data: { roleId: role.id, permissionId: ids.permission } });
+      expect((await service.requirePermission(login.token, "catalogue:manage")).user.role).toBe("ADMIN");
       await expect(service.requireCustomer(login.token)).rejects.toMatchObject({ code: "FORBIDDEN" });
       await db.rolePermission.deleteMany({ where: { roleId: role.id } });
       await expect(service.requirePermission(login.token, "catalogue.read")).rejects.toMatchObject({ code: "FORBIDDEN" });
