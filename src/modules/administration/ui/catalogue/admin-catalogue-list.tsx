@@ -139,7 +139,9 @@ export function AdminCatalogueList({ onCreate, onEdit, onArchived }: AdminCatalo
                   <td className="px-4 py-3 font-medium">{item.perfume.name}</td>
                   <td className="px-4 py-3 text-text-muted">{item.perfume.primaryFamily.label}</td>
                   <td className="px-4 py-3 text-text-muted">
-                    {(item.perfume.priceFrom.amountMinor / 100).toFixed(2)} {item.perfume.priceFrom.currency}
+                    {item.perfume.priceFrom
+                      ? `${(item.perfume.priceFrom.amountMinor / 100).toFixed(2)} ${item.perfume.priceFrom.currency}`
+                      : "No variants yet"}
                   </td>
                   <td className="px-4 py-3">
                     <AdminBadge status={item.status === "ACTIVE" ? "active" : "archived"}>

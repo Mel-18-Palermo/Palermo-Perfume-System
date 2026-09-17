@@ -9,7 +9,9 @@ export type Dashboard = Readonly<{
   bestSelling: readonly Readonly<{ perfumeId: EntityId; name: string; unitsSold: number }>[];
   lowStockVariantCount: number;
 }>;
-export type AdminPerfume = Readonly<{ perfume: PerfumeDetail; status: "ACTIVE" | "ARCHIVED"; revision: Revision }>;
+/** An administrator may create a perfume before adding its first priced variant. */
+export type AdminPerfumeDetail = Omit<PerfumeDetail, "priceFrom"> & Readonly<{ priceFrom: MoneyValue | null }>;
+export type AdminPerfume = Readonly<{ perfume: AdminPerfumeDetail; status: "ACTIVE" | "ARCHIVED"; revision: Revision }>;
 export type PerfumeInput = Readonly<{
   name: string; slug: string; description: string; primaryFamilyId: EntityId;
   intensity: Option | null; notes: readonly NoteAssignment[]; suitability: SuitabilitySummary;

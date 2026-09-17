@@ -19,6 +19,7 @@ export function adminCatalogueCases(db: PrismaClient): void {
       const created = await service.create({ ...perfumeInput("Perfume"), idempotencyKey: "managed-perfume-key" });
       expect(created.ok).toBe(true); if (!created.ok) return;
       expect(created.data.status).toBe("ACTIVE");
+      expect(created.data.perfume.priceFrom).toBeNull();
       const updated = await service.update(created.data.perfume.id, created.data.revision, { ...perfumeInput("Perfume"), name: "Managed Perfume Updated" });
       expect(updated.ok).toBe(true); if (!updated.ok) return;
       expect(updated.data.perfume.name).toBe("Managed Perfume Updated");
@@ -34,9 +35,12 @@ export function adminCatalogueCases(db: PrismaClient): void {
     it("creates and updates variants without manufacturing inventory", async () => {
       const created = await service.create({ ...perfumeInput("Variant"), idempotencyKey: "managed-variant-key" });
       expect(created.ok).toBe(true); if (!created.ok) return;
+      expect(created.data.perfume.priceFrom).toBeNull();
+      expect(await new CatalogueService(db).get(created.data.perfume.id)).toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
       const variant = await service.createVariant(created.data.perfume.id, { ...variantInput, idempotencyKey: "managed-variant-key" });
       expect(variant.ok).toBe(true); if (!variant.ok) return;
       expect((await service.get(created.data.perfume.id))).toMatchObject({ ok: true, data: { perfume: { priceFrom: { amountMinor: 12500 } } } });
+      expect((await new CatalogueService(db).get(created.data.perfume.id))).toMatchObject({ ok: true, data: { priceFrom: { amountMinor: 12500, currency: "AUD" } } });
       expect(await db.inventoryBalance.findUnique({ where: { variantId: variant.data.id } })).toBeNull();
       const current = await service.get(created.data.perfume.id); expect(current.ok).toBe(true); if (!current.ok) return;
       const updated = await service.updateVariant(created.data.perfume.id, variant.data.id, current.data.revision, { ...variantInput, price: { amountMinor: 13000, currency: "AUD" } });

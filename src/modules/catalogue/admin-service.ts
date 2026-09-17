@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "../../lib/db/generated/client";
 import type { AdminPerfume, PerfumeInput, VariantInput } from "../../contracts/admin";
-import type { PerfumeDetail, PerfumeVariantSummary, SuitabilitySummary } from "../../contracts/catalogue";
+import type { PerfumeVariantSummary, SuitabilitySummary } from "../../contracts/catalogue";
 import type { ApiResult, Option, PageRequest, Page } from "../../contracts/common";
 import { failure, success } from "../../lib/api/result";
 
@@ -117,7 +117,7 @@ function dto(perfume: Loaded): AdminPerfume {
   const cheapest = [...perfume.variants].sort((a, b) => a.priceMinor - b.priceMinor)[0];
   const grouped: SuitabilitySummary = { occasion: [], mood: [], weather: [], daypart: [], season: [] };
   for (const item of perfume.suitability) (grouped[item.tag.category.toLowerCase() as keyof SuitabilitySummary] as Option[]).push(option(item.tag));
-  const detail: PerfumeDetail = { id: perfume.id, slug: perfume.slug, name: perfume.name, description: perfume.description, primaryFamily: option(perfume.primaryFamily), imageUrl: perfume.images[0]?.url ?? null, priceFrom: money(cheapest?.priceMinor ?? 0, cheapest?.currency ?? "AUD"), intensity: perfume.intensity ? option(perfume.intensity) : null, notes: perfume.notes.map(item => ({ id: item.note.id, label: item.note.name, description: item.note.description, layer: item.layer })), variants, suitability: grouped, images: perfume.images.sort((a, b) => a.sortOrder - b.sortOrder).map(image => ({ id: image.id, url: image.url, alt: image.alt })), longevity: perfume.longevity ? { id: `longevity:${perfume.longevity}`, label: perfume.longevity } : null, projection: perfume.projection ? { id: `projection:${perfume.projection}`, label: perfume.projection } : null };
+  const detail: AdminPerfume["perfume"] = { id: perfume.id, slug: perfume.slug, name: perfume.name, description: perfume.description, primaryFamily: option(perfume.primaryFamily), imageUrl: perfume.images[0]?.url ?? null, priceFrom: cheapest ? money(cheapest.priceMinor, cheapest.currency) : null, intensity: perfume.intensity ? option(perfume.intensity) : null, notes: perfume.notes.map(item => ({ id: item.note.id, label: item.note.name, description: item.note.description, layer: item.layer })), variants, suitability: grouped, images: perfume.images.sort((a, b) => a.sortOrder - b.sortOrder).map(image => ({ id: image.id, url: image.url, alt: image.alt })), longevity: perfume.longevity ? { id: `longevity:${perfume.longevity}`, label: perfume.longevity } : null, projection: perfume.projection ? { id: `projection:${perfume.projection}`, label: perfume.projection } : null };
   return { perfume: detail, status: perfume.status, revision: `catalogue-${perfume.revision}` };
 }
 
