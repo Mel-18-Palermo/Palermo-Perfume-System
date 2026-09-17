@@ -71,6 +71,24 @@ export function adminCatalogueCases(db: PrismaClient): void {
       expect((await db.perfume.findUniqueOrThrow({ where: { id: first.data.perfume.id } })).revision).toBe(revision);
       expect(await db.inventoryBalance.findUnique({ where: { variantId: created.data.id } })).toBeNull();
     });
+    it("commits at most one entity for simultaneous identical create requests", async () => {
+      const request = { ...perfumeInput("Concurrent"), idempotencyKey: "concurrent-perfume-create-key" };
+      const perfumes = await Promise.all([service.create(request), service.create(request)]);
+      expect(perfumes.every(result => result.ok)).toBe(true);
+      if (!perfumes[0]?.ok || !perfumes[1]?.ok) return;
+      expect(perfumes[0].data.perfume.id).toBe(perfumes[1].data.perfume.id);
+      expect(await db.perfume.count({ where: { slug: request.slug } })).toBe(1);
+      const variantRequest = { ...variantInput, sku: "MANAGED-CONCURRENT-50", idempotencyKey: "concurrent-variant-create-key" };
+      const variants = await Promise.all([
+        service.createVariant(perfumes[0].data.perfume.id, variantRequest),
+        service.createVariant(perfumes[0].data.perfume.id, variantRequest),
+      ]);
+      expect(variants.every(result => result.ok)).toBe(true);
+      if (!variants[0]?.ok || !variants[1]?.ok) return;
+      expect(variants[0].data.id).toBe(variants[1].data.id);
+      expect(await db.perfumeVariant.count({ where: { perfumeId: perfumes[0].data.perfume.id } })).toBe(1);
+      expect((await db.perfume.findUniqueOrThrow({ where: { id: perfumes[0].data.perfume.id } })).revision).toBe(2);
+    });
     it("uses the lowest actual configured variant price", async () => {
       const created = await service.create({ ...perfumeInput("Prices"), idempotencyKey: "prices-create-key" });
       expect(created.ok).toBe(true); if (!created.ok) return;
