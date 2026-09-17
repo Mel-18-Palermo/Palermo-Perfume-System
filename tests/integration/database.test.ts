@@ -18,6 +18,7 @@ import { orderCases } from "./order-cases";
 import { adminCatalogueCases } from "./admin-catalogue-cases";
 import { availabilityCases } from "./availability-cases";
 import { reportingCases } from "./reporting-cases";
+import { deliveryCases } from "./delivery-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -159,3 +160,4 @@ inventoryCases(db);
 orderCases(db);
 adminCatalogueCases(db);
 reportingCases(db);
+deliveryCases(db);
