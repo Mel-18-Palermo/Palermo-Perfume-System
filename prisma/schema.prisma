@@ -296,6 +296,19 @@ model Perfume {
   @@index([intensityId])
 }
 
+// Durable transaction identity for administrator catalogue creation. The result
+// and mutation are committed together; retries resolve to the same entity.
+model CatalogueCreateRequest {
+  id          String   @id @default(uuid()) @db.Uuid
+  operation   String
+  key         String
+  fingerprint String   @db.Char(64)
+  resultId    String   @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([operation, key])
+}
+
 model WishlistItem {
   customerId String  @db.Uuid
   perfumeId  String  @db.Uuid
