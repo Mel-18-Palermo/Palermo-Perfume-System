@@ -26,13 +26,21 @@ Endpoints:
 
 Administrator mutations are exposed through the server-only `/api/admin/catalogue/*`
 adapter. Every request requires an active administrator with `catalogue:manage`.
-Create, update and archive perfume records use canonical validation and
+Create, update and archive perfume records use active canonical family,
+intensity, note and category-matched suitability references, validated image
+URLs/alt text, and
 `catalogue-N` optimistic revisions; archive sets `ARCHIVED` and `archivedAt`
 without deleting rows. Variant writes validate price/customisation fields and
 advance the parent revision, but never create inventory balances or movements.
+Create requests use a durable `(operation, idempotencyKey)` transaction identity:
+an identical retry resolves to the same perfume or variant, while reusing the key
+with different data returns `CONFLICT`. The identity, created entity, relation
+writes and variant parent-revision advancement commit atomically. `priceFrom`
+comes from the lowest configured variant price when variants exist.
 Stale revisions return `CONFLICT`; unauthenticated and forbidden requests are
 rejected at the route boundary.
 
-No cart, checkout or recommendation provider is included. The service does not call external providers. Integration tests exercise list/detail,
-filter combinations, archive/status isolation, malformed input and seeded query
-latency; the 42-test suite completes within the configured 120-second hook budget.
+No cart, checkout or recommendation provider is included. The service does not
+call external providers. Integration tests exercise list/detail, filter
+combinations, archive/status isolation, malformed input, idempotency,
+transaction rollback and seeded query latency.
