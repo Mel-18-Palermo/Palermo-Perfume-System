@@ -11,18 +11,25 @@ export default function CartPage() {
   const [cart, setCart] = React.useState<CartDto | null>(null);
   const [session, setSession] = React.useState<Session | null>(null);
   const [initialized, setInitialized] = React.useState(false);
+  const [initialError, setInitialError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let active = true;
 
     void Promise.all([
-      api.cart.get().catch(() => ({ ok: false as const })),
+      api.cart.get().catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : "Unable to connect to cart service.";
+        return { ok: false as const, error: { message } };
+      }),
       api.auth.getSession().catch(() => ({ ok: false as const })),
     ])
       .then(([cartRes, sessionRes]) => {
         if (!active) return;
         if (cartRes.ok) {
           setCart(cartRes.data);
+          setInitialError(null);
+        } else {
+          setInitialError(cartRes.error?.message || "Failed to load shopping cart.");
         }
         if (sessionRes.ok) {
           setSession(sessionRes.data);
@@ -40,8 +47,8 @@ export default function CartPage() {
   return (
     <CustomerShell cart={cart} session={session}>
       <CartView
-        key={cart ? `${cart.id}-${cart.revision}` : "empty"}
         initialCart={cart}
+        initialError={initialError}
         initialLoading={!initialized}
         onCartChange={setCart}
       />
