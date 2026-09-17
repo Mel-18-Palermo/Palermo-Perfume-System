@@ -36,7 +36,9 @@ Create requests use a durable `(operation, idempotencyKey)` transaction identity
 an identical retry resolves to the same perfume or variant, while reusing the key
 with different data returns `CONFLICT`. The identity, created entity, relation
 writes and variant parent-revision advancement commit atomically. `priceFrom`
-comes from the lowest configured variant price when variants exist.
+comes from the lowest configured variant price when variants exist. The
+administrator-only detail returns `null` before the first variant is added;
+the public catalogue price contract remains non-null.
 Stale revisions return `CONFLICT`; unauthenticated and forbidden requests are
 rejected at the route boundary.
 
