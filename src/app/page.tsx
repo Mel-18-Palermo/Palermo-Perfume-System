@@ -1,51 +1,56 @@
-import { CircleCheck, HeartPulse } from "lucide-react";
+﻿import * as React from "react";
+import { CustomerShell } from "@/components/layout/customer-shell";
+import { CatalogueView } from "@/modules/catalogue/catalogue-view";
+import { api } from "@/lib/api";
+import type { PerfumeSummary, CatalogueFilters } from "@/contracts/catalogue";
+import type { Session } from "@/contracts/auth";
+import type { CartDto } from "@/contracts/cart";
 
-export default function HomePage() {
+export default async function Home() {
+  let initialItems: readonly PerfumeSummary[] | null = null;
+  let filters: CatalogueFilters | null = null;
+  let session: Session | null = null;
+  let cart: CartDto | null = null;
+  let initialError: string | null = null;
+
+  try {
+    const [listResult, filterResult, sessionResult, cartResult] = await Promise.all([
+      api.catalogue.list({ page: 1, pageSize: 24 }).catch(() => ({ ok: false as const, error: { message: "Failed to load catalogue" } })),
+      api.catalogue.getFilters().catch(() => ({ ok: false as const, error: { message: "Failed to load filters" } })),
+      api.auth.getSession().catch(() => ({ ok: false as const })),
+      api.cart.get().catch(() => ({ ok: false as const })),
+    ]);
+
+    if (listResult.ok) {
+      initialItems = listResult.data.items;
+    } else {
+      initialError = "Failed to load catalogue items. Please try again.";
+    }
+
+    if (filterResult.ok) {
+      filters = filterResult.data;
+    }
+
+    if (sessionResult.ok) {
+      session = sessionResult.data;
+    }
+
+    if (cartResult.ok) {
+      cart = cartResult.data;
+    }
+  } catch {
+    initialError = "Unable to load catalogue. Please check your connection and try again.";
+  }
+
   return (
-    <main className="min-h-dvh bg-background px-4 py-10 text-foreground md:px-6 md:py-16 lg:px-8">
-      <section className="mx-auto flex max-w-reading flex-col gap-6">
-        <div className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-          <CircleCheck aria-hidden="true" size={20} strokeWidth={1.75} />
-          <span>Implementation foundation active</span>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <p className="text-label uppercase tracking-wide text-muted-foreground">
-            Palermo Perfume System
-          </p>
-          <h1 className="text-h1 md:text-display">
-            Application scaffold
-          </h1>
-          <p className="max-w-reading text-base leading-6 text-muted-foreground">
-            The Next.js, React and strict TypeScript foundation is ready for
-            contract, persistence and feature implementation.
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-border bg-surface p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <HeartPulse
-              aria-hidden="true"
-              className="shrink-0 text-success"
-              size={24}
-              strokeWidth={1.75}
-            />
-            <div className="flex flex-col gap-2">
-              <h2 className="text-h3">Health surface</h2>
-              <p className="text-sm leading-5 text-muted-foreground">
-                The server exposes a minimal non-sensitive health endpoint for
-                local and later automated smoke validation.
-              </p>
-              <a
-                className="flex min-h-11 w-fit items-center text-label underline underline-offset-4"
-                href="/api/health"
-              >
-                Open /api/health
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+    <CustomerShell cart={cart} session={session}>
+      <React.Suspense fallback={<div className="p-8 text-center text-text-muted">Loading catalogue...</div>}>
+        <CatalogueView
+          initialItems={initialItems}
+          initialFilters={filters}
+          initialError={initialError}
+        />
+      </React.Suspense>
+    </CustomerShell>
   );
 }

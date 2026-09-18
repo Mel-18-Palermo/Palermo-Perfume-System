@@ -48,7 +48,7 @@ export function AdminVariantList({ perfume, onVariantSaved }: AdminVariantListPr
         mode={view.mode}
         perfumeId={perfume.perfume.id}
         perfumeRevision={perfume.revision}
-        defaultCurrency={perfume.perfume.priceFrom.currency}
+        defaultCurrency={perfume.perfume.priceFrom?.currency ?? "AUD"}
         onSaved={handleSaved}
         onCancel={() => setView({ mode: "list" })}
         {...optionalProps}

@@ -1,4 +1,4 @@
-import type { PalermoApi } from "../../contracts/api";
+﻿import type { PalermoApi } from "../../contracts/api";
 import { createUnavailableApi } from "./unavailable";
 import { createAuthHttpClient } from "../auth/client";
 import { createCatalogueHttpClient } from "../catalogue/client";

@@ -10,12 +10,15 @@ import { cartCases } from "./cart-cases";
 import { profileCases } from "./profile-cases";
 import { wishlistCases } from "./wishlist-cases";
 import { discoveryCases } from "./discovery-cases";
+import { discoveryCompletionCases } from "./discovery-completion-cases";
 import { checkoutCases } from "./checkout-cases";
 import { paymentCases } from "./payment-cases";
 import { inventoryCases } from "./inventory-cases";
 import { orderCases } from "./order-cases";
 import { adminCatalogueCases } from "./admin-catalogue-cases";
 import { availabilityCases } from "./availability-cases";
+import { reportingCases } from "./reporting-cases";
+import { deliveryCases } from "./delivery-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -29,6 +32,7 @@ profileCases(db);
 wishlistCases(db);
 availabilityCases(db);
 discoveryCases(db);
+discoveryCompletionCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
@@ -155,3 +159,5 @@ paymentCases(db);
 inventoryCases(db);
 orderCases(db);
 adminCatalogueCases(db);
+reportingCases(db);
+deliveryCases(db);
