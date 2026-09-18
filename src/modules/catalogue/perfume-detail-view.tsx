@@ -31,16 +31,23 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
   React.useEffect(() => {
     let active = true;
 
+    setLoading(true);
+    setErrorMessage(null);
+    setPerfume(null);
+    setSelectedVariantId(null);
+
     api.catalogue
       .get({ id })
       .then((res) => {
         if (!active) return;
         if (res.ok) {
+          setErrorMessage(null);
           setPerfume(res.data);
           const firstAvailable = res.data.variants.find((v) => v.availability === "AVAILABLE");
           setSelectedVariantId(firstAvailable ? firstAvailable.id : null);
         } else {
           if (res.error.code === "NOT_FOUND") {
+            setErrorMessage(null);
             setPerfume(null);
           } else {
             setErrorMessage(res.error.message || "Failed to load perfume profile.");
