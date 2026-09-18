@@ -102,7 +102,7 @@ export function AdminDashboard() {
           </h2>
 
           <p className="mt-2 text-sm text-text-muted">
-            Mock data preview · Reporting period uses UTC
+          Reporting period uses UTC · Requires administrator access
           </p>
 
           <div className="mt-4">
