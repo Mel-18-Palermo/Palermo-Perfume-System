@@ -27,14 +27,19 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [selectedVariantId, setSelectedVariantId] = React.useState<string | null>(null);
+  const [currentId, setCurrentId] = React.useState<string>(id);
+
+  // When id prop changes, immediately update tracking id and reset states during render
+  if (id !== currentId) {
+    setCurrentId(id);
+    setPerfume(null);
+    setErrorMessage(null);
+    setSelectedVariantId(null);
+    setLoading(true);
+  }
 
   React.useEffect(() => {
     let active = true;
-
-    setLoading(true);
-    setErrorMessage(null);
-    setPerfume(null);
-    setSelectedVariantId(null);
 
     api.catalogue
       .get({ id })
