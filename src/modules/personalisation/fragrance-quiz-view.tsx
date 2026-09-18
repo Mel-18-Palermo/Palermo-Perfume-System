@@ -11,6 +11,7 @@ import type {
   QuizDefinition,
   RecommendationResult,
   RecommendationRequest,
+  RecommendationItem,
 } from "@/contracts/recommendations";
 import type { MoneyValue } from "@/contracts/common";
 
@@ -85,6 +86,7 @@ export function FragranceQuizView() {
   const totalQuestions = quiz?.questions.length ?? 0;
 
   const handleOptionToggle = (questionId: string, optionId: string, maxSelections: number) => {
+    if (isSubmitting) return;
     setValidationError(null);
     setAnswers((prev) => {
       const currentSelections = prev[questionId] ?? [];
@@ -124,6 +126,13 @@ export function FragranceQuizView() {
       return;
     }
 
+    if (!currentQuestion.required && selected.length > 0 && selected.length < currentQuestion.minSelections) {
+      setValidationError(
+        `Please select at least ${currentQuestion.minSelections} options or deselect all to skip.`
+      );
+      return;
+    }
+
     setValidationError(null);
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
@@ -146,18 +155,28 @@ export function FragranceQuizView() {
         setValidationError(`Please answer question "${q.prompt}".`);
         return;
       }
+      if (!q.required && selections.length > 0 && selections.length < q.minSelections) {
+        setValidationError(
+          `Question "${q.prompt}" requires at least ${q.minSelections} selections if partially answered.`
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const validAnswers = Object.entries(answers)
+      .filter(([, optionIds]) => Array.isArray(optionIds) && optionIds.length > 0)
+      .map(([questionId, optionIds]) => ({
+        questionId,
+        optionIds,
+      }));
+
     const payload: RecommendationRequest = {
       quizId: quiz.id,
       quizVersion: quiz.version,
-      answers: Object.entries(answers).map(([questionId, optionIds]) => ({
-        questionId,
-        optionIds,
-      })),
+      answers: validAnswers,
     };
 
     try {
@@ -192,95 +211,130 @@ export function FragranceQuizView() {
 
   if (quizLoadError || !quiz) {
     return (
-      <div className="mx-auto max-w-2xl py-12">
+      <div className="mx-auto max-w-2xl py-12 space-y-4 text-center">
         <Alert variant="danger" role="alert">
           <p className="font-semibold">Unable to Load Quiz</p>
           <p className="text-sm">{quizLoadError || "Quiz definition is currently unavailable."}</p>
         </Alert>
-        <div className="mt-4 text-center">
+        <div className="flex justify-center gap-3">
           <Button onClick={handleRetryQuiz}>Retry</Button>
+          <Link
+            href="/"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-subtle"
+          >
+            Return to Catalogue
+          </Link>
         </div>
       </div>
     );
   }
 
   if (result) {
+    const items: readonly RecommendationItem[] = result.items;
+    const hasItems = items.length > 0;
+
     return (
       <div className="mx-auto max-w-4xl py-6 space-y-8">
         <div className="border-b border-border pb-6 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Your Personalised Fragrance Curation
+            Fragrance Recommendations
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Based on your answers, our perfumery team selected these signature compositions for you.
+            Curated selections based on your responses.
           </p>
         </div>
 
         {result.fallback && (
           <Alert variant="warning" role="alert">
-            <p className="font-semibold">Curated Fallback Selection</p>
+            <p className="font-semibold">Deterministic Fallback Result</p>
             <p className="text-sm">
-              Our automated recommendation engine is currently refining its matching profile. In the
-              meantime, here are our universally acclaimed signature compositions tailored to your
-              preferences.
+              Standard recommendations returned based on available catalogue inventory.
             </p>
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {result.items.map((item) => (
-            <Card key={item.perfumeId} className="flex flex-col justify-between">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-xl">{item.perfume.name}</CardTitle>
-                    {item.perfume.primaryFamily && (
-                      <Badge variant="neutral" className="mt-1">
-                        {item.perfume.primaryFamily.label}
-                      </Badge>
-                    )}
+        {!hasItems ? (
+          <div className="rounded-lg border border-border bg-surface p-8 text-center space-y-4">
+            <p className="text-foreground font-medium">No matching fragrances were found.</p>
+            <p className="text-sm text-muted-foreground">
+              Try adjusting your preferences or explore our complete fragrance catalogue.
+            </p>
+            <div className="flex justify-center gap-3 pt-2">
+              <Button variant="outline" onClick={handleReset}>
+                Retake Questionnaire
+              </Button>
+              <Link
+                href="/"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-surface shadow hover:bg-primary/90 transition-colors"
+              >
+                Return to Catalogue
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {items.map((item: RecommendationItem) => (
+              <Card key={item.perfume.id} className="flex flex-col justify-between">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      {item.perfume.primaryFamily && (
+                        <Badge variant="accent" className="mb-2">
+                          {item.perfume.primaryFamily.label}
+                        </Badge>
+                      )}
+                      <CardTitle className="text-xl font-bold text-foreground">
+                        {item.perfume.name}
+                      </CardTitle>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-muted-foreground">From</span>
+                      <p className="text-lg font-bold text-foreground">
+                        {formatMoney(item.perfume.priceFrom)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm text-muted-foreground">From</span>
-                    <p className="text-lg font-bold text-foreground">
-                      {formatMoney(item.perfume.priceFrom)}
+                </CardHeader>
+
+                <CardContent className="space-y-3">
+                  <div className="rounded-md bg-surface p-3 text-sm border border-border">
+                    <span className="font-semibold text-xs text-muted-foreground uppercase tracking-wider block mb-1">
+                      Match Notes:
+                    </span>
+                    <p className="text-foreground">{item.reason}</p>
+                  </div>
+
+                  {item.perfume.intensity && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Intensity: </span>
+                      {item.perfume.intensity.label}
                     </p>
-                  </div>
-                </div>
-              </CardHeader>
+                  )}
+                </CardContent>
 
-              <CardContent className="space-y-3">
-                <div className="rounded-md bg-surface p-3 text-sm border border-border">
-                  <span className="font-semibold text-xs text-muted-foreground uppercase tracking-wider block mb-1">
-                    Why this matches you:
-                  </span>
-                  <p className="text-foreground">{item.reason}</p>
-                </div>
+                <CardFooter className="pt-2 border-t border-border">
+                  <Link
+                    href={`/product/${item.perfume.id}`}
+                    className="inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-surface shadow hover:bg-primary/90 transition-colors"
+                  >
+                    View Fragrance
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
 
-                {item.perfume.intensity && (
-                  <p className="text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">Intensity: </span>
-                    {item.perfume.intensity.label}
-                  </p>
-                )}
-              </CardContent>
-
-              <CardFooter className="pt-2 border-t border-border">
-                <Link
-                  href={`/catalogue/${item.perfume.slug || item.perfume.id}`}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-surface shadow hover:bg-primary/90 transition-colors"
-                >
-                  View Fragrance
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-
-        <div className="text-center pt-4">
+        <div className="flex justify-center gap-3 pt-4">
           <Button variant="outline" onClick={handleReset}>
             Retake Questionnaire
           </Button>
+          <Link
+            href="/"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-subtle"
+          >
+            Return to Catalogue
+          </Link>
         </div>
       </div>
     );
@@ -325,7 +379,7 @@ export function FragranceQuizView() {
           </CardHeader>
 
           <CardContent className="space-y-3">
-            <fieldset>
+            <fieldset disabled={isSubmitting}>
               <legend className="sr-only">{currentQuestion.prompt}</legend>
               <div className="space-y-2">
                 {currentQuestion.options.map((option) => {
@@ -339,7 +393,7 @@ export function FragranceQuizView() {
                         isChecked
                           ? "border-primary bg-primary/5 font-medium text-foreground"
                           : "border-border bg-surface text-muted-foreground hover:border-primary/50"
-                      }`}
+                      } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <span className="text-sm">{option.label}</span>
                       <input
@@ -347,6 +401,7 @@ export function FragranceQuizView() {
                         name={currentQuestion.id}
                         value={option.id}
                         checked={isChecked}
+                        disabled={isSubmitting}
                         onChange={() =>
                           handleOptionToggle(
                             currentQuestion.id,
@@ -369,10 +424,20 @@ export function FragranceQuizView() {
             )}
 
             {submitError && (
-              <Alert variant="danger" className="mt-4" role="alert">
-                <p className="font-semibold">Submission Failed</p>
-                <p className="text-sm">{submitError}</p>
-              </Alert>
+              <div className="mt-4 space-y-3">
+                <Alert variant="danger" role="alert">
+                  <p className="font-semibold">Submission Failed</p>
+                  <p className="text-sm">{submitError}</p>
+                </Alert>
+                <div className="text-center">
+                  <Link
+                    href="/"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-subtle"
+                  >
+                    Return to Catalogue
+                  </Link>
+                </div>
+              </div>
             )}
           </CardContent>
 
@@ -394,7 +459,9 @@ export function FragranceQuizView() {
                 Find My Fragrance
               </Button>
             ) : (
-              <Button onClick={handleNext}>Next Question</Button>
+              <Button onClick={handleNext} disabled={isSubmitting}>
+                Next Question
+              </Button>
             )}
           </CardFooter>
         </Card>
