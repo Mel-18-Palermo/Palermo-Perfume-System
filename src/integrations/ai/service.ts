@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { RecommendationRequest } from "../../contracts/recommendations";
 import type { ApiResult } from "../../contracts/common";
 import { success } from "../../lib/api/result";
@@ -13,10 +12,12 @@ const fallbackResult = async (discovery: DiscoveryRecommendationBoundary, input:
 function providerOutput(value: unknown): ProviderOutput | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const root = value as Record<string, unknown>;
-  if (!Object.hasOwn(root, "recommendations")) return null;
+  if (Object.keys(root).sort().join(",") !== "recommendations") return null;
   const recommendations = root["recommendations"];
   if (!Array.isArray(recommendations) || recommendations.length === 0 || recommendations.length > 12) return null;
+
   const parsed: ProviderRecommendation[] = [];
+  const seen = new Set<string>();
   for (const item of recommendations) {
     if (!item || typeof item !== "object" || Array.isArray(item)) return null;
     const record = item as Record<string, unknown>;
@@ -25,7 +26,9 @@ function providerOutput(value: unknown): ProviderOutput | null {
     const reason = record["reason"];
     if (typeof perfumeId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(perfumeId)
       || typeof reason !== "string" || reason.trim().length === 0 || reason.length > 500
-      || /\b(cure|treat|diagnos|medical|pregnan|\d+\s+hours?|longevity\s+hours?|projection\s+percent|match\s+percent|\d+\s*%)\b/i.test(reason)) return null;
+      || /\b(cure|treat|diagnos|medical|pregnan|\d+\s+hours?|longevity\s+hours?|projection\s+percent|match\s+percent|\d+\s*%)\b/i.test(reason)
+      || seen.has(perfumeId)) return null;
+    seen.add(perfumeId);
     parsed.push({ perfumeId, reason: reason.trim() });
   }
   return { recommendations: parsed };
@@ -47,32 +50,44 @@ export class AiRecommendationService {
     private readonly discovery: DiscoveryRecommendationBoundary,
     private readonly provider: RecommendationProvider,
     private readonly timeoutMs: ProviderTimeoutMs = 1_500,
-    private readonly now: () => Date = () => new Date(),
   ) {}
 
   async recommend(input: RecommendationRequest): Promise<ApiResult<AiRecommendationServiceResult>> {
     const context = await this.discovery.getCandidateContext(input);
     if (!context.ok) return fallbackResult(this.discovery, input);
+
     const redacted = contextForProvider(input, context.data);
-    let raw: unknown;
+    const controller = new AbortController();
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    let response: Awaited<ReturnType<RecommendationProvider["recommend"]>>;
+
     try {
-      raw = await Promise.race([
-        this.provider.recommend(redacted),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("provider-timeout")), this.timeoutMs)),
-      ]);
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(() => {
+          controller.abort();
+          reject(new Error("provider-timeout"));
+        }, this.timeoutMs);
+      });
+      response = await Promise.race([this.provider.recommend(redacted, controller.signal), timeout]);
     } catch {
       return fallbackResult(this.discovery, input);
+    } finally {
+      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
     }
-    const parsed = providerOutput(raw);
+
+    const parsed = providerOutput(response.output);
     if (!parsed) return fallbackResult(this.discovery, input);
-    const candidates = new Map(context.data.candidates.map(candidate => [candidate.perfume.id, candidate] as const));
-    if (parsed.recommendations.some(item => !candidates.has(item.perfumeId))) return fallbackResult(this.discovery, input);
-    const generatedAt = this.now().toISOString();
-    const items = parsed.recommendations.map(item => {
-      const candidate = candidates.get(item.perfumeId);
-      if (!candidate) throw new Error("validated candidate missing");
-      return { perfumeId: candidate.perfume.id, perfume: candidate.perfume, reason: item.reason };
-    });
-    return success({ provider: "AI", result: { runId: randomUUID(), items, generatedAt, fallback: false } });
+
+    const candidateIds = new Set(context.data.candidates.map(candidate => candidate.perfume.id));
+    if (parsed.recommendations.some(item => !candidateIds.has(item.perfumeId))) return fallbackResult(this.discovery, input);
+
+    const persisted = await this.discovery.persistProviderRecommendations(
+      input,
+      parsed.recommendations,
+      response.providerReference,
+    );
+    if (!persisted.ok) return fallbackResult(this.discovery, input);
+
+    return success({ provider: "AI", result: persisted.data });
   }
 }
