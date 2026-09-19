@@ -45,7 +45,7 @@ export default function CartPage() {
   }, []);
 
   return (
-    <CustomerShell cart={cart} session={session}>
+    <CustomerShell cart={cart} session={session} isLoading={!initialized}>
       <CartView
         initialCart={cart}
         initialError={initialError}
