@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import Link from "next/link";
@@ -108,7 +108,7 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
           action={
             <Link
               href="/"
-              className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors mt-4"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors mt-4"
             >
               Explore Fragrance Catalogue
             </Link>
@@ -219,7 +219,7 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
                       <div className="flex w-full items-center justify-between">
                         <div className="text-sm">
                           <p id={`variant-label-${v.id}`} className="font-semibold text-text">
-                            {v.bottleSize} {v.concentration ? `· ${v.concentration}` : ""}
+                            {v.bottleSize} {v.concentration ? `� ${v.concentration}` : ""}
                           </p>
                           <p className="text-xs text-text-muted mt-0.5">{formatMoney(v.price)}</p>
                         </div>
