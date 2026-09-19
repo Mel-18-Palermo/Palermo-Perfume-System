@@ -183,6 +183,64 @@ export class DiscoveryService {
     return validated.ok ? this.candidateContext(validated.data) : validated;
   }
 
+  async persistProviderRecommendations(
+    input: RecommendationRequest,
+    recommendations: readonly Readonly<{ perfumeId: string; reason: string }>[],
+    providerReference: string | null,
+  ): Promise<ApiResult<RecommendationResult>> {
+    if (providerReference !== null
+      && (!providerReference.length || providerReference.length > 255 || providerReference.trim() !== providerReference)) {
+      return failure("VALIDATION_ERROR");
+    }
+    if (recommendations.length === 0 || recommendations.length > 12) return failure("VALIDATION_ERROR");
+
+    const seen = new Set<string>();
+    const selections: { perfumeId: string; reason: string }[] = [];
+    for (const item of recommendations) {
+      const reason = item.reason.trim();
+      if (!isId(item.perfumeId) || !reason || reason.length > 500 || seen.has(item.perfumeId)) {
+        return failure("VALIDATION_ERROR");
+      }
+      seen.add(item.perfumeId);
+      selections.push({ perfumeId: item.perfumeId, reason });
+    }
+
+    const validated = await this.validateRequest(input);
+    if (!validated.ok) return validated;
+    const context = await this.candidateContext(validated.data);
+    if (!context.ok) return context;
+
+    const candidates = new Map(context.data.candidates.map(item => [item.perfume.id, item] as const));
+    if (selections.some(item => !candidates.has(item.perfumeId))) return failure("CONFLICT");
+
+    const runId = randomUUID();
+    const attemptId = randomUUID();
+    const time = this.now();
+
+    await this.db.$transaction(async tx => {
+      await tx.quizAttempt.create({ data: {
+        id: attemptId, quizId: validated.data.quiz.id, quizVersion: validated.data.quiz.version,
+        visitorSessionKey: `quiz-${attemptId}`, status: "COMPLETED", startedAt: time, completedAt: time,
+        responses: { create: validated.data.answers.flatMap(answer => answer.optionIds.map(optionId => ({ questionId: answer.questionId, optionId }))) },
+      } });
+      await tx.recommendationRun.create({ data: {
+        id: runId, quizAttemptId: attemptId, status: "SUCCEEDED", providerReference, createdAt: time,
+        items: { create: selections.map((item, index) => ({
+          perfumeId: item.perfumeId, rank: index + 1, explanation: item.reason,
+        })) },
+      } });
+    });
+
+    return success({
+      runId, generatedAt: time.toISOString(), fallback: false,
+      items: selections.map(item => {
+        const current = candidates.get(item.perfumeId);
+        if (!current) throw new Error("Validated recommendation candidate missing.");
+        return { perfumeId: current.perfume.id, perfume: current.perfume, reason: item.reason };
+      }),
+    });
+  }
+
   async generate(input: RecommendationRequest): Promise<ApiResult<RecommendationResult>> {
     const validated = await this.validateRequest(input);
     if (!validated.ok) return validated;

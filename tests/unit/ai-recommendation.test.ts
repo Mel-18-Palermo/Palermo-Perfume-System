@@ -3,7 +3,7 @@ import type { RecommendationRequest, RecommendationResult } from "../../src/cont
 import type { ApiResult } from "../../src/contracts/common";
 import type { CandidateContext } from "../../src/modules/discovery/types";
 import { AiRecommendationService } from "../../src/integrations/ai/service";
-import type { DiscoveryRecommendationBoundary, RecommendationProvider, RedactedRecommendationContext } from "../../src/integrations/ai/contracts";
+import type { DiscoveryRecommendationBoundary, ProviderRecommendation, RecommendationProvider, RedactedRecommendationContext } from "../../src/integrations/ai/contracts";
 import { DeterministicRecommendationProvider } from "../../src/integrations/ai/mock-provider";
 
 const ids = { quiz: "24200000-0000-4000-8000-000000000060", question: "24200000-0000-4000-8000-000000000061", option: "24200000-0000-4000-8000-000000000062", perfume: "24200000-0000-4000-8000-000000000013" } as const;
@@ -19,14 +19,54 @@ const request: RecommendationRequest = { quizId: ids.quiz, quizVersion: "1", ans
 const fallback: RecommendationResult = { runId: "24200000-0000-4000-8000-000000000099", items: [{ perfumeId: ids.perfume, perfume: candidate.perfume, reason: "Deterministic match" }], generatedAt: "2026-09-18T00:00:00.000Z", fallback: true };
 
 function discovery(): DiscoveryRecommendationBoundary {
-  return { getCandidateContext: vi.fn(async () => ({ ok: true, data: context }) as ApiResult<CandidateContext>), generate: vi.fn(async () => ({ ok: true, data: fallback }) as ApiResult<RecommendationResult>) };
+  return {
+    getCandidateContext: vi.fn(async () =>
+      ({ ok: true, data: context }) as ApiResult<CandidateContext>),
+
+    generate: vi.fn(async () =>
+      ({ ok: true, data: fallback }) as ApiResult<RecommendationResult>),
+
+    persistProviderRecommendations: vi.fn(
+      async (_input, recommendations: readonly ProviderRecommendation[]) =>
+        ({
+          ok: true,
+          data: {
+            runId: "24200000-0000-4000-8000-000000000098",
+            generatedAt: "2026-09-18T00:00:00.000Z",
+            fallback: false,
+            items: recommendations.map((item: ProviderRecommendation) => ({
+              perfumeId: item.perfumeId,
+              perfume: candidate.perfume,
+              reason: item.reason,
+            })),
+          },
+        }) as ApiResult<RecommendationResult>,
+    ),
+  };
 }
 
 describe("replaceable AI recommendation boundary", () => {
   it("accepts injected provider output only for supplied candidates", async () => {
     let supplied: RedactedRecommendationContext | undefined;
-    const provider: RecommendationProvider = { recommend: async value => { supplied = value; return { recommendations: [{ perfumeId: ids.perfume, reason: "Grounded catalogue explanation" }] }; } };
-    const result = await new AiRecommendationService(discovery(), provider, 100, () => new Date("2026-09-18T00:00:00.000Z")).recommend(request);
+    const provider: RecommendationProvider = {
+      recommend: async value => {
+        supplied = value;
+        return {
+          providerReference: "resp_test_123",
+          output: {
+            recommendations: [{
+              perfumeId: ids.perfume,
+              reason: "Grounded catalogue explanation",
+            }],
+          },
+        };
+      },
+    };
+    const result = await new AiRecommendationService(
+      discovery(),
+      provider,
+      100,
+    ).recommend(request);
     expect(result).toMatchObject({ ok: true, data: { provider: "AI", result: { fallback: false, items: [{ perfumeId: ids.perfume }] } } });
     expect(Object.keys(supplied ?? {})).toEqual(["quiz", "preferences", "candidates"]);
     expect(JSON.stringify(supplied)).not.toMatch(/account|address|payment|order|support|stock/i);
@@ -35,6 +75,10 @@ describe("replaceable AI recommendation boundary", () => {
   it.each([
     ["malformed output", {}, 100],
     ["unknown perfume", { recommendations: [{ perfumeId: "24200000-0000-4000-8000-000000000999", reason: "Unknown" }] }, 100],
+    ["duplicate perfume", { recommendations: [
+      { perfumeId: ids.perfume, reason: "First" },
+      { perfumeId: ids.perfume, reason: "Duplicate" },
+    ] }, 100],
     ["unsupported field", { recommendations: [{ perfumeId: ids.perfume, reason: "Grounded", percentage: 99 }] }, 100],
     ["unsupported claim", { recommendations: [{ perfumeId: ids.perfume, reason: "Guaranteed 12 hours longevity" }] }, 100],
   ])("falls back for %s", async (_name, output, timeout) => {
@@ -54,6 +98,38 @@ describe("replaceable AI recommendation boundary", () => {
       const d = discovery();
       await expect(new AiRecommendationService(d, provider, 5).recommend(request)).resolves.toMatchObject({ ok: true, data: { provider: "DETERMINISTIC" } });
     }
+  });
+
+  it("aborts provider work when the recommendation timeout expires", async () => {
+    let suppliedSignal: AbortSignal | undefined;
+
+    const provider: RecommendationProvider = {
+      recommend: (providerContext, signal) => {
+        void providerContext;
+        suppliedSignal = signal;
+
+        return new Promise(() => undefined);
+      },
+    };
+
+    const d = discovery();
+
+    const result = await new AiRecommendationService(
+      d,
+      provider,
+      5,
+    ).recommend(request);
+
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        provider: "DETERMINISTIC",
+      },
+    });
+
+    expect(suppliedSignal).toBeDefined();
+    expect(suppliedSignal?.aborted).toBe(true);
+    expect(d.generate).toHaveBeenCalledWith(request);
   });
 
   it("keeps deterministic mock output bounded and proves no commerce authority", async () => {

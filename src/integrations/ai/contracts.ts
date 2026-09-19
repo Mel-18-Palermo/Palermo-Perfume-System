@@ -19,8 +19,13 @@ export type RedactedRecommendationContext = Readonly<{
 
 export type ProviderRecommendation = Readonly<{ perfumeId: EntityId; reason: string }>;
 export type ProviderOutput = Readonly<{ recommendations: readonly ProviderRecommendation[] }>;
+export type ProviderResponse = Readonly<{ output: unknown; providerReference: string | null }>;
+
 export type RecommendationProvider = Readonly<{
-  recommend(context: RedactedRecommendationContext): Promise<unknown>;
+  recommend(
+    context: RedactedRecommendationContext,
+    signal?: AbortSignal,
+  ): Promise<ProviderResponse>;
 }>;
 
 export type AiRecommendationServiceResult = Readonly<{
@@ -31,10 +36,16 @@ export type AiRecommendationServiceResult = Readonly<{
 export type DiscoveryRecommendationBoundary = Readonly<{
   getCandidateContext(input: RecommendationRequest): Promise<ApiResult<CandidateContext>>;
   generate(input: RecommendationRequest): Promise<ApiResult<RecommendationResult>>;
+  persistProviderRecommendations(
+    input: RecommendationRequest,
+    recommendations: readonly ProviderRecommendation[],
+    providerReference: string | null,
+  ): Promise<ApiResult<RecommendationResult>>;
 }>;
 
 export type ProviderClock = () => Date;
 export type ProviderTimeoutMs = number;
+
 export type ProviderContextSchema = Readonly<{
   allowedRootKeys: readonly ["quiz", "preferences", "candidates"];
   candidateFields: readonly ["perfume", "notes", "suitability"];
