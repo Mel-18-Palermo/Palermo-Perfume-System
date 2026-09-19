@@ -248,7 +248,7 @@ export function FragranceQuizView() {
           <Alert variant="warning" role="alert">
             <p className="font-semibold">Deterministic Fallback Result</p>
             <p className="text-sm">
-              Standard recommendations returned based on available catalogue inventory.
+              Deterministic recommendations based on the submitted quiz responses and approved catalogue attributes.
             </p>
           </Alert>
         )}
