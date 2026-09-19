@@ -6,6 +6,7 @@ import type { IdentityProvider, ProviderIdentity } from "../../lib/auth/provider
 import * as validate from "../../lib/auth/validation";
 
 export const SESSION_SECONDS = 24 * 60 * 60;
+export const SESSION_INACTIVITY_SECONDS = 30 * 60;
 export type Principal = Readonly<{ user: SessionUser; permissions: readonly string[] }>;
 export type LoginResult = Readonly<{ session: Session; token: string; expiresAt: Date }>;
 const anonymous: Session = { user: null };
@@ -64,29 +65,41 @@ export class IdentityService {
       await this.activate(identity);
       const account = await this.db.customer.findUnique({ where: { id: before.id } });
       if (!account || account.status !== "ACTIVE" || !account.emailVerifiedAt || account.authVersion !== before.authVersion) denied();
-      await this.db.identitySession.create({ data: { tokenHash: hash(token), customerId: account.id, authVersion: before.authVersion, createdAt, expiresAt } });
+      await this.db.identitySession.create({ data: { tokenHash: hash(token), customerId: account.id, authVersion: before.authVersion, createdAt, expiresAt, lastActivityAt: createdAt } });
       // Every use compares authVersion and account status, including login/deactivation races.
       return { token, expiresAt, session: { user: { id: account.id, role, email: account.email, displayName: account.name } } };
     }
     const account = await this.db.adminAccount.findUnique({ where: { authUserId: identity.id }, include: { role: true } });
     if (!account || account.email !== email || !account.active || !account.role.active) denied();
-    await this.db.identitySession.create({ data: { tokenHash: hash(token), adminId: account.id, createdAt, expiresAt } });
+    await this.db.identitySession.create({ data: { tokenHash: hash(token), adminId: account.id, createdAt, expiresAt, lastActivityAt: createdAt } });
     return { token, expiresAt, session: { user: { id: account.id, role, email: account.email, displayName: account.name } } };
   }
 
   async principal(token: string | undefined): Promise<Principal | null> {
     if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
+    const now = this.now();
+    const inactivityDeadline = new Date(now.getTime() - SESSION_INACTIVITY_SECONDS * 1000);
     const session = await this.db.identitySession.findUnique({ where: { tokenHash: hash(token) }, include: { customer: true, admin: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } });
-    if (!session || session.expiresAt <= this.now()) return null;
+    if (!session || session.expiresAt <= now || session.lastActivityAt <= inactivityDeadline) return null;
     const customer = session.customer;
+    let principal: Principal | null = null;
     if (customer?.status === "ACTIVE" && customer.emailVerifiedAt && customer.authUserId && customer.authVersion === session.authVersion) {
-      return { user: { id: customer.id, role: "CUSTOMER", email: customer.email, displayName: customer.name }, permissions: [] };
+      principal = { user: { id: customer.id, role: "CUSTOMER", email: customer.email, displayName: customer.name }, permissions: [] };
     }
     const admin = session.admin;
-    if (admin?.active && admin.authUserId && admin.role.active) {
-      return { user: { id: admin.id, role: "ADMIN", email: admin.email, displayName: admin.name }, permissions: admin.role.permissions.map(({ permission }) => permission.code) };
+    if (!principal && admin?.active && admin.authUserId && admin.role.active) {
+      principal = { user: { id: admin.id, role: "ADMIN", email: admin.email, displayName: admin.name }, permissions: admin.role.permissions.map(({ permission }) => permission.code) };
     }
-    return null;
+    if (!principal) return null;
+    const touched = await this.db.identitySession.updateMany({
+      where: {
+        tokenHash: session.tokenHash,
+        expiresAt: { gt: now },
+        lastActivityAt: { gt: inactivityDeadline, lte: now },
+      },
+      data: { lastActivityAt: now },
+    });
+    return touched.count === 1 ? principal : null;
   }
 
   async session(token: string | undefined): Promise<Session> { const principal = await this.principal(token); return principal ? { user: principal.user } : anonymous; }
