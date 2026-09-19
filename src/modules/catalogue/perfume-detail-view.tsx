@@ -1,4 +1,4 @@
-"use client";
+ï»¿"use client";
 
 import * as React from "react";
 import Link from "next/link";
@@ -219,7 +219,7 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
                       <div className="flex w-full items-center justify-between">
                         <div className="text-sm">
                           <p id={`variant-label-${v.id}`} className="font-semibold text-text">
-                            {v.bottleSize} {v.concentration ? `· ${v.concentration}` : ""}
+                            {v.bottleSize} {v.concentration ? `ï¿½ ${v.concentration}` : ""}
                           </p>
                           <p className="text-xs text-text-muted mt-0.5">{formatMoney(v.price)}</p>
                         </div>
