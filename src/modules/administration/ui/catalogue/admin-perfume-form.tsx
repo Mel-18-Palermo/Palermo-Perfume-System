@@ -377,12 +377,12 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
         </div>
       </fieldset>
 
-      <fieldset className="space-y-1 opacity-60">
+      <fieldset className="space-y-1">
         <legend className="text-label">Daypart, season, longevity, projection</legend>
         <p className="text-sm text-text-muted">
           Not yet available — no contract-approved option list exists for these fields yet.
         </p>
-        <select disabled className="w-full rounded-md border border-border px-3 py-2" aria-label="Daypart (not yet available)">
+        <select disabled className="w-full rounded-md border border-border px-3 py-2 opacity-60" aria-label="Daypart (not yet available)">
           <option>Not yet available</option>
         </select>
       </fieldset>
