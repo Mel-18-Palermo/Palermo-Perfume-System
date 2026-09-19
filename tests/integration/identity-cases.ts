@@ -3,7 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import type { PrismaClient } from "../../src/lib/db/generated/client";
 import type { IdentityProvider, ProviderIdentity, RecoveryGrant } from "../../src/lib/auth/provider";
 import { AuthFault } from "../../src/lib/auth/errors";
-import { IdentityService, SESSION_SECONDS } from "../../src/modules/identity/service";
+import { IdentityService, SESSION_INACTIVITY_SECONDS, SESSION_SECONDS } from "../../src/modules/identity/service";
 import { handleAuthRequest, SESSION_COOKIE } from "../../src/lib/auth/http";
 import { ids } from "../../prisma/seed-data";
 
@@ -117,7 +117,25 @@ export function identityCases(db: PrismaClient): void {
       expect((await db.identitySession.findFirstOrThrow()).tokenHash).not.toBe(login.token);
       expect((await service.session(login.token)).user?.id).toBe(login.session.user?.id);
       expect(await service.session("guessed")).toEqual({ user: null });
-      time = new Date(time.getTime() + SESSION_SECONDS * 1000);
+      time = new Date(time.getTime() + SESSION_INACTIVITY_SECONDS * 1000);
+      expect(await service.session(login.token)).toEqual({ user: null });
+    });
+    it("refreshes activity before inactivity expiry but never extends the absolute deadline", async () => {
+      const login = await active();
+      const startedAt = time;
+      time = new Date(startedAt.getTime() + (SESSION_INACTIVITY_SECONDS - 1) * 1000);
+      expect((await service.session(login.token)).user?.id).toBe(login.session.user?.id);
+      expect((await db.identitySession.findFirstOrThrow()).lastActivityAt).toEqual(time);
+      time = new Date(startedAt.getTime() + (SESSION_INACTIVITY_SECONDS * 2 - 2) * 1000);
+      expect((await service.session(login.token)).user?.id).toBe(login.session.user?.id);
+      time = new Date(startedAt.getTime() + SESSION_SECONDS * 1000);
+      expect(await service.session(login.token)).toEqual({ user: null });
+    });
+    it("does not revive an inactivity-expired session after later requests", async () => {
+      const login = await active();
+      time = new Date(time.getTime() + SESSION_INACTIVITY_SECONDS * 1000);
+      expect(await service.session(login.token)).toEqual({ user: null });
+      time = new Date(time.getTime() + 60_000);
       expect(await service.session(login.token)).toEqual({ user: null });
     });
     it("logout invalidates the current credential including replay and is idempotent", async () => {
@@ -161,6 +179,34 @@ export function identityCases(db: PrismaClient): void {
       await db.adminRole.update({ where: { id: role.id }, data: { active: true } });
       await db.adminAccount.update({ where: { id: admin.id }, data: { active: false } });
       expect(await service.session(login.token)).toEqual({ user: null });
+    });
+    it("applies the same inactivity boundary to administrator sessions", async () => {
+      provider.identity = { ...provider.identity, verified: true };
+      const role = await db.adminRole.create({ data: { name: "auth-test-role", permissions: { create: { permission: { connect: { id: ids.permission } } } } } });
+      await db.adminAccount.create({ data: { name: "Synthetic Admin", email, authUserId: provider.identity.id, roleId: role.id } });
+      const login = await service.login(input, "ADMIN");
+      time = new Date(time.getTime() + (SESSION_INACTIVITY_SECONDS - 1) * 1000);
+      expect((await service.session(login.token)).user?.role).toBe("ADMIN");
+      time = new Date(time.getTime() + SESSION_INACTIVITY_SECONDS * 1000);
+      expect(await service.session(login.token)).toEqual({ user: null });
+    });
+    it("does not touch a session after auth-version invalidation", async () => {
+      const login = await active();
+      const before = await db.identitySession.findFirstOrThrow();
+      await db.customer.update({ where: { id: before.customerId ?? "" }, data: { authVersion: { increment: 1 } } });
+      time = new Date(time.getTime() + 60_000);
+      expect(await service.session(login.token)).toEqual({ user: null });
+      expect((await db.identitySession.findFirstOrThrow()).lastActivityAt).toEqual(before.lastActivityAt);
+    });
+    it("does not let a stale concurrent clock move activity backwards", async () => {
+      const login = await active();
+      const startedAt = time;
+      time = new Date(startedAt.getTime() + 10 * 60_000);
+      expect((await service.session(login.token)).user?.id).toBe(login.session.user?.id);
+      const refreshed = await db.identitySession.findFirstOrThrow();
+      const stale = new IdentityService(db, provider, () => new Date(startedAt.getTime() + 5 * 60_000));
+      expect(await stale.session(login.token)).toEqual({ user: null });
+      expect((await db.identitySession.findFirstOrThrow()).lastActivityAt).toEqual(refreshed.lastActivityAt);
     });
     it("reset requests acknowledge ineligible accounts without sending recovery email", async () => {
       await service.requestPasswordReset({ email });

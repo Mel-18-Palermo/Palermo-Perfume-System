@@ -234,6 +234,7 @@ model IdentitySession {
   adminId     String?       @db.Uuid
   createdAt   DateTime      @default(now()) @db.Timestamptz(3)
   expiresAt   DateTime      @db.Timestamptz(3)
+  lastActivityAt DateTime   @db.Timestamptz(3)
   authVersion Int           @default(0)
   customer    Customer?     @relation(fields: [customerId], references: [id], onDelete: Cascade)
   admin       AdminAccount? @relation(fields: [adminId], references: [id], onDelete: Cascade)
@@ -241,6 +242,7 @@ model IdentitySession {
   @@index([customerId])
   @@index([adminId])
   @@index([expiresAt])
+  @@index([lastActivityAt])
 }
 
 model FragranceFamily {
