@@ -7,9 +7,22 @@ type LoginPageProps = Readonly<{
 }>;
 
 function safeNext(value: string | string[] | undefined): string {
-  if (typeof value !== "string") return "/";
-  if (!value.startsWith("/") || value.startsWith("//")) return "/";
-  return value;
+  if (typeof value !== "string" || !value.startsWith("/")) {
+    return "/";
+  }
+
+  try {
+    const base = new URL("https://palermo.invalid");
+    const target = new URL(value, base);
+
+    if (target.origin !== base.origin) {
+      return "/";
+    }
+
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return "/";
+  }
 }
 
 export default async function LoginPage({
