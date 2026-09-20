@@ -1,0 +1,641 @@
+.landing {
+  overflow: clip;
+  background: var(--color-bg);
+}
+
+.hero,
+.recommendation {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--color-text);
+  color: var(--color-primary-text);
+}
+
+.hero {
+  min-height: min(44rem, calc(82svh - 4rem));
+}
+
+.campaignImage {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.heroShade,
+.recommendationShade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.heroShade {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-text) 74%, transparent) 0%,
+    color-mix(in srgb, var(--color-text) 35%, transparent) 35%,
+    transparent 61%
+  );
+}
+
+.heroContent,
+.sectionHeading,
+.commerceSection,
+.familySection {
+  width: min(calc(100% - 3rem), var(--container-wide));
+  margin-inline: auto;
+}
+
+.heroContent {
+  display: flex;
+  min-height: inherit;
+  max-width: 43rem;
+  margin-inline: max(1.5rem, calc((100% - var(--container-wide)) / 2));
+  padding-block: clamp(6rem, 11vw, 9rem);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  animation: text-enter var(--duration-slow) ease-out both;
+}
+
+.heroEyebrow,
+.eyebrow,
+.productFamily {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: var(--text-xs--line-height);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.heroEyebrow {
+  color: color-mix(in srgb, var(--color-primary-text) 82%, transparent);
+}
+
+.heroContent h1 {
+  max-width: 9ch;
+  margin: 1.1rem 0 2rem;
+  font-size: clamp(3.25rem, 6.35vw, 5.75rem);
+  font-weight: 500;
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+}
+
+.textLink {
+  display: inline-flex;
+  min-height: 2.75rem;
+  width: fit-content;
+  align-items: center;
+  gap: 0.7rem;
+  border-bottom: 1px solid currentColor;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.25rem;
+  text-decoration: none;
+  transition:
+    gap var(--duration-normal) ease,
+    color var(--duration-normal) ease;
+}
+
+.textLink svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+}
+
+.textLink:hover {
+  gap: 1rem;
+}
+
+.introduction {
+  width: min(calc(100% - 3rem), var(--container-reading));
+  margin-inline: auto;
+  padding-block: clamp(6rem, 10vw, 9rem);
+  text-align: center;
+}
+
+.eyebrow,
+.productFamily {
+  color: var(--color-text-muted);
+}
+
+.introduction h2,
+.sectionHeading h2,
+.editorialCopy h2,
+.recommendationCopy h2 {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.introduction h2 {
+  margin-top: 1.25rem;
+  font-size: clamp(2rem, 4.2vw, 3.75rem);
+  line-height: 1.08;
+}
+
+.introduction > p:last-child {
+  max-width: 37rem;
+  margin: 1.5rem auto 0;
+  color: var(--color-text-muted);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  line-height: 1.75;
+}
+
+.commerceSection,
+.familySection {
+  padding-block: clamp(5rem, 9vw, 8rem);
+}
+
+.commerceSection {
+  border-top: 1px solid var(--color-border);
+}
+
+.sectionHeading {
+  display: flex;
+  width: 100%;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.sectionHeading h2 {
+  margin-top: 0.75rem;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.08;
+}
+
+.sectionNote {
+  max-width: 28rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2rem, 7vw, 7rem);
+}
+
+.productItem {
+  min-width: 0;
+}
+
+.productImageLink {
+  display: block;
+  text-decoration: none;
+}
+
+.productImageFrame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--color-surface-muted);
+}
+
+.productImage {
+  object-fit: contain;
+  padding: clamp(2rem, 5vw, 5rem);
+  transition: transform var(--duration-slow) ease;
+}
+
+.productImageLink:hover .productImage {
+  transform: scale(1.015);
+}
+
+.productPlaceholder {
+  position: absolute;
+  inset: 14% 25%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.55rem;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.productPlaceholder::before {
+  position: absolute;
+  top: -15%;
+  width: 37%;
+  height: 15%;
+  border: 1px solid var(--color-border-strong);
+  border-bottom: 0;
+  background: var(--color-text);
+  content: "";
+}
+
+.productPlaceholder span {
+  font-size: clamp(0.7rem, 1.25vw, 0.9rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.productPlaceholder strong {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.productDetails {
+  padding-top: 1.75rem;
+}
+
+.productDetails h3 {
+  margin: 0.65rem 0 0;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.productDetails h3 a {
+  text-decoration: none;
+}
+
+.productMeta {
+  margin: 0.7rem 0 1rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.commerceFallback {
+  display: flex;
+  min-height: 18rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+.commerceFallback p {
+  margin: 0;
+}
+
+.editorial {
+  display: grid;
+  min-height: min(54rem, 82svh);
+  grid-template-columns: minmax(22rem, 0.9fr) minmax(0, 1.1fr);
+  background: var(--color-text);
+  color: var(--color-primary-text);
+}
+
+.editorialCopy {
+  display: flex;
+  max-width: 37rem;
+  padding: clamp(4rem, 9vw, 8.5rem) clamp(2rem, 7vw, 7rem);
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.editorialCopy .eyebrow {
+  color: color-mix(in srgb, var(--color-primary-text) 64%, transparent);
+}
+
+.editorialCopy h2,
+.recommendationCopy h2 {
+  margin-top: 1rem;
+  font-size: clamp(2.75rem, 5vw, 4.75rem);
+  line-height: 0.98;
+}
+
+.editorialCopy > p:not(.eyebrow),
+.recommendationCopy > p:not(.heroEyebrow) {
+  max-width: 30rem;
+  margin: 1.75rem 0 1.5rem;
+  color: color-mix(in srgb, var(--color-primary-text) 74%, transparent);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+  line-height: 1.7;
+}
+
+.editorialImageWrap {
+  position: relative;
+  min-height: 42rem;
+  overflow: hidden;
+}
+
+.editorialImage {
+  object-fit: cover;
+  object-position: center;
+}
+
+.familySection {
+  background: var(--color-bg);
+}
+
+.familyGrid {
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.familyItem {
+  display: grid;
+  min-height: 5.75rem;
+  padding-inline: 0.25rem;
+  grid-template-columns: 3.25rem 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: clamp(1.25rem, 2.5vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  transition: padding-inline var(--duration-normal) ease;
+}
+
+.familyItem:hover {
+  padding-inline: 0.75rem;
+}
+
+.familyItem svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.familyNumber {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.recommendation {
+  min-height: min(45rem, 76svh);
+}
+
+.recommendation .campaignImage {
+  object-position: center;
+}
+
+.recommendationShade {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-text) 86%, transparent) 0%,
+    color-mix(in srgb, var(--color-text) 56%, transparent) 36%,
+    transparent 68%
+  );
+}
+
+.recommendationCopy {
+  display: flex;
+  min-height: inherit;
+  width: min(calc(100% - 3rem), var(--container-wide));
+  margin-inline: auto;
+  padding-block: clamp(5rem, 10vw, 8rem);
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.recommendationCopy > p:not(.heroEyebrow) {
+  max-width: 28rem;
+}
+
+@keyframes text-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 64rem) {
+  .introduction {
+    padding-block: clamp(6rem, 7vw, 6.5rem);
+  }
+
+  .commerceSection {
+    padding-block: clamp(5rem, 6.5vw, 6rem);
+  }
+
+  .commerceSection .sectionHeading {
+    margin-bottom: clamp(3rem, 4vw, 3.5rem);
+  }
+
+  .commerceFallback {
+    min-height: 12.5rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  .introduction {
+    display: grid;
+    width: min(calc(100% - 4rem), var(--container-wide));
+    padding-block: 6rem;
+    grid-template-columns: minmax(0, 1fr) 28rem;
+    column-gap: 6rem;
+    align-items: end;
+    text-align: left;
+  }
+
+  .introduction .eyebrow {
+    align-self: start;
+    margin-bottom: 1.5rem;
+  }
+
+  .introduction h2 {
+    max-width: 13ch;
+    margin-top: 0;
+    font-size: 4rem;
+    line-height: 1;
+    text-wrap: balance;
+  }
+
+  .introduction > p:last-child {
+    max-width: 28rem;
+    margin: 0 0 0.5rem;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: end;
+  }
+
+  .commerceSection .sectionHeading h2,
+  .familySection .sectionHeading h2 {
+    font-size: 4rem;
+    line-height: 1;
+  }
+
+  .commerceFallback {
+    display: grid;
+    padding: 3rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 4rem;
+    border-block: 1px solid var(--color-border);
+    background: transparent;
+  }
+
+  .commerceFallback p {
+    max-width: 18ch;
+    color: var(--color-text);
+    font-size: var(--text-h2);
+    font-weight: 500;
+    line-height: var(--text-h2--line-height);
+    letter-spacing: -0.02em;
+  }
+
+  .commerceFallback .textLink {
+    justify-self: end;
+  }
+
+  .familySection .sectionHeading h2 {
+    max-width: 13ch;
+    text-wrap: balance;
+  }
+
+  .familySection .sectionNote {
+    margin-bottom: 0.5rem;
+  }
+
+  .familySection > .textLink {
+    min-height: 6rem;
+    width: 100%;
+    padding-inline: 0.25rem;
+    justify-content: space-between;
+    border-top: 1px solid var(--color-border-strong);
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .hero {
+    min-height: 0;
+    aspect-ratio: 4 / 5;
+  }
+
+  .hero .campaignImage {
+    object-position: right center;
+  }
+
+  .heroShade {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-text) 70%, transparent) 0%,
+      color-mix(in srgb, var(--color-text) 28%, transparent) 72%,
+      transparent 100%
+    );
+  }
+
+  .heroContent,
+  .sectionHeading,
+  .commerceSection,
+  .familySection,
+  .recommendationCopy {
+    width: min(calc(100% - 2rem), var(--container-wide));
+  }
+
+  .heroContent {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    margin-inline: 1rem;
+    padding-block: 2.5rem;
+    justify-content: flex-end;
+  }
+
+  .heroContent h1 {
+    margin-block: 0.85rem 1.5rem;
+    font-size: clamp(2.65rem, 12vw, 3.25rem);
+  }
+
+  .introduction {
+    width: min(calc(100% - 2.5rem), var(--container-reading));
+    padding-block: 5.5rem;
+  }
+
+  .sectionHeading {
+    margin-bottom: 2.75rem;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .productGrid {
+    grid-template-columns: 1fr;
+    gap: 4.75rem;
+  }
+
+  .productImageFrame {
+    aspect-ratio: 1 / 1;
+  }
+
+  .editorial {
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .editorialImageWrap {
+    min-height: auto;
+    aspect-ratio: 4 / 5;
+    grid-row: 1;
+  }
+
+  .editorialCopy {
+    grid-row: 2;
+    padding: 4.5rem 1.25rem 5rem;
+  }
+
+  .editorialCopy h2,
+  .recommendationCopy h2 {
+    font-size: clamp(2.75rem, 13vw, 4rem);
+  }
+
+  .familyItem {
+    min-height: 5rem;
+    grid-template-columns: 2rem 1fr auto;
+    font-size: 1.25rem;
+  }
+
+  .recommendation {
+    min-height: min(43rem, 92svh);
+  }
+
+  .recommendation .campaignImage {
+    object-position: center;
+  }
+
+  .recommendationShade {
+    background: linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--color-text) 88%, transparent) 0%,
+      color-mix(in srgb, var(--color-text) 45%, transparent) 45%,
+      transparent 76%
+    );
+  }
+
+  .recommendationCopy {
+    padding-block: 4rem;
+    justify-content: flex-end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroContent {
+    animation: none;
+  }
+
+  .productImage,
+  .familyItem,
+  .textLink {
+    transition: none;
+  }
+}
