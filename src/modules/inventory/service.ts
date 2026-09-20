@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { ProductionBatch } from "../../contracts/admin";
-import type { ApiResult } from "../../contracts/common";
+import type { InventoryBalance as AdminInventoryBalance, ProductionBatch } from "../../contracts/admin";
+import type { ApiResult, Page, PageRequest } from "../../contracts/common";
 import { failure, success } from "../../lib/api/result";
 import type { PrismaClient } from "../../lib/db/generated/client";
 
@@ -66,6 +66,93 @@ export class InventoryService {
       reserved: balance.reserved,
       available,
       lowStock: available <= balance.lowStockThreshold,
+    });
+  }
+
+  async listInventory(
+    actor: InventoryActor,
+    request: PageRequest,
+  ): Promise<ApiResult<Page<AdminInventoryBalance>>> {
+    if (!hasInventoryAuthority(actor)) return failure("FORBIDDEN");
+
+    const page = request.page ?? 1;
+    const pageSize = request.pageSize ?? 20;
+
+    if (!Number.isSafeInteger(page) || page < 1
+      || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+      return failure("VALIDATION_ERROR");
+    }
+
+    const [rows, total] = await Promise.all([
+      this.db.inventoryBalance.findMany({
+        include: {
+          variant: {
+            select: {
+              sku: true,
+            },
+          },
+        },
+        orderBy: [
+          { variantId: "asc" },
+        ],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.db.inventoryBalance.count(),
+    ]);
+
+    return success({
+      items: rows.map((balance) => {
+        const available = balance.onHand - balance.reserved;
+
+        return {
+          variantId: balance.variantId,
+          sku: balance.variant.sku,
+          onHand: balance.onHand,
+          reserved: balance.reserved,
+          available,
+          lowStockThreshold: balance.lowStockThreshold,
+          lowStock: available <= balance.lowStockThreshold,
+          updatedAt: balance.updatedAt.toISOString(),
+        };
+      }),
+      page,
+      pageSize,
+      hasMore: page * pageSize < total,
+    });
+  }
+
+  async listBatches(
+    actor: InventoryActor,
+    request: PageRequest,
+  ): Promise<ApiResult<Page<ProductionBatch>>> {
+    if (!hasInventoryAuthority(actor)) return failure("FORBIDDEN");
+
+    const page = request.page ?? 1;
+    const pageSize = request.pageSize ?? 20;
+
+    if (!Number.isSafeInteger(page) || page < 1
+      || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100) {
+      return failure("VALIDATION_ERROR");
+    }
+
+    const [rows, total] = await Promise.all([
+      this.db.productionBatch.findMany({
+        orderBy: [
+          { productionDate: "desc" },
+          { id: "asc" },
+        ],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.db.productionBatch.count(),
+    ]);
+
+    return success({
+      items: rows.map(batchDto),
+      page,
+      pageSize,
+      hasMore: page * pageSize < total,
     });
   }
 
