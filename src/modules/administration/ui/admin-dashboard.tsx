@@ -121,7 +121,7 @@ export function AdminDashboard() {
               required
               value={reportingMonth}
               onChange={event => {
-                if (/^\d{4}-\d{2}$/.test(event.target.value)) {
+                if (event.target.value) {
                   changeMonth(event.target.value);
                 }
               }}
