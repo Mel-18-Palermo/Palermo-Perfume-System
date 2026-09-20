@@ -1,56 +1,115 @@
-﻿import * as React from "react";
+﻿import type { Metadata } from "next";
+
+import { redirect } from "next/navigation";
+
 import { CustomerShell } from "@/components/layout/customer-shell";
-import { CatalogueView } from "@/modules/catalogue/catalogue-view";
-import { api } from "@/lib/api";
-import type { PerfumeSummary, CatalogueFilters } from "@/contracts/catalogue";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
+import type { CatalogueFilters, PerfumeSummary } from "@/contracts/catalogue";
+import { api } from "@/lib/api";
+import { getCatalogueService } from "@/modules/catalogue/runtime";
+import { LandingPage } from "@/modules/landing/landing-page";
 
-export default async function Home() {
-  let initialItems: readonly PerfumeSummary[] | null = null;
-  let filters: CatalogueFilters | null = null;
-  let session: Session | null = null;
-  let cart: CartDto | null = null;
-  let initialError: string | null = null;
+const CATALOGUE_QUERY_KEYS = new Set([
+  "q",
+  "page",
+  "pageSize",
+  "note",
+  "family",
+  "collection",
+  "minPrice",
+  "maxPrice",
+  "intensity",
+  "occasion",
+  "mood",
+  "weather",
+]);
 
+type LandingAvailability = "AVAILABLE" | "OUT_OF_STOCK";
+
+interface HomeProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export const metadata: Metadata = {
+  title: "Palermo — Fragrance, reimagined",
+  description:
+    "Discover Palermo fragrances through luminous citrus, warm woods, and modern depth.",
+};
+
+async function getLandingCatalogue(): Promise<{
+  products: readonly PerfumeSummary[];
+  filters: CatalogueFilters | null;
+  availabilityByProductId: Readonly<Record<string, LandingAvailability>>;
+}> {
   try {
-    const [listResult, filterResult, sessionResult, cartResult] = await Promise.all([
-      api.catalogue.list({ page: 1, pageSize: 24 }).catch(() => ({ ok: false as const, error: { message: "Failed to load catalogue" } })),
-      api.catalogue.getFilters().catch(() => ({ ok: false as const, error: { message: "Failed to load filters" } })),
-      api.auth.getSession().catch(() => ({ ok: false as const })),
-      api.cart.get().catch(() => ({ ok: false as const })),
+    const service = getCatalogueService();
+    const [catalogueResult, filtersResult] = await Promise.all([
+      service.list({ page: 1, pageSize: 6 }),
+      service.getFilters(),
     ]);
 
-    if (listResult.ok) {
-      initialItems = listResult.data.items;
-    } else {
-      initialError = "Failed to load catalogue items. Please try again.";
-    }
+    const products = catalogueResult.ok ? catalogueResult.data.items : [];
+    const detailResults = await Promise.all(
+      products.map((product) => service.get(product.id)),
+    );
+    const availabilityByProductId: Record<string, LandingAvailability> = {};
 
-    if (filterResult.ok) {
-      filters = filterResult.data;
-    }
+    detailResults.forEach((detailResult) => {
+      if (!detailResult.ok) return;
 
-    if (sessionResult.ok) {
-      session = sessionResult.data;
-    }
+      availabilityByProductId[detailResult.data.id] = detailResult.data.variants.some(
+        (variant) => variant.availability === "AVAILABLE",
+      )
+        ? "AVAILABLE"
+        : "OUT_OF_STOCK";
+    });
 
-    if (cartResult.ok) {
-      cart = cartResult.data;
-    }
+    return {
+      products,
+      filters: filtersResult.ok ? filtersResult.data : null,
+      availabilityByProductId,
+    };
   } catch {
-    initialError = "Unable to load catalogue. Please check your connection and try again.";
+    return { products: [], filters: null, availabilityByProductId: {} };
+  }
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const resolvedSearchParams = await searchParams;
+  const legacyCatalogueParams = new URLSearchParams();
+
+  Object.entries(resolvedSearchParams).forEach(([key, value]) => {
+    if (!CATALOGUE_QUERY_KEYS.has(key) || value === undefined) return;
+
+    const values = Array.isArray(value) ? value : [value];
+    values.forEach((entry) => legacyCatalogueParams.append(key, entry));
+  });
+
+  if (legacyCatalogueParams.size > 0) {
+    redirect(`/catalogue?${legacyCatalogueParams.toString()}`);
   }
 
+  const [
+    { products, filters, availabilityByProductId },
+    sessionResult,
+    cartResult,
+  ] = await Promise.all([
+    getLandingCatalogue(),
+    api.auth.getSession().catch(() => ({ ok: false as const })),
+    api.cart.get().catch(() => ({ ok: false as const })),
+  ]);
+
+  const session: Session | null = sessionResult.ok ? sessionResult.data : null;
+  const cart: CartDto | null = cartResult.ok ? cartResult.data : null;
+
   return (
-    <CustomerShell cart={cart} session={session}>
-      <React.Suspense fallback={<div className="p-8 text-center text-text-muted">Loading catalogue...</div>}>
-        <CatalogueView
-          initialItems={initialItems}
-          initialFilters={filters}
-          initialError={initialError}
-        />
-      </React.Suspense>
+    <CustomerShell cart={cart} session={session} contentLayout="full-bleed">
+      <LandingPage
+        products={products}
+        filters={filters}
+        availabilityByProductId={availabilityByProductId}
+      />
     </CustomerShell>
   );
 }
