@@ -2,403 +2,234 @@
 
 ## Purpose
 
-This document defines the planned software development environment and target repository structure for implementation of the Palermo Perfume System.
+This document defines the software development environment and repository structure for the Palermo Perfume System.
 
-At the time of this SRS baseline, application implementation has not yet started. The repository contains the SRS/documentation baseline only. Therefore, the application folder structure below is a proposed implementation structure consistent with the approved architecture, not a claim that all listed directories already exist.
+**Status update:** at the original SRS baseline, application implementation had not yet started, and this document described the *planned* environment only. Implementation is now active and the repository contains the application, API, persistence, CI and provider boundaries described below. This revision keeps the approved architecture/technology decisions from that baseline, and replaces the sections that were previously "planned"/"proposed" with the now-verified, actual configuration, folder structure and commands present in the repository. Where a described capability does not yet exist (see [#271](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/271)), this is marked **Pending** rather than presented as complete.
 
-Exact library versions, deployment provider, authentication provider and some supporting test/developer tools remain implementation decisions unless separately frozen.
+---
 
-## Development environment
+## 1. Approved Architecture and Technology Decisions
 
-### Application platform
+These decisions were frozen at the SRS baseline and remain the architecture of the implemented system.
 
-Approved baseline:
+**Application platform:** Next.js, React, TypeScript. Next.js provides the web application runtime and routing/application framework; React provides the component UI model; TypeScript is used for typed application code and contracts. The architecture is a **modular monolith**, not a microservice system.
 
-- Next.js
-- React
-- TypeScript
+**Data access and database:** Prisma ORM/data access over Supabase-hosted PostgreSQL. Critical multi-record operations (checkout, inventory reservation/commit, other protected business outcomes) must use database constraints and transactions. Supabase is managed PostgreSQL infrastructure, not a business actor.
 
-Next.js provides the web application runtime and routing/application framework. React provides the component UI model. TypeScript is used for typed application code and contracts.
+**Payment:** Stripe, test/sandbox mode, isolated behind an internal payment-provider adapter. Palermo stores only approved payment state/provider references — never raw PAN/CVV.
 
-The architecture is a modular monolith rather than a microservice system.
+**AI:** accessed through a replaceable provider interface/adapter, supporting deterministic mock/stub responses for testing, controlled test provider configuration, minimised approved request context, and failure/timeout handling that does not break core commerce.
 
-### Data access and database
+**Email:** accessed through an integration adapter; provider selection remains an implementation/deployment decision; development/testing may use a safe test configuration or mock adapter.
 
-Approved baseline:
+**Delivery:** an internal delivery simulator behind a `DeliveryProvider`-style abstraction; no production courier account is required for the capstone baseline.
 
-- Prisma ORM/data access
-- Supabase PostgreSQL
+**Version control and collaboration:** Git + GitHub, a protected `main` integration branch, GitHub Issues, short-lived scoped branches, Pull Requests, and a rebase-merge workflow (`Issue → Branch → Commit → Pull Request → Review → Rebase Merge → Delete Branch`). There is no shared `develop` branch.
 
-Prisma provides the application data-access/migration layer. PostgreSQL is the authoritative relational data store.
+**Documentation and modelling:** maintained under `docs/` using Markdown, CSV/text for structured registries, Mermaid for technical/architecture modelling, and draw.io/diagrams.net + exported SVG for final report diagrams.
 
-Critical multi-record operations such as checkout, inventory reservation/commit and protected business outcomes must use appropriate database constraints and transactions.
+**Development editor and OS:** no single mandatory editor or OS; any environment supporting TypeScript, Git and the Node.js/Next.js toolchain is acceptable. `.editorconfig` reduces cross-environment formatting differences.
 
-Supabase is treated as managed PostgreSQL infrastructure; it is not a business actor in use-case or data-flow models.
+**Browser/test targets:** current stable Chrome, Firefox, Edge, Safari. Responsive validation widths: **375px, 768px, 1440px**. Staging/test environments use seeded non-real data and test/sandbox integrations only.
 
-### Payment
+**Security configuration:** environment-specific secrets are never committed. The implementation must prevent commits of database credentials, auth secrets/tokens, Stripe secret keys, AI provider secrets, email-provider credentials, real customer data, or raw payment-card data. Public/client-safe configuration is distinguished from server secrets. Sensitive connections use HTTPS/TLS.
 
-Approved baseline:
+---
 
-- Stripe test/sandbox environment
+## 2. Runtime and Package Management — *now confirmed*
 
-Payment integration is isolated behind Palermo's internal payment-provider interface/adapter.
+| Requirement | Value | Source |
+|---|---|---|
+| Node.js | `24.19.0` locally/CI; compatible `24.x` | `.nvmrc`; `package.json` → `engines.node` |
+| Package manager | `pnpm 11.24.0` | `package.json` → `packageManager` |
 
-Palermo stores only approved payment state/provider references required for its own order workflow and does not store raw PAN/CVV.
+The project uses **pnpm exclusively** — do not use `npm` or `yarn`. The committed `pnpm-lock.yaml` and CI (`pnpm install --frozen-lockfile`) both assume pnpm.
 
-### AI
+---
 
-AI features use a replaceable provider interface/adapter.
+## 3. Current Repository Structure — *now confirmed*
 
-The exact provider/model may be selected/configured during implementation. The development environment must support:
+The repository has moved beyond the documentation-only SRS stage. Confirmed top-level areas include:
 
-- deterministic mock/stub AI responses for testing;
-- controlled test provider configuration where live integration is required;
-- minimised approved request context;
-- failure/timeout testing without breaking core commerce.
-
-### Email
-
-Email delivery is accessed through an integration adapter.
-
-Provider selection/configuration remains an implementation/deployment decision unless separately frozen.
-
-Development/testing may use a safe test configuration or mock adapter.
-
-### Delivery
-
-The capstone baseline uses an internal delivery simulator behind a `DeliveryProvider`-style abstraction.
-
-No production courier account is required for the baseline.
-
-The simulator supports controlled shipment/tracking transitions for repeatable tests and demonstrations.
-
-### Version control and collaboration
-
-Repository management uses:
-
-- Git
-- GitHub
-- protected `main` integration branch;
-- GitHub Issues;
-- short-lived scoped branches;
-- Pull Requests;
-- rebase merge workflow.
-
-Normal workflow:
-
-Issue -> Branch -> Commit -> Pull Request -> Review -> Rebase Merge -> Delete Branch
-
-There is no shared `develop` branch.
-
-### Documentation and modelling
-
-Documentation artefacts are maintained under `docs/`.
-
-Current tools/formats include:
-
-- Markdown for written technical sources;
-- CSV/text where structured registries or validation profiles are more appropriate;
-- Mermaid for the final System Architecture source and detailed technical modelling where retained;
-- draw.io / diagrams.net for manually composed final report diagrams;
-- SVG for final report diagram exports.
-
-### Development editor and operating system
-
-The project does not require one mandatory editor or desktop operating system.
-
-Developers may use an editor/IDE capable of supporting TypeScript, Git and the selected Node.js/Next.js toolchain.
-
-Repository configuration files such as `.editorconfig` are used where possible to reduce formatting differences between environments.
-
-### Runtime and package management
-
-A Node.js runtime compatible with the selected Next.js version will be required when implementation begins.
-
-The exact Node.js version and JavaScript package manager should be frozen in the implementation scaffold/configuration rather than guessed in the SRS.
-
-Once selected, the project should commit the relevant version/package-manager metadata and lockfile so all developers and CI use a reproducible dependency set.
-
-### Browser/test environment
-
-Final validation targets current stable major browser families defined by the NFR baseline:
-
-- Chrome
-- Firefox
-- Edge
-- Safari
-
-Responsive checks are performed at the documented validation widths:
-
-- 375 px
-- 768 px
-- 1440 px
-
-The controlled staging/test environment uses seeded non-real data and test/sandbox integrations.
-
-### Security configuration
-
-Environment-specific secrets must be stored outside source control.
-
-The implementation environment must prevent commits of:
-
-- database credentials;
-- authentication secrets/tokens;
-- Stripe secret keys;
-- AI provider secrets;
-- email-provider credentials;
-- real customer data;
-- raw payment-card data.
-
-Public/client-safe configuration must be distinguished from server secrets.
-
-Deployed test/staging connections carrying sensitive data use HTTPS/TLS.
-
-## Current repository structure
-
-At the SRS stage, the repository primarily contains governance and documentation:
-
-```text
-Palermo-Perfume-System/
-├── .github/
-├── docs/
-├── .editorconfig
-├── .gitignore
-├── CONTRIBUTING.md
-├── README.md
-└── SECURITY.md
 ```
-
-The absence of an application scaffold at this stage is intentional: implementation begins after the SRS v1.0 baseline is reviewed/frozen.
-
-## Current documentation structure
-
-```text
-docs/
-├── diagrams/
-├── privacy/
-├── project-management/
-├── requirements/
-├── security/
-├── srs/
-├── testing/
-└── ui/
-```
-
-Primary responsibilities:
-
-- `requirements/` — functional/NFR registries, decisions, derived requirements, data dictionary, logical ERD and traceability;
-- `srs/` — report-supporting technical SRS content and detailed use-case specifications;
-- `diagrams/` — report-facing diagram workspace;
-- `ui/` — UI requirements, design evidence and wireframes;
-- `privacy/` — DPIA, retention and privacy risk material;
-- `security/` — additional security design/supporting material;
-- `testing/` — testing plan, validation profile, cases/evidence/results;
-- `project-management/` — methodology, implementation planning, deliverables, schedule/WBS and supervisor/project evidence.
-
-## Proposed implementation structure
-
-The following structure is the target organisation for the modular-monolith application. Names may be refined when the scaffold is created, but the architectural separation should remain.
-
-```text
 Palermo-Perfume-System/
-├── .github/
-│   └── workflows/
-│
-├── docs/
-│   ├── diagrams/
-│   ├── privacy/
-│   ├── project-management/
-│   ├── requirements/
-│   ├── security/
-│   ├── srs/
-│   ├── testing/
-│   └── ui/
-│
-├── prisma/
-│   ├── schema.prisma
-│   ├── migrations/
-│   └── seed.*
-│
-├── public/
-│
+├── .github/workflows/       # CI (ci.yml) and Governance gate workflows
+├── docs/                    # SRS, diagrams, requirements, testing, ui, etc.
+├── prisma/                  # schema, migrations, seed.ts, check.ts, certs/
 ├── src/
-│   ├── app/
-│   │
-│   ├── components/
-│   │
-│   ├── modules/
-│   │   ├── identity/
-│   │   ├── catalogue/
-│   │   ├── discovery/
-│   │   ├── personalisation/
-│   │   ├── commerce/
-│   │   ├── inventory/
-│   │   ├── delivery/
-│   │   ├── support/
-│   │   ├── administration/
-│   │   └── participation/
-│   │
-│   ├── integrations/
-│   │   ├── payment/
-│   │   ├── ai/
-│   │   ├── email/
-│   │   └── delivery/
-│   │
-│   ├── lib/
-│   │   ├── db/
-│   │   ├── auth/
-│   │   ├── validation/
-│   │   ├── logging/
-│   │   └── config/
-│   │
-│   └── types/
-│
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-│
+│   ├── app/                 # Next.js routes (e.g. app/account/, app/api/)
+│   ├── components/          # shared UI (components/ui/, components/layout/)
+│   ├── contracts/           # canonical TypeScript contracts
+│   ├── integrations/        # provider adapter boundaries
+│   ├── lib/                 # cross-cutting infrastructure and HTTP clients
+│   ├── modules/             # business/domain modules
+│   └── types/               # shared supporting types
 ├── .env.example
 ├── package.json
 ├── tsconfig.json
-└── <package-manager-lockfile>
+└── pnpm-lock.yaml
 ```
 
-## Folder responsibilities
+The tree above reflects directories currently present on `main`. The baseline structure below explains their intended responsibilities and dependency direction rather than predicting missing folders.
 
-### `src/app/`
+---
 
-Next.js application routing, layouts and application entry surfaces.
+## 4. Proposed Implementation Structure (baseline reference)
 
-This layer should coordinate approved application/domain services rather than contain uncontrolled business logic directly in UI components.
+The following remains the target organisation for the modular-monolith application, carried over from the SRS baseline. Names may be refined during implementation, but the architectural separation should hold:
 
-### `src/components/`
+```
+src/
+├── app/            # Next.js routing, layouts, entry surfaces
+├── components/     # Reusable presentational/interface components
+├── modules/        # Business-domain boundaries (identity, catalogue,
+│                   #   discovery, personalisation, commerce, inventory,
+│                   #   delivery, support, administration, participation)
+├── integrations/   # Provider-specific adapters (payment, ai, email, delivery)
+├── lib/            # Cross-cutting infra (db, auth, validation, logging, config)
+└── types/
+tests/
+├── unit/
+├── integration/
+└── e2e/
+```
 
-Reusable presentational/interface components shared across application surfaces.
+**Dependency direction (still binding):** UI/routes call approved application/domain services; domain rules do not depend directly on provider SDKs; integrations implement internal provider contracts; Prisma/database access stays server-side; external/user input is validated at trust boundaries; authorisation is enforced independently of UI visibility; payment/inventory/order invariants are protected by server logic plus persistence controls.
 
-Domain-specific components may remain within a module if they are not genuinely shared.
+---
 
-### `src/modules/`
+## 5. Install
 
-Primary business-domain boundaries of the modular monolith.
+```bash
+pnpm install --frozen-lockfile
+```
 
-Each module may contain its own domain logic, application services, validation schemas/types and module-specific UI/server helpers as appropriate.
+This is the exact command CI runs on every pull request and push to `main` (`.github/workflows/ci.yml`, both the `quality` and `database` jobs).
 
-The goal is cohesive domain ownership, not artificially creating separate deployable services.
+---
 
-### `src/integrations/`
+## 6. Environment Variables (names only — no values, no secrets)
 
-Provider-specific implementation adapters.
+Copy `.env.example` to `.env.local` for local development and fill in only approved isolated development/preview values. Process-provided variables take precedence; Palermo's server-side environment loader checks `.env.local` before `.env`.
 
-Examples:
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Application DB connection (pooler `6543`/`5432`), schema `palermo` |
+| `DIRECT_URL` | Prisma migrations connection |
+| `TEST_DATABASE_URL` | Optional disposable test-schema connection (`schema=palermo_test`) |
+| `PALERMO_DATABASE_ENV` | Must be `development` or `preview` for seed/test — never production |
+| `DATABASE_CA_FILE` | Path to the public Supabase root CA cert |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Supabase Auth project configuration used by Palermo authentication |
+| `SUPABASE_SERVICE_ROLE_KEY` | Optional, owner-only provisioning/live-test tooling |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe **test-mode only**; secret key never exposed to browser code |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe test-mode publishable key (browser-safe) |
+| `OPENAI_API_KEY` | Server-only OpenAI recommendation-provider credential; optional |
+| `OPENAI_MODEL` | OpenAI recommendation model selection; optional |
 
-- Stripe payment adapter;
-- selected AI provider adapter;
-- email provider adapter;
-- internal delivery simulator / future delivery adapter.
+Hosted Supabase database URLs require `sslmode=verify-full`; disposable local CI/test PostgreSQL does not. The health/home scaffold runs without database credentials. CI provisions its own ephemeral PostgreSQL and uses no hosted credentials. On Vercel, isolated values go to **Preview only**; Production is configured separately by the project owner. `TEST_DATABASE_URL` and migration-owner credentials must never reach a live runtime.
 
-Provider SDKs should be concentrated here or behind equivalent adapter boundaries rather than spread through core domain logic.
+---
 
-### `src/lib/`
+## 7. Database: Generate, Migrate, Seed, Check
 
-Cross-cutting infrastructure shared by modules, such as:
+| Command | What it does |
+|---|---|
+| `pnpm db:generate` | `prisma generate` — regenerates the Prisma client |
+| `pnpm db:migrate` | `prisma migrate deploy` — applies pending migrations |
+| `pnpm db:seed` | `tsx prisma/seed.ts` — idempotently adds/updates the synthetic seed baseline without acting as a full reset |
+| `pnpm db:check` | `tsx prisma/check.ts` — database integrity/sanity check |
 
-- database client/access support;
-- authentication/session helpers;
-- common validation primitives;
-- structured logging;
-- environment/configuration parsing.
+**Pending — [#271](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/271):** a dedicated, deterministic *demo reset* workflow and documented known demo accounts do not exist yet. The commands above are real and runnable today; the guaranteed-repeatable "reset to known demo state" flow will be documented once #271 merges.
 
-Cross-cutting code should remain narrow; domain business rules should not become an unstructured global utility layer.
+---
 
-### `prisma/`
+## 8. Development Server
 
-Database schema, reviewed migrations and repeatable seed support.
+```bash
+pnpm dev
+```
 
-The detailed SRS data dictionary/logical ERD guides this implementation, but exact Prisma model names/indexes may be refined where implementation requires it without changing approved business semantics.
+Runs `next dev` (default `http://localhost:3000`).
 
-### `tests/`
+---
 
-Automated verification grouped by test level:
+## 9. Lint, Type-check, Test, Build
 
-- `unit/` — isolated deterministic rules;
-- `integration/` — persistence, transaction and adapter boundaries;
-- `e2e/` — complete customer/administrator journeys.
+| Command | What it does |
+|---|---|
+| `pnpm lint` | `eslint . --max-warnings=0` |
+| `pnpm typecheck` | `prisma generate && next typegen && tsc --noEmit` |
+| `pnpm test` | `vitest run` — unit/contract tests |
+| `pnpm test:db` | `vitest run --config vitest.db.config.ts` — DB integration tests |
+| `pnpm build` | `prisma generate && next build` |
 
-Additional fixtures/helpers may be added under the test hierarchy when implementation begins.
+CI runs `typecheck → lint → test → build` in the `quality` job. `test:db` runs separately in the isolated `database` job.
 
-### `public/`
+---
 
-Static public assets required by the Next.js application.
+## 10. Database Integration Tests Locally
 
-Copyright/asset approval rules still apply to public/promotional media.
+CI's `database` job provisions ephemeral PostgreSQL 17.6, applies `.github/workflows/ci-database.sql`, generates the Prisma client, then runs `pnpm test:db`. To reproduce locally: run Postgres 17.6 (e.g. via Docker), apply the same SQL script, set `TEST_DATABASE_URL` (schema `palermo_test`) and `PALERMO_DATABASE_ENV=development`, then run `pnpm db:generate && pnpm test:db`. Never point this at a hosted/shared database.
 
-### `.github/workflows/`
+---
 
-CI automation such as build/type/lint/test/security checks once application implementation starts.
+## 11. Continuous Integration
 
-## Dependency direction
+`.github/workflows/ci.yml` runs on every PR and push to `main`, with three jobs: `quality` (install → typecheck → lint → test → build), `database` (ephemeral Postgres → provision → generate → `test:db`), and `gate` (requires both to succeed).
 
-The target structure should preserve these principles:
+A separate `.github/workflows/governance-gate.yml` workflow evaluates PR authorisation metadata. Owner-authored PRs pass directly; contributor-authored PRs require an `APPROVED` owner review whose `commit_id` matches the current PR head. The workflow is read-only and never checks out or executes contributor code. Whether this status is configured as a required branch-protection check remains tracked by #328 and must not be inferred solely from the workflow existing.
 
-- UI/routes call approved application/domain services;
-- domain rules do not depend directly on provider SDKs;
-- integrations implement internal provider contracts;
-- Prisma/database access remains on trusted server-side paths;
-- external/user inputs are validated at trust boundaries;
-- customer/admin authorisation is enforced independently of UI visibility;
-- payment, inventory and order invariants are protected by server logic plus persistence controls.
+---
 
-The folder structure is intended to make these boundaries visible in the repository.
+## 12. Preview Deployment Interpretation
 
-## Configuration strategy
+Vercel auto-deploys a Preview per PR; find it via the `Vercel` check on the PR or the bot's environment link. A failing Vercel check ("Deployment has failed") is a build failure separate from the `CI` checks — diagnose via the linked Vercel deployment logs, not the GitHub Actions logs. Preview uses Preview-scoped env vars only.
 
-Implementation should provide an `.env.example` containing variable names and safe descriptions only.
+---
 
-Secret values must never be committed.
+## 13. Production / Demo Deployment Authority
 
-Configuration should fail early when mandatory environment values are missing/invalid.
+Per [#243](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/243), production/demo deployment configuration on Vercel is performed by the project's technical owner outside source control — not part of the normal contributor PR workflow. Contributors do not perform manual production deployment.
 
-Separate local/test/staging provider credentials should be used rather than sharing production-like secrets across environments.
+---
 
-## Build and execution workflow
+## 14. Common Safe Troubleshooting
 
-Once the application scaffold exists, a normal developer workflow is expected to be:
+| Symptom | Safe next step |
+|---|---|
+| `pnpm install` misbehaves | Check local Node/pnpm exactly match `engines`/`packageManager` |
+| `pnpm typecheck` fails after pulling | It already regenerates Prisma + Next types first — confirm the full command ran, not a partial `tsc` |
+| `pnpm test:db` fails locally | Confirm Postgres 17.6 running, `ci-database.sql` applied, `TEST_DATABASE_URL`/`PALERMO_DATABASE_ENV` set |
+| CI `database` job fails, `quality` passes | Isolated to DB provisioning/`test:db` — check that job's logs specifically |
+| PR `Governance gate` fails | For a contributor-authored PR, confirm the current head has an `APPROVED` owner review on that exact SHA; #328 separately tracks proof/required-check configuration |
+| Vercel Preview looks stale | Confirm the push reached the PR branch; check the `Vercel` check's commit SHA |
+| `pnpm build` fails only for you | CI builds with **no** service credentials configured — a build that needs real env values indicates an unwanted runtime dependency at build time |
 
-1. obtain the repository;
-2. use the project-pinned runtime/package manager;
-3. install locked dependencies;
-4. copy/configure local environment variables from safe documentation;
-5. prepare/apply the development database schema;
-6. seed controlled test data;
-7. run the development server;
-8. execute lint/type/test commands before PR submission.
+---
 
-Exact command names are defined by the implementation scaffold/package scripts rather than fabricated in the SRS before those files exist.
+## 15. Environment Reproducibility — *now confirmed*
 
-## Environment reproducibility
+- Committed dependency lockfile (`pnpm-lock.yaml`) ✅
+- Runtime/package-manager version metadata pinned (`engines`, `packageManager`, `.nvmrc`) ✅
+- Prisma migrations tracked under `prisma/migrations/` ✅
+- Repeatable seed command (`pnpm db:seed`) exists ✅ — full deterministic demo/reset workflow: **Pending #271**
+- `.env.example` present, names-only ✅
+- CI uses the same install/build/test commands as local development ✅
+- Documented setup steps: this document ✅
 
-When implementation begins, reproducibility should be provided by:
+---
 
-- committed dependency lockfile;
-- runtime/package-manager version metadata;
-- reviewed Prisma migrations;
-- repeatable seed command;
-- `.env.example`;
-- CI using the same project configuration;
-- documented setup steps.
+## Verification Note
 
-This reduces "works on my machine" differences across team members.
+*(To be completed by whoever runs this runbook against a clean checkout. Do not mark a step verified without having actually run it.)*
 
-## Final SRS interpretation
+- [ ] `pnpm install --frozen-lockfile` — ran on a clean checkout
+- [ ] `pnpm dev` — server started successfully
+- [ ] `pnpm lint` — ran successfully
+- [ ] `pnpm typecheck` — ran successfully
+- [ ] `pnpm test` — ran successfully
+- [ ] `pnpm build` — ran successfully
+- [ ] `pnpm db:generate` — ran successfully
+- [ ] Links and paths referenced in this document resolve
 
-This development-environment section establishes the technology and organisational baseline required for implementation.
-
-It intentionally distinguishes:
-
-- approved architecture/technology decisions;
-- current repository state;
-- proposed folder organisation;
-- details that will only become exact when the application scaffold is created.
-
-This prevents the SRS from presenting non-existent implementation files or unfrozen library/version choices as completed facts.
+Tested by: _______________  Date: _______________
