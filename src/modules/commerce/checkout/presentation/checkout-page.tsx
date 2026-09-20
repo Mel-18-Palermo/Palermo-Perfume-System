@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import type { Stripe, StripeElements, StripePaymentElement } from "@stripe/stripe-js";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
@@ -252,17 +253,18 @@ export function CheckoutPage() {
 
   const busy = stage === "INITIALISING" || stage === "CHECKOUT_SUBMITTING" || stage === "PAYMENT_INITIALISING" || stage === "PAYMENT_PROCESSING" || stage === "VERIFYING_ORDER";
   return <CustomerShell cart={cart} session={session} isLoading={stage === "INITIALISING"}>
-    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]" aria-busy={busy}>
       <section className="space-y-4">
         <h1 className="text-h1">Checkout</h1>
         {busy && <Alert title="Please wait">{stage === "VERIFYING_ORDER" ? "Verifying your order with Palermo." : "Processing your request."}</Alert>}
-        {stage === "AUTH_REQUIRED" && <Alert variant="warning" title="Sign in required">Sign in as a customer to continue.</Alert>}
+        {stage === "AUTH_REQUIRED" && <Alert variant="warning" title="Sign in required">Sign in as a customer to continue. <Link className="font-semibold underline" href="/login?next=/checkout">Sign in</Link></Alert>}
         {message && <Alert variant="warning">{message}</Alert>}
         {profile && <Card><CardHeader><CardTitle>Addresses and delivery</CardTitle></CardHeader><CardContent className="space-y-3">
           <p>Delivery: {profile.deliveryAddress ? [profile.deliveryAddress.recipientName, profile.deliveryAddress.line1, profile.deliveryAddress.suburb].join(", ") : "No saved delivery address."}</p>
           <p>Billing: {profile.billingSameAsDelivery ? "Same as delivery" : profile.billingAddress?.line1 ?? "No saved billing address."}</p>
           {!addressReady && <Alert variant="warning">Add the required delivery and billing addresses in your profile before checkout.</Alert>}
           {methods.length === 0 ? <Alert variant="warning">No delivery methods are currently available.</Alert> : <label className="block">Delivery method<select disabled={controlsFrozen} className="mt-1 min-h-11 w-full rounded-md border border-border bg-surface px-3" value={deliveryMethodId} onChange={(event) => { if (!checkoutInFlightRef.current) setDeliveryMethodId(event.target.value); }}>{methods.map((item) => <option key={item.id} value={item.id}>{item.name} — {money(item.charge)}</option>)}</select></label>}
+          {selectedDeliveryMethod && selectedDeliveryMethod.displayInformation !== null && <p>{selectedDeliveryMethod.displayInformation}</p>}
         </CardContent></Card>}
         {paymentUiActive && <Card><CardHeader><CardTitle>Secure payment</CardTitle></CardHeader><CardContent><div ref={stripeContainerRef}/>{stage === "PAYMENT_READY" && <Button className="mt-4" onClick={() => { void confirmPayment(); }}>Confirm payment</Button>}</CardContent></Card>}
         {stage === "SUCCESS" && confirmedOrder && <Alert variant="success" title="Order confirmed">Order {confirmedOrder.orderNumber} is confirmed. Authoritative total: {money(confirmedOrder.total)}.</Alert>}
