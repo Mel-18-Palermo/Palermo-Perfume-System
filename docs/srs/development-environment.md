@@ -118,9 +118,11 @@ Copy `.env.example` to `.env.local` for local development and fill in only appro
 | `DIRECT_URL` | Prisma migrations connection |
 | `TEST_DATABASE_URL` | Optional disposable test-schema connection (`schema=palermo_test`) |
 | `PALERMO_DATABASE_ENV` | Must be `development` or `preview` for seed/test — never production |
+| `PALERMO_DEMO_SUPABASE_PROJECT_REF` | Exact non-secret isolated development/Preview Supabase project reference permitted for demo reset |
 | `DATABASE_CA_FILE` | Path to the public Supabase root CA cert |
 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Supabase Auth project configuration used by Palermo authentication |
 | `SUPABASE_SERVICE_ROLE_KEY` | Optional, owner-only provisioning/live-test tooling |
+| `PALERMO_DEMO_CUSTOMER_PASSWORD` / `PALERMO_DEMO_ADMIN_PASSWORD` | Owner-supplied demo login secrets; never committed |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe **test-mode only**; secret key never exposed to browser code |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe test-mode publishable key (browser-safe) |
 | `OPENAI_API_KEY` | Server-only OpenAI recommendation-provider credential; optional |
@@ -138,8 +140,21 @@ Hosted Supabase database URLs require `sslmode=verify-full`; disposable local CI
 | `pnpm db:migrate` | `prisma migrate deploy` — applies pending migrations |
 | `pnpm db:seed` | `tsx prisma/seed.ts` — idempotently adds/updates the synthetic seed baseline without acting as a full reset |
 | `pnpm db:check` | `tsx prisma/check.ts` — database integrity/sanity check |
+| `pnpm demo:reset` | Destructively resets only the isolated Palermo application schema, provisions demo Auth identities, reseeds, verifies and validates login/RBAC |
+| `pnpm demo:check` | Read-only verification of the canonical demo state and non-secret state hash |
 
-**Pending — [#271](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/271):** a dedicated, deterministic *demo reset* workflow and documented known demo accounts do not exist yet. The commands above are real and runnable today; the guaranteed-repeatable "reset to known demo state" flow will be documented once #271 merges.
+`pnpm demo:reset` is intentionally separate from `pnpm db:seed`; ordinary seeding remains nondestructive. The reset refuses to run unless `PALERMO_DATABASE_ENV` is `development` or `preview`, Vercel is not Production, the exact Auth origin matches `PALERMO_DEMO_SUPABASE_PROJECT_REF`, the database URL identifies that same explicitly allowlisted project and the private `palermo` schema. Missing or ambiguous configuration fails closed. The reset truncates an explicit list of Palermo application tables without `CASCADE`; it never drops schemas, touches `_prisma_migrations`, or addresses Supabase `auth`, `storage`, `realtime` or `vault` data.
+
+Known login emails are `customer@example.test` and `admin@example.test`. Their passwords come only from `PALERMO_DEMO_CUSTOMER_PASSWORD` and `PALERMO_DEMO_ADMIN_PASSWORD`; owners must supply those secrets out of band and never commit them. Supabase Auth reconciliation is limited to those two `.test` identities. The canonical state restores Demo Citrus and Demo Woody, fixed variants/prices/inventory, the customer cart/profile, `DEMO-001` with succeeded payment and pending `DEMO-TRACK-001`, `DEMO-002` with pending payment and no shipment, the demo administrator permissions, and deterministic quiz/recommendation fixtures. All Palermo sessions and noncanonical application evidence are removed.
+
+For repeatability evidence, run the reset and its read-only check twice and compare the printed non-secret hashes:
+
+```bash
+pnpm demo:reset
+pnpm demo:check
+pnpm demo:reset
+pnpm demo:check
+```
 
 ---
 
@@ -212,7 +227,7 @@ Per [#243](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/243),
 - Committed dependency lockfile (`pnpm-lock.yaml`) ✅
 - Runtime/package-manager version metadata pinned (`engines`, `packageManager`, `.nvmrc`) ✅
 - Prisma migrations tracked under `prisma/migrations/` ✅
-- Repeatable seed command (`pnpm db:seed`) exists ✅ — full deterministic demo/reset workflow: **Pending #271**
+- Repeatable nondestructive seed (`pnpm db:seed`) and guarded deterministic demo reset (`pnpm demo:reset`) exist ✅
 - `.env.example` present, names-only ✅
 - CI uses the same install/build/test commands as local development ✅
 - Documented setup steps: this document ✅
