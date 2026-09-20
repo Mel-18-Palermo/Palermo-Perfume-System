@@ -199,5 +199,130 @@ export function inventoryCases(db: PrismaClient): void {
       expect(await db.inventoryReservation.findUniqueOrThrow({ where: { id: reservation.reservationId } })).toMatchObject({ status: "EXPIRED" });
       expect(data(await timed.get(variantId))).toMatchObject({ onHand: 4, reserved: 0, available: 4 });
     });
+
+
+    it("lists authoritative inventory with canonical derived availability and low-stock state", async () => {
+      const variantId = await variant("ADMIN-READ", {
+        onHand: 8,
+        reserved: 3,
+        threshold: 5,
+      });
+
+      const created = await db.perfumeVariant.findUniqueOrThrow({
+        where: { id: variantId },
+      });
+
+      const page = data(await service.listInventory(actor, {
+        page: 1,
+        pageSize: 100,
+      }));
+
+      const row = page.items.find(item => item.variantId === variantId);
+
+      expect(row).toBeDefined();
+      expect(row).toMatchObject({
+        variantId,
+        sku: created.sku,
+        onHand: 8,
+        reserved: 3,
+        available: 5,
+        lowStockThreshold: 5,
+        lowStock: true,
+      });
+      expect(row?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    });
+
+    it("paginates inventory and batches deterministically and rejects invalid administration reads", async () => {
+      const forbidden = { adminId: ids.admin, permissions: [] } as const;
+
+      const inventoryForbidden = await service.listInventory(forbidden, {});
+      expect(inventoryForbidden.ok).toBe(false);
+      if (!inventoryForbidden.ok) {
+        expect(inventoryForbidden.error.code).toBe("FORBIDDEN");
+      }
+
+      const batchesForbidden = await service.listBatches(forbidden, {});
+      expect(batchesForbidden.ok).toBe(false);
+      if (!batchesForbidden.ok) {
+        expect(batchesForbidden.error.code).toBe("FORBIDDEN");
+      }
+
+      for (const request of [
+        { page: 0 },
+        { page: 1.5 },
+        { pageSize: 0 },
+        { pageSize: 101 },
+      ]) {
+        const inventoryResult = await service.listInventory(actor, request);
+        expect(inventoryResult.ok).toBe(false);
+        if (!inventoryResult.ok) {
+          expect(inventoryResult.error.code).toBe("VALIDATION_ERROR");
+        }
+
+        const batchResult = await service.listBatches(actor, request);
+        expect(batchResult.ok).toBe(false);
+        if (!batchResult.ok) {
+          expect(batchResult.error.code).toBe("VALIDATION_ERROR");
+        }
+      }
+
+      const expectedInventory = await db.inventoryBalance.findMany({
+        orderBy: [{ variantId: "asc" }],
+        take: 2,
+        select: { variantId: true },
+      });
+
+      const inventoryPage = data(await service.listInventory(actor, {
+        page: 1,
+        pageSize: 2,
+      }));
+
+      expect(inventoryPage.items.map(item => item.variantId))
+        .toEqual(expectedInventory.map(item => item.variantId));
+
+      const expectedBatches = await db.productionBatch.findMany({
+        orderBy: [
+          { productionDate: "desc" },
+          { id: "asc" },
+        ],
+        take: 2,
+        select: { id: true },
+      });
+
+      const batchPage = data(await service.listBatches(actor, {
+        page: 1,
+        pageSize: 2,
+      }));
+
+      expect(batchPage.items.map(item => item.id))
+        .toEqual(expectedBatches.map(item => item.id));
+    });
+
+    it("returns canonical production-batch read DTOs", async () => {
+      const variantId = await variant("ADMIN-BATCH-READ");
+
+      const created = data(await service.recordBatch(actor, {
+        variantId,
+        batchCode: `READ-${randomUUID().slice(0, 8)}`,
+        producedQuantity: 11,
+        productionDate: "2026-09-07T12:00:00.000Z",
+        idempotencyKey: `record:${randomUUID()}`,
+      }));
+
+      const page = data(await service.listBatches(actor, {
+        page: 1,
+        pageSize: 100,
+      }));
+
+      expect(page.items.find(item => item.id === created.id)).toEqual({
+        id: created.id,
+        variantId,
+        batchCode: created.batchCode,
+        producedQuantity: 11,
+        status: "RECORDED",
+        productionDate: "2026-09-07T12:00:00.000Z",
+        releasedAt: null,
+      });
+    });
   });
 }
