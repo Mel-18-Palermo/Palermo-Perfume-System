@@ -148,7 +148,7 @@ export function AdminProductionBatches({
       </div>
 
       <p className="text-sm text-text-muted">
-        Mock data preview · Review recorded batches before release.
+        Review recorded batches before release.
       </p>
 
       <p role="status" className="text-sm">{notice}</p>

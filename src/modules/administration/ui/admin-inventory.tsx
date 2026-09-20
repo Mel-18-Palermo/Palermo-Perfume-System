@@ -80,7 +80,7 @@ export function AdminInventory() {
             Inventory
           </h2>
           <p className="mt-2 text-sm text-text-muted">
-            Mock data preview · Variant stock balances
+            Variant stock balances
           </p>
         </div>
 
