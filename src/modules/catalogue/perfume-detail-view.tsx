@@ -29,7 +29,6 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
   const [selectedVariantId, setSelectedVariantId] = React.useState<string | null>(null);
   const [currentId, setCurrentId] = React.useState<string>(id);
 
-  // When id prop changes, immediately update tracking id and reset states during render
   if (id !== currentId) {
     setCurrentId(id);
     setPerfume(null);
@@ -219,7 +218,8 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
                       <div className="flex w-full items-center justify-between">
                         <div className="text-sm">
                           <p id={`variant-label-${v.id}`} className="font-semibold text-text">
-                            {v.bottleSize} {v.concentration ? `· ${v.concentration}` : ""}
+                            {v.bottleSize}
+                            {v.concentration ? ` \u00B7 ${v.concentration}` : ""}
                           </p>
                           <p className="text-xs text-text-muted mt-0.5">{formatMoney(v.price)}</p>
                         </div>
