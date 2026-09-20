@@ -221,15 +221,20 @@ Per [#243](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/243),
 
 ## Verification Note
 
-*(To be completed by whoever runs this runbook against a clean checkout. Do not mark a step verified without having actually run it.)*
+Verified against a clean worktree of the recovery branch on **20 September 2026**.
 
-- [ ] `pnpm install --frozen-lockfile` — ran on a clean checkout
-- [ ] `pnpm dev` — server started successfully
-- [ ] `pnpm lint` — ran successfully
-- [ ] `pnpm typecheck` — ran successfully
-- [ ] `pnpm test` — ran successfully
-- [ ] `pnpm build` — ran successfully
-- [ ] `pnpm db:generate` — ran successfully
-- [ ] Links and paths referenced in this document resolve
+- [x] `pnpm install --frozen-lockfile` — completed successfully from a clean worktree
+- [x] `pnpm dev` — Next.js 16.3.3 started successfully on port 3010
+- [x] `GET /api/health` — returned `{"status":"ok"}`
+- [x] `pnpm db:generate` — completed successfully
+- [x] `pnpm lint` — completed successfully
+- [x] `pnpm typecheck` — completed successfully
+- [x] `pnpm test` — 10 test files, 73/73 tests passed
+- [x] `pnpm build` — production build completed successfully
+- [x] Documented repository paths were checked and resolve on the verified revision
+- [x] Runbook secret-pattern scan completed with no committed credential values detected
 
-Tested by: _______________  Date: _______________
+Database migration, seed, connectivity check, and `test:db` were **not** executed as part of this documentation verification because the clean worktree was not connected to a disposable local PostgreSQL instance. Their command definitions and CI execution paths were instead verified against `package.json`, `.github/workflows/ci.yml`, `.github/workflows/ci-database.sql`, `prisma/seed.ts`, `prisma/check.ts`, and `tests/integration/database.test.ts`. No hosted or shared database was used for this documentation verification.
+
+Tested by: `HexCodeYT`
+Date: **20 September 2026**
