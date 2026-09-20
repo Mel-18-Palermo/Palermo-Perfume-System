@@ -275,6 +275,12 @@ export function CartView({
                               &ldquo;{item.customisation.giftMessage}&rdquo;
                             </p>
                           )}
+                        {item.customisation.giftPackagingId != null && (
+                          <p>
+                            <span className="font-semibold text-text">Gift packaging: </span>
+                            Selected
+                          </p>
+                        )}
                         </div>
                       )}
                     </div>
