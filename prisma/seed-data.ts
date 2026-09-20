@@ -12,6 +12,8 @@ export const ids = {
   invoice: seedId(45), shipment: seedId(46), reservation: seedId(47), batch: seedId(48),
   role: seedId(50), admin: seedId(51), permission: seedId(52), inventoryPermission: seedId(53), reportingPermission: seedId(54),
   quiz: seedId(60), question: seedId(61), option: seedId(62), attempt: seedId(63), recommendation: seedId(64),
+  citrusOpeningMovement: seedId(70), woodyOpeningMovement: seedId(71), paidOrderMovement: seedId(72),
+  trackingEvent: seedId(73), paidOrderItem: seedId(80), pendingOrderItem: seedId(81),
 } as const;
 
 const addressSnapshot = {
@@ -19,7 +21,7 @@ const addressSnapshot = {
   suburb: "Example", state: "VIC", postcode: "3000", country: "AU",
 };
 
-async function seedRecords(tx: Prisma.TransactionClient): Promise<void> {
+export async function seedCanonicalRecords(tx: Prisma.TransactionClient): Promise<void> {
   for (const customer of [
     { id: ids.customer, email: "customer@example.test", name: "Demo Customer" },
     { id: ids.otherCustomer, email: "other@example.test", name: "Other Demo Customer" },
@@ -71,7 +73,8 @@ async function seedRecords(tx: Prisma.TransactionClient): Promise<void> {
       variantId: record.variantId, onHand: record.stock, reserved: record.reserved, lowStockThreshold: 3, updatedAt: seedTime,
     } });
     await tx.inventoryMovement.upsert({ where: { reference: `seed-opening-${record.sku}` }, update: {}, create: {
-      id: seedId(record.variantId === ids.variant ? 70 : 71), variantId: record.variantId,
+      id: record.variantId === ids.variant ? ids.citrusOpeningMovement : ids.woodyOpeningMovement,
+      variantId: record.variantId,
       quantityDelta: record.stock + (record.variantId === ids.variant ? 2 : 0), reason: "DEMO_OPENING_STOCK",
       reference: `seed-opening-${record.sku}`, createdAt: seedTime,
     } });
@@ -102,7 +105,7 @@ async function seedRecords(tx: Prisma.TransactionClient): Promise<void> {
       deliveryAddressSnapshot: addressSnapshot, billingAddressSnapshot: addressSnapshot,
       deliveryMethodSnapshot: { id: ids.delivery, name: "Demo delivery", chargeMinor: 1000, currency: "AUD" }, placedAt: seedTime,
     } });
-    const itemId = seedId(record.paid ? 80 : 81);
+    const itemId = record.paid ? ids.paidOrderItem : ids.pendingOrderItem;
     await tx.orderItem.upsert({ where: { id: itemId }, update: {}, create: {
       id: itemId, orderId: record.id, variantId: ids.variant, skuSnapshot: "DEMO-CITRUS-50", nameSnapshot: "Demo Citrus", unitPriceMinor: 12000, quantity: 2,
     } });
@@ -116,7 +119,7 @@ async function seedRecords(tx: Prisma.TransactionClient): Promise<void> {
     currency: "AUD", paymentReferenceSnapshot: "demo-verified-payment", issuedAt: seedTime,
   } });
   await tx.inventoryMovement.upsert({ where: { reference: "seed-paid-order" }, update: {}, create: {
-    id: seedId(72), variantId: ids.variant, quantityDelta: -2, reason: "DEMO_ORDER_COMMIT", reference: "seed-paid-order", createdAt: seedTime,
+    id: ids.paidOrderMovement, variantId: ids.variant, quantityDelta: -2, reason: "DEMO_ORDER_COMMIT", reference: "seed-paid-order", createdAt: seedTime,
   } });
   await tx.inventoryReservation.upsert({ where: { id: ids.reservation }, update: {}, create: {
     id: ids.reservation, orderId: ids.pendingOrder, variantId: ids.variant, quantity: 2,
@@ -125,8 +128,8 @@ async function seedRecords(tx: Prisma.TransactionClient): Promise<void> {
   await tx.shipment.upsert({ where: { orderId: ids.paidOrder }, update: {}, create: {
     id: ids.shipment, orderId: ids.paidOrder, trackingReference: "DEMO-TRACK-001", updatedAt: seedTime,
   } });
-  await tx.trackingEvent.upsert({ where: { id: seedId(73) }, update: {}, create: {
-    id: seedId(73), shipmentId: ids.shipment, status: "PENDING", description: "Awaiting simulated dispatch.", occurredAt: seedTime,
+  await tx.trackingEvent.upsert({ where: { id: ids.trackingEvent }, update: {}, create: {
+    id: ids.trackingEvent, shipmentId: ids.shipment, status: "PENDING", description: "Awaiting simulated dispatch.", occurredAt: seedTime,
   } });
   await tx.productionBatch.upsert({ where: { id: ids.batch }, update: {}, create: {
     id: ids.batch, variantId: ids.variant, batchCode: "DEMO-BATCH-001", producedQuantity: 5, productionDate: seedTime,
@@ -154,5 +157,5 @@ async function seedRecords(tx: Prisma.TransactionClient): Promise<void> {
 
 /** Insert missing demo rows only. Existing business/history rows are never reset by re-seeding. */
 export async function seedCore(db: PrismaClient): Promise<void> {
-  await db.$transaction(seedRecords, { timeout: 60_000 });
+  await db.$transaction(seedCanonicalRecords, { timeout: 60_000 });
 }

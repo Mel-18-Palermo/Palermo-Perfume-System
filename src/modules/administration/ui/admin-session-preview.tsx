@@ -1,58 +1,128 @@
-import type { ReactNode } from "react";
+"use client";
 
-import { api as defaultApi, createApiClient } from "@/lib/api";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import type { Session } from "@/contracts/auth";
+import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 type AdminSessionPreviewProps = Readonly<{
   children: ReactNode;
 }>;
 
-export async function AdminSessionPreview({
+type SessionState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; session: Session };
+
+export function AdminSessionPreview({
   children,
 }: AdminSessionPreviewProps) {
-  const isDemo = process.env.NODE_ENV === "development";
-  let client = defaultApi;
+  const [state, setState] = useState<SessionState>({
+    status: "loading",
+  });
+  const [reloadToken, setReloadToken] = useState(0);
 
-  if (isDemo) {
-    const { createMockApi } = await import("@/lib/api/mocks");
-    client = createApiClient(createMockApi({ actor: "ADMIN" }));
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSession() {
+      try {
+        const result = await api.auth.getSession(undefined);
+
+        if (!active) return;
+
+        setState(
+          result.ok
+            ? { status: "ready", session: result.data }
+            : { status: "error", message: result.error.message },
+        );
+      } catch {
+        if (active) {
+          setState({
+            status: "error",
+            message: "The account service is temporarily unavailable.",
+          });
+        }
+      }
+    }
+
+    void loadSession();
+
+    return () => {
+      active = false;
+    };
+  }, [reloadToken]);
+
+  function retry() {
+    setState({ status: "loading" });
+    setReloadToken(value => value + 1);
   }
 
-  const result = await client.auth.getSession(undefined);
+  if (state.status === "loading") {
+    return <p role="status">Checking administrator session…</p>;
+  }
 
-  if (!result.ok) {
+  const user = state.status === "ready" ? state.session.user : null;
+
+  if (user?.role === "ADMIN") {
     return (
-      <section aria-labelledby="admin-session-error">
-        <h1 id="admin-session-error" className="text-h1 font-bold">
-          Administration unavailable
-        </h1>
-        <p role="alert" className="mt-4 text-text-muted">
-          {result.error.message}
+      <div className="space-y-6">
+        <p className="text-sm text-text-muted">
+          Administrator: {user.displayName}
         </p>
-      </section>
+        {children}
+      </div>
     );
   }
 
-  const user = result.data.user;
+  const heading =
+    state.status === "error"
+      ? "Administrator session unavailable"
+      : user
+        ? "Access denied"
+        : "Administrator sign-in required";
 
-  if (!user || user.role !== "ADMIN") {
-    return (
-      <section aria-labelledby="admin-access-heading">
-        <h1 id="admin-access-heading" className="text-h1 font-bold">
-          {user ? "Access denied" : "Sign-in required"}
-        </h1>
-        <p className="mt-4 text-text-muted">
-          An administrator session is required to view this area.
-        </p>
-      </section>
-    );
-  }
+  const message =
+    state.status === "error"
+      ? state.message
+      : user
+        ? "The current account is not an administrator."
+        : "No signed-in administrator session was found.";
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-text-muted">
-        {isDemo ? "Mock admin preview" : "Administrator"}: {user.displayName}
-      </p>
-      {children}
+      <section
+        aria-labelledby="admin-session-heading"
+        className="space-y-3 rounded-lg border border-border bg-surface p-5"
+      >
+        <h1
+          id="admin-session-heading"
+          className="text-h3 font-semibold"
+        >
+          {heading}
+        </h1>
+
+        <p role="alert" className="text-sm text-text-muted">
+          {message}
+        </p>
+
+        <Button variant="outline" onClick={retry}>
+          Check session again
+        </Button>
+
+        {isDevelopment && (
+          <p className="text-sm text-text-muted">
+            Development UI preview only. No administrator access has
+            been established. Real operations still require server
+            authorization; mock screens are labelled separately.
+          </p>
+        )}
+      </section>
+
+      {isDevelopment ? children : null}
     </div>
   );
 }
