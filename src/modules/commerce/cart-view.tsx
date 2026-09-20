@@ -363,16 +363,23 @@ export function CartView({
               </p>
             </CardContent>
             <CardFooter className="pt-2">
-              <Button
-                className="w-full min-h-[44px]"
-                size="lg"
-                disabled
-                aria-disabled="true"
-              >
-                {!cart.checkoutEligible
-                  ? "Cart Ineligible for Checkout"
-                  : "Checkout Unavailable (Coming Soon)"}
-              </Button>
+              {cart.checkoutEligible ? (
+                <Link
+                  href="/checkout"
+                  className="inline-flex min-h-[48px] w-full items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-surface transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  Proceed to Checkout
+                </Link>
+              ) : (
+                <Button
+                  className="min-h-[44px] w-full"
+                  size="lg"
+                  disabled
+                  aria-disabled="true"
+                >
+                  Cart Ineligible for Checkout
+                </Button>
+              )}
             </CardFooter>
           </Card>
         </div>
