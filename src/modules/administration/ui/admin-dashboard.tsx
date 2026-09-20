@@ -113,16 +113,20 @@ export function AdminDashboard() {
               Reporting month
             </label>
 
-            <select
+            <input
               id="dashboard-month"
+              type="month"
+              min="1000-01"
+              max="9999-12"
+              required
               value={reportingMonth}
-              onChange={event => changeMonth(event.target.value)}
+              onChange={event => {
+                if (/^\d{4}-\d{2}$/.test(event.target.value)) {
+                  changeMonth(event.target.value);
+                }
+              }}
               className="min-h-[44px] max-w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <option value="2026-08">August 2026</option>
-              <option value="2026-09">September 2026</option>
-              <option value="2026-10">October 2026</option>
-            </select>
+            />
           </div>
         </div>
 
