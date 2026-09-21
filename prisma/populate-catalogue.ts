@@ -1,7 +1,12 @@
 import "../src/lib/db/load-env";
 import { assertDevelopmentDatabase, createDatabase } from "../src/lib/db/connection";
 import { approvedCatalogueManifest } from "./catalogue-data";
-import { assertCatalogueAssets, CatalogueManifestError, populateApprovedCatalogue } from "./catalogue-population";
+import {
+  assertCatalogueAssets,
+  CatalogueManifestError,
+  CataloguePopulationConflictError,
+  populateApprovedCatalogue,
+} from "./catalogue-population";
 
 async function main(): Promise<void> {
   await assertCatalogueAssets(approvedCatalogueManifest);
@@ -17,7 +22,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error(error instanceof CatalogueManifestError
+  console.error(error instanceof CatalogueManifestError || error instanceof CataloguePopulationConflictError
     ? error.message
     : "Catalogue population failed. Check the isolated target, migration state and approved manifest; connection details were not logged.");
   process.exitCode = 1;
