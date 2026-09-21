@@ -4,7 +4,7 @@
 - **Unit & Integration Suite (Vitest)**: 12 test files passed (87/87 tests passed)
 - **Static Analysis (ESLint)**: Clean (0 errors, 0 warnings)
 - **Production Build**: Successful compilation on Next.js 16.3.3 Turbopack with 0 type errors
-- **Live Preview Target**: https://palermo-perfume-system-git-chore-26276d-pawan-sedaras-projects.vercel.app
+- **Live Preview Target**: https://palermo-perfume-system-bz5teluwl-pawan-sedaras-projects.vercel.app/
 
 ## E2E Customer Journey Verification
 - [x] Customer Login & Session Handling (/login)
