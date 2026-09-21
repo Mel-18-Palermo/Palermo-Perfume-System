@@ -6,7 +6,9 @@ export const seedTime = new Date("2026-09-01T00:00:00.000Z");
 export const ids = {
   customer: seedId(1), otherCustomer: seedId(2), address: seedId(3), profile: seedId(4),
   family: seedId(10), note: seedId(11), intensity: seedId(12), perfume: seedId(13), variant: seedId(14),
+  perfumeImage: seedId(15),
   woodyFamily: seedId(20), woodyNote: seedId(21), woodyPerfume: seedId(22), woodyVariant: seedId(23),
+  woodyPerfumeImage: seedId(24),
   cart: seedId(30), cartItem: seedId(31), visitorCart: seedId(32), delivery: seedId(40),
   paidOrder: seedId(41), pendingOrder: seedId(42), payment: seedId(43), pendingPayment: seedId(44),
   invoice: seedId(45), shipment: seedId(46), reservation: seedId(47), batch: seedId(48),
@@ -54,14 +56,17 @@ export async function seedCanonicalRecords(tx: Prisma.TransactionClient): Promis
   } });
   await tx.intensity.upsert({ where: { id: ids.intensity }, update: {}, create: { id: ids.intensity, name: "Light" } });
   for (const record of [
-    { familyId: ids.family, family: "Citrus", noteId: ids.note, note: "Bergamot", perfumeId: ids.perfume, name: "Demo Citrus", slug: "demo-citrus", variantId: ids.variant, sku: "DEMO-CITRUS-50", price: 12000, stock: 12, reserved: 2 },
-    { familyId: ids.woodyFamily, family: "Woody", noteId: ids.woodyNote, note: "Cedar", perfumeId: ids.woodyPerfume, name: "Demo Woody", slug: "demo-woody", variantId: ids.woodyVariant, sku: "DEMO-WOODY-50", price: 15000, stock: 8, reserved: 0 },
+    { familyId: ids.family, family: "Citrus", noteId: ids.note, note: "Bergamot", perfumeId: ids.perfume, name: "Demo Citrus", slug: "demo-citrus", imageId: ids.perfumeImage, imageUrl: "/catalogue/products/demo-citrus/primary.png", imageAlt: "Palermo Demo Citrus Eau de Parfum bottle", variantId: ids.variant, sku: "DEMO-CITRUS-50", price: 12000, stock: 12, reserved: 2 },
+    { familyId: ids.woodyFamily, family: "Woody", noteId: ids.woodyNote, note: "Cedar", perfumeId: ids.woodyPerfume, name: "Demo Woody", slug: "demo-woody", imageId: ids.woodyPerfumeImage, imageUrl: "/catalogue/products/demo-woody/primary.png", imageAlt: "Palermo Demo Woody Eau de Parfum bottle", variantId: ids.woodyVariant, sku: "DEMO-WOODY-50", price: 15000, stock: 8, reserved: 0 },
   ]) {
     await tx.fragranceFamily.upsert({ where: { id: record.familyId }, update: {}, create: { id: record.familyId, name: record.family } });
     await tx.fragranceNote.upsert({ where: { id: record.noteId }, update: {}, create: { id: record.noteId, name: record.note } });
     await tx.perfume.upsert({ where: { id: record.perfumeId }, update: {}, create: {
       id: record.perfumeId, slug: record.slug, name: record.name, description: "Synthetic demonstration perfume.",
       primaryFamilyId: record.familyId, intensityId: ids.intensity, createdAt: seedTime,
+    } });
+    await tx.perfumeImage.upsert({ where: { id: record.imageId }, update: {}, create: {
+      id: record.imageId, perfumeId: record.perfumeId, url: record.imageUrl, alt: record.imageAlt, sortOrder: 0,
     } });
     const noteKey = { perfumeId: record.perfumeId, noteId: record.noteId, layer: "TOP" as const };
     await tx.perfumeNote.upsert({ where: { perfumeId_noteId_layer: noteKey }, update: {}, create: noteKey });
