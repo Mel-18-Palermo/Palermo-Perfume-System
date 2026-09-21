@@ -33,6 +33,9 @@ const noCustomisation: CartCustomisation = {
   giftPackagingId: null,
 };
 
+const formControlClassName =
+  "mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text shadow-sm transition-colors outline-none placeholder:text-text-muted focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
+
 export function PerfumeDetailView({ id, initialCart = null, onCartChange }: PerfumeDetailViewProps) {
   const [perfume, setPerfume] = React.useState<PerfumeDetail | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -330,27 +333,33 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
               <CardContent className="space-y-4 p-6">
                 <h2 className="text-base font-semibold text-text">Add to cart</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="text-sm font-medium text-text">
+                  <label htmlFor="product-quantity" className="text-sm font-medium text-text">
                     Quantity
-                    <input type="number" min={1} max={99} value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" />
+                    <input id="product-quantity" type="number" min={1} max={99} inputMode="numeric" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} className={formControlClassName} />
                   </label>
                   {selectedVariant.customisations.giftPackaging.length > 0 && (
-                    <label className="text-sm font-medium text-text">
+                    <label htmlFor="gift-packaging" className="text-sm font-medium text-text">
                       Gift packaging
-                      <select value={giftPackagingId} onChange={(event) => setGiftPackagingId(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm">
+                      <select id="gift-packaging" value={giftPackagingId} onChange={(event) => setGiftPackagingId(event.target.value)} className={formControlClassName}>
                         <option value="">No gift packaging</option>
                         {selectedVariant.customisations.giftPackaging.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
                       </select>
                     </label>
                   )}
-                  {selectedVariant.customisations.personalisedLabel && <label className="text-sm font-medium text-text">Personalised label<input value={personalisedLabel} maxLength={100} onChange={(event) => setPersonalisedLabel(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" /></label>}
-                  {selectedVariant.customisations.engravingName && <label className="text-sm font-medium text-text">Engraving name<input value={engravingName} maxLength={100} onChange={(event) => setEngravingName(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" /></label>}
-                  {selectedVariant.customisations.giftMessage && <label className="text-sm font-medium text-text sm:col-span-2">Gift message<textarea value={giftMessage} maxLength={100} onChange={(event) => setGiftMessage(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" /></label>}
+                  {selectedVariant.customisations.personalisedLabel && <label htmlFor="personalised-label" className="text-sm font-medium text-text">Personalised label<input id="personalised-label" value={personalisedLabel} maxLength={100} onChange={(event) => setPersonalisedLabel(event.target.value)} className={formControlClassName} /></label>}
+                  {selectedVariant.customisations.engravingName && <label htmlFor="engraving-name" className="text-sm font-medium text-text">Engraving name<input id="engraving-name" value={engravingName} maxLength={100} onChange={(event) => setEngravingName(event.target.value)} className={formControlClassName} /></label>}
+                  {selectedVariant.customisations.giftMessage && <label htmlFor="gift-message" className="text-sm font-medium text-text sm:col-span-2">Gift message<textarea id="gift-message" value={giftMessage} maxLength={100} onChange={(event) => setGiftMessage(event.target.value)} className={formControlClassName} /></label>}
                 </div>
                 {cartMessage && <Alert variant={cartMessage === "Added to your cart." ? "success" : "danger"} role="status">{cartMessage}</Alert>}
-                <Button type="button" onClick={() => void handleAddToCart()} isLoading={isAdding}>Add to Cart</Button>
+                <Button type="button" onClick={() => void handleAddToCart()} isLoading={isAdding} className="w-full sm:w-auto">Add to Cart</Button>
               </CardContent>
             </Card>
+          )}
+
+          {!selectedVariant && (
+            <Alert variant="warning" role="status">
+              This fragrance is currently unavailable to add to your cart.
+            </Alert>
           )}
 
           <Card className="border-border">
