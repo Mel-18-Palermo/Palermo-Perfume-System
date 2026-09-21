@@ -12,7 +12,7 @@ const expectedCounts = {
   collection: 0, collectionPerfume: 0, customer: 2, deliveryMethod: 1, fragranceFamily: 2,
   fragranceIdentity: 1, fragranceNote: 2, fragranceProfile: 1, identitySession: 0, intensity: 1,
   inventoryBalance: 2, inventoryMovement: 3, inventoryReservation: 1, invoice: 1, order: 2,
-  orderItem: 2, payment: 2, perfume: 2, perfumeImage: 0, perfumeNote: 2, perfumeSuitability: 0,
+  orderItem: 2, payment: 2, perfume: 2, perfumeImage: 2, perfumeNote: 2, perfumeSuitability: 0,
   perfumeVariant: 2, permission: 3, productionBatch: 1, profileFavouriteNote: 1, promotion: 0,
   quiz: 1, quizAttempt: 1, quizOption: 1, quizQuestion: 1, quizResponse: 1, recommendationItem: 1,
   recommendationRun: 1, rolePermission: 3, shipment: 1, suitabilityTag: 0, trackingEvent: 1,
@@ -89,14 +89,21 @@ export async function verifyDemoState(db: PrismaClient, expectedAuthIds?: DemoAu
 
   const catalogue = await db.perfume.findMany({ orderBy: { id: "asc" }, select: {
     id: true, name: true, slug: true, status: true,
+    images: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }], select: {
+      id: true, url: true, alt: true, sortOrder: true,
+    } },
     variants: { orderBy: { id: "asc" }, select: { id: true, sku: true, priceMinor: true, currency: true,
       inventory: { select: { onHand: true, reserved: true, lowStockThreshold: true, updatedAt: true } } } },
   } });
   exact("catalogue and inventory", catalogue, [
-    { id: ids.perfume, name: "Demo Citrus", slug: "demo-citrus", status: "ACTIVE", variants: [{ id: ids.variant,
+    { id: ids.perfume, name: "Demo Citrus", slug: "demo-citrus", status: "ACTIVE",
+      images: [{ id: ids.perfumeImage, url: "/catalogue/products/demo-citrus/primary.png",
+        alt: "Palermo Demo Citrus Eau de Parfum bottle", sortOrder: 0 }], variants: [{ id: ids.variant,
       sku: "DEMO-CITRUS-50", priceMinor: 12000, currency: "AUD",
       inventory: { onHand: 12, reserved: 2, lowStockThreshold: 3, updatedAt: seedTime } }] },
-    { id: ids.woodyPerfume, name: "Demo Woody", slug: "demo-woody", status: "ACTIVE", variants: [{ id: ids.woodyVariant,
+    { id: ids.woodyPerfume, name: "Demo Woody", slug: "demo-woody", status: "ACTIVE",
+      images: [{ id: ids.woodyPerfumeImage, url: "/catalogue/products/demo-woody/primary.png",
+        alt: "Palermo Demo Woody Eau de Parfum bottle", sortOrder: 0 }], variants: [{ id: ids.woodyVariant,
       sku: "DEMO-WOODY-50", priceMinor: 15000, currency: "AUD",
       inventory: { onHand: 8, reserved: 0, lowStockThreshold: 3, updatedAt: seedTime } }] },
   ]);
