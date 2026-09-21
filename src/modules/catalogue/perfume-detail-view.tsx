@@ -201,6 +201,13 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
   const topNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "TOP");
   const middleNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "MIDDLE");
   const baseNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "BASE");
+  const suitabilityTags = [
+    ...perfume.suitability.season,
+    ...perfume.suitability.occasion,
+    ...perfume.suitability.daypart,
+    ...perfume.suitability.mood,
+    ...perfume.suitability.weather,
+  ];
 
   const displayImage = perfume.images && perfume.images.length > 0 ? perfume.images[0] : null;
 
@@ -393,9 +400,9 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
             </CardContent>
           </Card>
 
-          {perfume.suitability && (
-            <div className="space-y-3 pt-2 text-xs text-text-muted">
-              <h3 className="font-semibold text-text uppercase tracking-wider">Atmospheric Suitability</h3>
+          <section className="space-y-3 pt-2 text-xs text-text-muted" aria-labelledby="atmospheric-suitability-heading">
+            <h3 id="atmospheric-suitability-heading" className="font-semibold text-text uppercase tracking-wider">Atmospheric Suitability</h3>
+            {suitabilityTags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {perfume.suitability.season?.map((s) => (
                   <Badge key={s.id} variant="neutral" className="text-xs">{s.label}</Badge>
@@ -413,8 +420,10 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
                   <Badge key={w.id} variant="neutral" className="text-xs">{w.label}</Badge>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p>Suitability information is currently unavailable.</p>
+            )}
+          </section>
         </div>
       </div>
     </div>
