@@ -79,7 +79,7 @@ Requirements: D-003–D-007, D-014–D-017, D-034–D-047, D-057–D-072, D-096,
 
 ## Approved final catalogue population
 
-`catalogue-data.ts` is the version-controlled source for approved real catalogue vocabulary, products, images, variants and deterministic opening inventory. It is intentionally separate from the synthetic `seed-data.ts` fixtures. Until commercial facts are owner-approved, its product and vocabulary arrays remain empty; placeholders must never be presented as real catalogue content.
+`catalogue-data.ts` is the version-controlled source for approved real catalogue vocabulary, products, images, variants and deterministic opening inventory. It is intentionally separate from the synthetic `seed-data.ts` fixtures. Only owner-approved commercial facts may be added; placeholders must never be presented as real catalogue content. Opening quantities are deterministic demo-system inventory and are not claims about Palermo's warehouse stock.
 
 After the manifest and matching assets have been reviewed, populate an explicitly isolated development/Preview target with:
 
@@ -94,9 +94,11 @@ The command uses `DIRECT_URL` and the same `assertDevelopmentDatabase` boundary 
 Image assets use these version-controlled paths:
 
 ```text
-public/catalogue/products/<slug>/primary.png
-public/catalogue/products/<slug>/detail-01.png
-public/catalogue/products/<slug>/detail-02.png
+public/catalogue/products/<slug>/primary.webp
+public/catalogue/products/<slug>/detail-01.webp
+public/catalogue/products/<slug>/detail-02.webp
 ```
+
+WebP is preferred for approved final-catalogue assets; PNG remains supported for existing deterministic demo imagery. Official source provenance for locally stored final-catalogue imagery is recorded in `docs/catalogue/source-provenance.md`.
 
 For #286, first approve the real catalogue facts and images, then populate and verify the isolated environment. Only after that acceptance should the deterministic reset incorporate the final manifest and should `demo-state.ts` expectations/hash be deliberately updated. This foundation does not make either change early.
