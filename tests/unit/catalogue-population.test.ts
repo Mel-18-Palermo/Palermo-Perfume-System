@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { ApprovedCatalogueManifest } from "../../prisma/catalogue-data";
+import {
+  approvedCatalogueManifest,
+  type ApprovedCatalogueManifest,
+} from "../../prisma/catalogue-data";
 import {
   assertApprovedCatalogueManifest,
   assertCatalogueAssets,
@@ -74,5 +77,60 @@ describe("approved catalogue manifest", () => {
   it("checks declared assets before a database connection is created", async () => {
     await expect(assertCatalogueAssets(fixture(), "/tmp/palermo-catalogue-assets-not-present"))
       .rejects.toBeInstanceOf(CatalogueManifestError);
+  });
+
+  it("validates the ten approved Palermo products and their local primary assets", async () => {
+    expect(validateApprovedCatalogueManifest(approvedCatalogueManifest)).toEqual([]);
+    await expect(assertCatalogueAssets(approvedCatalogueManifest)).resolves.toBeUndefined();
+
+    expect(approvedCatalogueManifest.products).toHaveLength(10);
+    expect(new Set(approvedCatalogueManifest.products.map(product => product.id))).toHaveProperty("size", 10);
+
+    const variants = approvedCatalogueManifest.products.flatMap(product => product.variants);
+    expect(new Set(variants.map(variant => variant.sku))).toHaveProperty("size", 10);
+    for (const variant of variants) {
+      expect(variant).toMatchObject({
+        priceMinor: 3500,
+        currency: "AUD",
+        bottleSize: "50 mL",
+        concentration: "Eau de Parfum",
+      });
+      expect(variant.openingInventory).toMatchObject({
+        onHand: variant.availability === "AVAILABLE" ? 10 : 0,
+        reserved: 0,
+        lowStockThreshold: 3,
+        movementReference: `catalogue-opening-${variant.sku}`,
+      });
+    }
+
+    const bySlug = new Map(approvedCatalogueManifest.products.map(product => [product.slug, product]));
+    expect(bySlug.get("baran")?.variants[0]).toMatchObject({
+      sku: "W263",
+      availability: "UNAVAILABLE",
+    });
+    expect(
+      approvedCatalogueManifest.products
+        .filter(product => product.slug !== "baran")
+        .every(product => product.variants[0]?.availability === "AVAILABLE"),
+    ).toBe(true);
+    expect(
+      approvedCatalogueManifest.products.every(product =>
+        product.images[0]?.url === `/catalogue/products/${product.slug}/primary.webp`),
+    ).toBe(true);
+
+    expect(Object.fromEntries(
+      approvedCatalogueManifest.products.map(product => [product.slug, product.notes.length]),
+    )).toEqual({
+      "golden-dust": 7,
+      candy: 11,
+      "saphire-chocolate": 6,
+      vanilla: 10,
+      "candy-summer": 9,
+      "musk-rose": 5,
+      "palermo-gold": 17,
+      "palermo-sport": 0,
+      "palermo-woman": 0,
+      baran: 0,
+    });
   });
 });

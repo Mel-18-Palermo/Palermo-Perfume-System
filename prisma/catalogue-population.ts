@@ -12,7 +12,7 @@ import {
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const assetNamePattern = /^(?:primary|detail-[0-9]{2})\.png$/;
+const assetNamePattern = /^(?:primary|detail-[0-9]{2})\.(?:png|webp)$/;
 
 export class CatalogueManifestError extends Error {
   constructor(readonly issues: readonly string[]) {
@@ -105,7 +105,9 @@ export function validateApprovedCatalogueManifest(manifest: ApprovedCatalogueMan
     }
     if (product.status !== "ACTIVE") issues.push(`Product ${product.slug} must use ACTIVE status.`);
     if (!familyIds.has(product.primaryFamilyId)) issues.push(`Product ${product.slug} references an unknown family.`);
-    if (!intensityIds.has(product.intensityId)) issues.push(`Product ${product.slug} references an unknown intensity.`);
+    if (product.intensityId !== null && !intensityIds.has(product.intensityId)) {
+      issues.push(`Product ${product.slug} references an unknown intensity.`);
+    }
     if (product.longevity !== null && !text(product.longevity, 120)) issues.push(`Product ${product.slug} has invalid longevity.`);
     if (product.projection !== null && !text(product.projection, 120)) issues.push(`Product ${product.slug} has invalid projection.`);
 
@@ -133,10 +135,12 @@ export function validateApprovedCatalogueManifest(manifest: ApprovedCatalogueMan
       const prefix = productAssetPrefix(product);
       const filename = image.url.startsWith(prefix) ? image.url.slice(prefix.length) : "";
       if (!integer(image.sortOrder) || !text(image.alt, 255) || !assetNamePattern.test(filename)) {
-        issues.push(`Product ${product.slug} has an invalid image; use ${prefix}primary.png or detail-NN.png.`);
+        issues.push(
+          `Product ${product.slug} has an invalid image; use ${prefix}primary.webp or detail-NN.webp (PNG is also supported).`,
+        );
       }
-      if (image.sortOrder === 0 && filename !== "primary.png") {
-        issues.push(`Product ${product.slug} primary image must be ${prefix}primary.png.`);
+      if (image.sortOrder === 0 && !/^primary\.(?:png|webp)$/.test(filename)) {
+        issues.push(`Product ${product.slug} primary image must be ${prefix}primary.webp or primary.png.`);
       }
     }
 
