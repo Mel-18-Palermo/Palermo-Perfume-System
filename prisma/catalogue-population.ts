@@ -101,7 +101,10 @@ export function validateApprovedCatalogueManifest(manifest: ApprovedCatalogueMan
   addDuplicateIssues("product slug", manifest.products.map(product => product.slug), issues);
   addDuplicateIssues("SKU", manifest.products.flatMap(product => product.variants.map(variant => variant.sku)), issues);
   addDuplicateIssues("opening movement reference", manifest.products
-    .flatMap(product => product.variants.map(variant => variant.openingInventory.movementReference)), issues);
+    .flatMap(product => product.variants.flatMap(variant =>
+      variant.openingInventory.movementReference === null
+        ? []
+        : [variant.openingInventory.movementReference])), issues);
   addDuplicateIssues("image URL", manifest.products.flatMap(product => product.images.map(image => image.url)), issues);
 
   for (const product of manifest.products) {
@@ -153,7 +156,6 @@ export function validateApprovedCatalogueManifest(manifest: ApprovedCatalogueMan
     if (product.variants.length === 0) issues.push(`Active product ${product.slug} requires at least one variant.`);
     for (const variant of product.variants) {
       registerId(`variant ${variant.sku || "<unnamed>"} id`, variant.id);
-      registerId(`variant ${variant.sku || "<unnamed>"} opening movement id`, variant.openingInventory.movementId);
       if (!text(variant.sku, 80) || !text(variant.bottleSize, 80) || !text(variant.concentration, 120)) {
         issues.push(`Product ${product.slug} has an invalid variant identity or presentation.`);
       }
@@ -166,8 +168,20 @@ export function validateApprovedCatalogueManifest(manifest: ApprovedCatalogueMan
       }
       const inventory = variant.openingInventory;
       if (!integer(inventory.onHand) || !integer(inventory.reserved) || !integer(inventory.lowStockThreshold)
-        || inventory.reserved > inventory.onHand || !text(inventory.movementReference, 160)) {
+        || inventory.reserved > inventory.onHand) {
         issues.push(`Variant ${variant.sku} has invalid opening inventory.`);
+      }
+      if (inventory.movementId !== null) {
+        registerId(`variant ${variant.sku || "<unnamed>"} opening movement id`, inventory.movementId);
+      }
+      if (inventory.onHand > 0) {
+        if (inventory.movementId === null || inventory.movementReference === null) {
+          issues.push(`Variant ${variant.sku} with positive opening stock requires an opening movement identity and reference.`);
+        } else if (!text(inventory.movementReference, 160)) {
+          issues.push(`Variant ${variant.sku} has an invalid opening movement reference.`);
+        }
+      } else if (inventory.movementId !== null || inventory.movementReference !== null) {
+        issues.push(`Variant ${variant.sku} with zero opening stock cannot declare an opening movement.`);
       }
       const available = inventory.onHand - inventory.reserved;
       if (variant.availability === "AVAILABLE" && available === 0) {
@@ -422,29 +436,37 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
         variantId: variant.id, onHand: inventory.onHand, reserved: inventory.reserved,
         lowStockThreshold: inventory.lowStockThreshold,
       } });
+      if (inventory.onHand === 0) continue;
+      if (inventory.movementId === null || inventory.movementReference === null) {
+        throw new CatalogueManifestError([
+          `Variant ${variant.sku} with positive opening stock requires an opening movement identity and reference.`,
+        ]);
+      }
+      const movementId = inventory.movementId;
+      const movementReference = inventory.movementReference;
       const [movementById, movementByReference] = await Promise.all([
-        tx.inventoryMovement.findUnique({ where: { id: inventory.movementId } }),
-        tx.inventoryMovement.findUnique({ where: { reference: inventory.movementReference } }),
+        tx.inventoryMovement.findUnique({ where: { id: movementId } }),
+        tx.inventoryMovement.findUnique({ where: { reference: movementReference } }),
       ]);
       assertCatalogueIdentity(
-        `opening movement ${inventory.movementReference}`,
-        inventory.movementId,
+        `opening movement ${movementReference}`,
+        movementId,
         movementById,
         movementByReference,
-        record => record.reference === inventory.movementReference && record.variantId === variant.id,
+        record => record.reference === movementReference && record.variantId === variant.id,
       );
       for (const movement of [movementById, movementByReference]) {
         if (movement && (movement.variantId !== variant.id || movement.quantityDelta !== inventory.onHand
           || movement.reason !== "CATALOGUE_OPENING_STOCK"
-          || movement.reference !== inventory.movementReference)) {
+          || movement.reference !== movementReference)) {
           throw new CataloguePopulationConflictError(
-            `opening movement ${inventory.movementReference} does not match declared stock`,
+            `opening movement ${movementReference} does not match declared stock`,
           );
         }
       }
-      await tx.inventoryMovement.upsert({ where: { id: inventory.movementId }, update: {}, create: {
-        id: inventory.movementId, variantId: variant.id, quantityDelta: inventory.onHand,
-        reason: "CATALOGUE_OPENING_STOCK", reference: inventory.movementReference,
+      await tx.inventoryMovement.upsert({ where: { id: movementId }, update: {}, create: {
+        id: movementId, variantId: variant.id, quantityDelta: inventory.onHand,
+        reason: "CATALOGUE_OPENING_STOCK", reference: movementReference,
       } });
     }
   }

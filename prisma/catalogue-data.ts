@@ -48,8 +48,8 @@ export type ApprovedOpeningInventory = Readonly<{
   onHand: number;
   reserved: number;
   lowStockThreshold: number;
-  movementId: string;
-  movementReference: string;
+  movementId: string | null;
+  movementReference: string | null;
 }>;
 
 export type ApprovedCatalogueVariant = Readonly<{
@@ -181,7 +181,7 @@ const primaryImage = (
 
 const standardVariant = (
   id: string,
-  movementId: string,
+  movementId: string | null,
   sku: string,
   availability: ApprovedAvailability,
 ): ApprovedCatalogueVariant => ({
@@ -199,7 +199,7 @@ const standardVariant = (
   giftPackagingOptions: [],
   openingInventory: {
     movementId,
-    movementReference: `catalogue-opening-${sku}`,
+    movementReference: movementId === null ? null : `catalogue-opening-${sku}`,
     // Synthetic demo-system inventory, not a Palermo warehouse stock claim.
     onHand: availability === "AVAILABLE" ? 10 : 0,
     reserved: 0,
@@ -566,7 +566,7 @@ export const approvedCatalogueManifest = {
       images: [
         primaryImage(catalogueId(1092), "baran", "Palermo Baran Eau de Parfum product bottle"),
       ],
-      variants: [standardVariant(catalogueId(1091), catalogueId(1093), "W263", "UNAVAILABLE")],
+      variants: [standardVariant(catalogueId(1091), null, "W263", "UNAVAILABLE")],
     },
   ],
 } as const satisfies ApprovedCatalogueManifest;
