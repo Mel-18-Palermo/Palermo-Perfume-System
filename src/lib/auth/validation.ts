@@ -15,7 +15,7 @@ export function email(value: unknown): string {
 export function password(value: unknown): string {
   // Supabase uses bcrypt: reject inputs beyond its 72-byte boundary instead of truncating.
   if (typeof value !== "string" || value.length < 12 || Buffer.byteLength(value, "utf8") > 72) {
-    invalid("Use a password of 12–72 characters.");
+    invalid("Use at least 12 characters. Very long passwords aren’t supported.");
   }
   return value;
 }
