@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import type { PerfumeDetail, PerfumeVariantSummary, NoteAssignment } from "@/contracts/catalogue";
 import type { MoneyValue } from "@/contracts/common";
+import type { CartCustomisation, CartDto } from "@/contracts/cart";
 
 function formatMoney(value?: MoneyValue | null): string {
   if (!value) return "$0.00";
@@ -20,14 +22,37 @@ function formatMoney(value?: MoneyValue | null): string {
 
 interface PerfumeDetailViewProps {
   id: string;
+  initialCart?: CartDto | null;
+  onCartChange?: (cart: CartDto) => void;
 }
 
-export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
+const noCustomisation: CartCustomisation = {
+  personalisedLabel: null,
+  engravingName: null,
+  giftMessage: null,
+  giftPackagingId: null,
+};
+
+export function PerfumeDetailView({ id, initialCart = null, onCartChange }: PerfumeDetailViewProps) {
   const [perfume, setPerfume] = React.useState<PerfumeDetail | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [selectedVariantId, setSelectedVariantId] = React.useState<string | null>(null);
   const [currentId, setCurrentId] = React.useState<string>(id);
+  const [cart, setCart] = React.useState<CartDto | null>(initialCart);
+  const [previousInitialCart, setPreviousInitialCart] = React.useState<CartDto | null>(initialCart);
+  const [quantity, setQuantity] = React.useState(1);
+  const [personalisedLabel, setPersonalisedLabel] = React.useState("");
+  const [engravingName, setEngravingName] = React.useState("");
+  const [giftMessage, setGiftMessage] = React.useState("");
+  const [giftPackagingId, setGiftPackagingId] = React.useState("");
+  const [isAdding, setIsAdding] = React.useState(false);
+  const [cartMessage, setCartMessage] = React.useState<string | null>(null);
+
+  if (initialCart !== previousInitialCart) {
+    setPreviousInitialCart(initialCart);
+    setCart(initialCart);
+  }
 
   if (id !== currentId) {
     setCurrentId(id);
@@ -119,6 +144,59 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
 
   const selectedVariant: PerfumeVariantSummary | undefined =
     perfume.variants.find((v) => v.id === selectedVariantId);
+
+  const updateCart = (nextCart: CartDto) => {
+    setCart(nextCart);
+    onCartChange?.(nextCart);
+  };
+
+  const handleAddToCart = async () => {
+    if (!selectedVariant || selectedVariant.availability !== "AVAILABLE" || isAdding) return;
+
+    setIsAdding(true);
+    setCartMessage(null);
+    try {
+      let currentCart = cart;
+      if (!currentCart) {
+        const cartResult = await api.cart.get();
+        if (!cartResult.ok) {
+          setCartMessage(cartResult.error.message || "Unable to prepare your cart.");
+          return;
+        }
+        currentCart = cartResult.data;
+        updateCart(currentCart);
+      }
+
+      const customisation: CartCustomisation = {
+        ...noCustomisation,
+        personalisedLabel: selectedVariant.customisations.personalisedLabel && personalisedLabel.trim() ? personalisedLabel.trim() : null,
+        engravingName: selectedVariant.customisations.engravingName && engravingName.trim() ? engravingName.trim() : null,
+        giftMessage: selectedVariant.customisations.giftMessage && giftMessage.trim() ? giftMessage.trim() : null,
+        giftPackagingId: selectedVariant.customisations.giftPackaging.some((option) => option.id === giftPackagingId) ? giftPackagingId : null,
+      };
+      const result = await api.cart.addItem({
+        cartId: currentCart.id,
+        expectedRevision: currentCart.revision,
+        variantId: selectedVariant.id,
+        quantity,
+        customisation,
+      });
+      if (result.ok) {
+        updateCart(result.data);
+        setCartMessage("Added to your cart.");
+      } else if (result.error.code === "CONFLICT") {
+        const refreshed = await api.cart.get();
+        if (refreshed.ok) updateCart(refreshed.data);
+        setCartMessage("Your cart changed in another session. We refreshed it; please add this item again.");
+      } else {
+        setCartMessage(result.error.message || "Unable to add this item to your cart.");
+      }
+    } catch {
+      setCartMessage("Unable to add this item to your cart. Please check your connection and try again.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   const topNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "TOP");
   const middleNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "MIDDLE");
@@ -239,6 +317,34 @@ export function PerfumeDetailView({ id }: PerfumeDetailViewProps) {
               </div>
             </fieldset>
           </div>
+
+          {selectedVariant && selectedVariant.availability === "AVAILABLE" && (
+            <Card className="border-border">
+              <CardContent className="space-y-4 p-6">
+                <h2 className="text-base font-semibold text-text">Add to cart</h2>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="text-sm font-medium text-text">
+                    Quantity
+                    <input type="number" min={1} max={99} value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" />
+                  </label>
+                  {selectedVariant.customisations.giftPackaging.length > 0 && (
+                    <label className="text-sm font-medium text-text">
+                      Gift packaging
+                      <select value={giftPackagingId} onChange={(event) => setGiftPackagingId(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm">
+                        <option value="">No gift packaging</option>
+                        {selectedVariant.customisations.giftPackaging.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+                      </select>
+                    </label>
+                  )}
+                  {selectedVariant.customisations.personalisedLabel && <label className="text-sm font-medium text-text">Personalised label<input value={personalisedLabel} maxLength={100} onChange={(event) => setPersonalisedLabel(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" /></label>}
+                  {selectedVariant.customisations.engravingName && <label className="text-sm font-medium text-text">Engraving name<input value={engravingName} maxLength={100} onChange={(event) => setEngravingName(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" /></label>}
+                  {selectedVariant.customisations.giftMessage && <label className="text-sm font-medium text-text sm:col-span-2">Gift message<textarea value={giftMessage} maxLength={100} onChange={(event) => setGiftMessage(event.target.value)} className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm" /></label>}
+                </div>
+                {cartMessage && <Alert variant={cartMessage === "Added to your cart." ? "success" : "danger"} role="status">{cartMessage}</Alert>}
+                <Button type="button" onClick={() => void handleAddToCart()} isLoading={isAdding}>Add to Cart</Button>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-border">
             <CardContent className="p-6 space-y-6">
