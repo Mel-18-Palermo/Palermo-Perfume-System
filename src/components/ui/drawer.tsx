@@ -8,9 +8,18 @@ interface DrawerProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
+  size?: "default" | "wide";
 }
 
-export function Drawer({ isOpen, onClose, title, children }: DrawerProps) {
+export function Drawer({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  size = "default",
+}: DrawerProps) {
   const drawerRef = React.useRef<HTMLDivElement>(null);
   const triggerElementRef = React.useRef<HTMLElement | null>(null);
 
@@ -82,20 +91,27 @@ export function Drawer({ isOpen, onClose, title, children }: DrawerProps) {
       <div
         ref={drawerRef}
         tabIndex={-1}
-        className="relative ml-auto flex h-full w-80 flex-col border-l border-border bg-surface p-6 focus:outline-none"
+        className={`relative ml-auto flex h-dvh flex-col border-l border-border bg-surface focus:outline-none ${
+          size === "wide" ? "w-[calc(100%-1rem)] sm:w-96" : "w-80"
+        }`}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-border">
+        <div className="mx-6 flex shrink-0 items-center justify-between border-b border-border pb-4 pt-6">
           <h2 className="text-base font-semibold text-text">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-text-muted hover:text-text"
-            aria-label="Close navigation"
+            aria-label={`Close ${title.toLowerCase()}`}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto pt-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">{children}</div>
+        {footer && (
+          <div className="shrink-0 border-t border-border bg-surface px-6 py-4">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
