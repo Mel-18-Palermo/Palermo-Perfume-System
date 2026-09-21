@@ -19,6 +19,7 @@ import { adminCatalogueCases } from "./admin-catalogue-cases";
 import { availabilityCases } from "./availability-cases";
 import { reportingCases } from "./reporting-cases";
 import { deliveryCases } from "./delivery-cases";
+import { cataloguePopulationCases } from "./catalogue-population-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -161,3 +162,5 @@ orderCases(db);
 adminCatalogueCases(db);
 reportingCases(db);
 deliveryCases(db);
+// Keep population last because this suite shares one disposable schema across cases.
+cataloguePopulationCases(db);

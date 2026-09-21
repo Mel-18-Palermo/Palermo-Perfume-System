@@ -17,6 +17,7 @@
     "db:check": "tsx prisma/check.ts",
     "demo:reset": "node --conditions=react-server --import tsx prisma/reset-demo.ts",
     "demo:check": "tsx prisma/check-demo.ts",
+    "catalogue:populate": "tsx prisma/populate-catalogue.ts",
     "auth:check": "node --conditions=react-server --import tsx src/modules/identity/live-check.ts"
   },
   "engines": {
