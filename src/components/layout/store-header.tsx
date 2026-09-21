@@ -11,9 +11,20 @@ export interface StoreHeaderProps {
   cart: CartDto | null;
   session: Session | null;
   isLoading?: boolean;
+  isLoggingOut?: boolean;
+  logoutError?: string | null;
+  onLogout: () => Promise<boolean>;
 }
 
-export function StoreHeader({ onOpenMobileNav, cart, session, isLoading = false }: StoreHeaderProps) {
+export function StoreHeader({
+  onOpenMobileNav,
+  cart,
+  session,
+  isLoading = false,
+  isLoggingOut = false,
+  logoutError = null,
+  onLogout,
+}: StoreHeaderProps) {
   const itemCount = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) ?? 0;
   const user = session?.user;
 
@@ -39,6 +50,9 @@ export function StoreHeader({ onOpenMobileNav, cart, session, isLoading = false 
             <Link href="/catalogue" className="text-sm font-medium text-text hover:underline transition-colors">
               Catalogue
             </Link>
+            <Link href="/quiz" className="text-sm font-medium text-text hover:underline transition-colors">
+              Quiz
+            </Link>
           </nav>
         </div>
 
@@ -46,16 +60,28 @@ export function StoreHeader({ onOpenMobileNav, cart, session, isLoading = false 
           {isLoading ? (
             <span className="text-xs text-text-muted">Loading...</span>
           ) : user ? (
-            <span className="text-xs text-text hidden sm:inline font-medium">
-              {user.displayName}
-            </span>
+            <>
+              <Link href="/account" className="text-xs font-medium text-text hover:underline transition-colors">
+                Account
+              </Link>
+              <button
+                type="button"
+                onClick={() => void onLogout()}
+                disabled={isLoggingOut}
+                className="min-h-[44px] text-xs font-medium text-text hover:underline transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoggingOut ? "Logging out..." : "Logout"}
+              </button>
+            </>
           ) : (
-            <Link
-              href="/login"
-              className="text-xs font-medium text-text hover:underline transition-colors"
-            >
-              Sign In
-            </Link>
+            <>
+              <Link href="/login" className="text-xs font-medium text-text hover:underline transition-colors">
+                Login
+              </Link>
+              <Link href="/signup" className="text-xs font-medium text-text hover:underline transition-colors">
+                Sign Up
+              </Link>
+            </>
           )}
 
           <Link
@@ -73,6 +99,11 @@ export function StoreHeader({ onOpenMobileNav, cart, session, isLoading = false 
           </Link>
         </div>
       </div>
+      {logoutError && (
+        <p className="mx-auto max-w-[var(--container-wide)] px-4 pb-3 text-xs text-danger sm:px-6 lg:px-8" role="alert">
+          {logoutError}
+        </p>
+      )}
     </header>
   );
 }
