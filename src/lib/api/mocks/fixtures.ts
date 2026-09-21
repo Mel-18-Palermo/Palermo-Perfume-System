@@ -8,6 +8,7 @@ import type { Invoice, OrderDetail, OrderSummary } from "../../../contracts/orde
 import type { Address, AddressInput, CustomerProfile } from "../../../contracts/profile";
 import type { QuizDefinition, RecommendationResult } from "../../../contracts/recommendations";
 import type { ShipmentTrackingDto } from "../../../contracts/tracking";
+import { approvedQuizManifest } from "../../../../prisma/quiz-data";
 
 /** Entirely synthetic, fixed-clock fixtures. AUD is demo data, not a production currency decision. */
 export const FIXTURE_TIME = "2026-09-01T00:00:00.000Z";
@@ -115,11 +116,16 @@ export const tracking: ShipmentTrackingDto = {
   updatedAt: FIXTURE_TIME, confirmation: null,
 };
 export const quiz: QuizDefinition = {
-  id: "quiz-demo", version: "1", questions: [{
-    id: "question-family", prompt: "Which fragrance family would you like to explore?", required: true,
-    minSelections: 1, maxSelections: 1,
-    options: [{ id: "option-citrus", label: "Citrus" }, { id: "option-woody", label: "Woody" }],
-  }],
+  id: approvedQuizManifest.id,
+  version: approvedQuizManifest.version,
+  questions: approvedQuizManifest.questions.map(question => ({
+    id: question.id,
+    prompt: question.prompt,
+    required: question.required,
+    minSelections: question.minSelections,
+    maxSelections: question.maxSelections,
+    options: question.options.map(option => ({ id: option.id, label: option.label })),
+  })),
 };
 export const recommendation: RecommendationResult = {
   runId: "recommendation-demo", generatedAt: FIXTURE_TIME, fallback: true,

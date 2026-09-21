@@ -99,7 +99,7 @@ export type ApprovedCatalogueManifest = Readonly<{
 const catalogueId = (value: number): string =>
   `27100000-0000-4000-8000-${String(value).padStart(12, "0")}`;
 
-const familyIds = {
+export const approvedCatalogueFamilyIds = {
   vanilla: catalogueId(1),
   fruity: catalogueId(2),
   amber: catalogueId(3),
@@ -211,16 +211,16 @@ export const approvedCatalogueManifest = {
   version: 1,
   vocabulary: {
     families: [
-      named(familyIds.vanilla, "Vanilla"),
-      named(familyIds.fruity, "Fruity"),
-      named(familyIds.amber, "Amber"),
-      named(familyIds.warmSpicy, "Warm Spicy"),
+      named(approvedCatalogueFamilyIds.vanilla, "Vanilla"),
+      named(approvedCatalogueFamilyIds.fruity, "Fruity"),
+      named(approvedCatalogueFamilyIds.amber, "Amber"),
+      named(approvedCatalogueFamilyIds.warmSpicy, "Warm Spicy"),
       named(
-        familyIds.unclassified,
+        approvedCatalogueFamilyIds.unclassified,
         "Unclassified",
         "Project taxonomy used when Palermo has not published an accord or family.",
       ),
-      named(familyIds.rose, "Rose"),
+      named(approvedCatalogueFamilyIds.rose, "Rose"),
     ],
     notes: [
       named(noteIds.floralNotes, "Floral Notes"),
@@ -285,7 +285,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo's Golden Dust interpretation brings its published accords together in a 50 mL Eau de Parfum.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.vanilla,
+      primaryFamilyId: approvedCatalogueFamilyIds.vanilla,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -316,7 +316,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo's Candy interpretation brings its published accords together in a 50 mL Eau de Parfum.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.fruity,
+      primaryFamilyId: approvedCatalogueFamilyIds.fruity,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -347,7 +347,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo's Saphire Chocolate interpretation brings its published accords together in a 50 mL Eau de Parfum.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.amber,
+      primaryFamilyId: approvedCatalogueFamilyIds.amber,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -377,7 +377,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo's Vanilla interpretation brings its published accords together in a 50 mL Eau de Parfum.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.vanilla,
+      primaryFamilyId: approvedCatalogueFamilyIds.vanilla,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -407,7 +407,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo's Candy Summer is presented as a 50 mL Eau de Parfum with published citrus, fruit, vanilla, and woody notes.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.vanilla,
+      primaryFamilyId: approvedCatalogueFamilyIds.vanilla,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -440,7 +440,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo's Musk Rose is presented as a 50 mL Eau de Parfum with published fruit, rose, patchouli, and musk notes.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.fruity,
+      primaryFamilyId: approvedCatalogueFamilyIds.fruity,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -469,7 +469,7 @@ export const approvedCatalogueManifest = {
       description:
         "A bold sweet and spicy fragrance presented by Palermo Perfumes with vanilla, amber, and spice accords.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.warmSpicy,
+      primaryFamilyId: approvedCatalogueFamilyIds.warmSpicy,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -510,7 +510,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo Sport is presented by Palermo Perfumes as a 50 mL Eau de Parfum; its fragrance notes are not currently published.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.unclassified,
+      primaryFamilyId: approvedCatalogueFamilyIds.unclassified,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -533,7 +533,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo Woman is presented by Palermo Perfumes as a 50 mL Eau de Parfum; its fragrance notes are not currently published.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.unclassified,
+      primaryFamilyId: approvedCatalogueFamilyIds.unclassified,
       intensityId: null,
       longevity: null,
       projection: null,
@@ -556,7 +556,7 @@ export const approvedCatalogueManifest = {
       description:
         "Palermo's Baran interpretation is presented as a 50 mL Eau de Parfum with published rose, floral, fresh, and fruity accords; its fragrance notes are not currently published.",
       status: "ACTIVE",
-      primaryFamilyId: familyIds.rose,
+      primaryFamilyId: approvedCatalogueFamilyIds.rose,
       intensityId: null,
       longevity: null,
       projection: null,

@@ -71,7 +71,7 @@ The database foundation does not itself implement durable checkout replay, payme
 
 ## Seed behavior
 
-`seed-data.ts` uses fixed UUIDs, a fixed September 2026 fixture clock and synthetic `.test` identities. It inserts missing rows in one transaction and preserves existing rows, including inventory, history and subsequent user edits. Repeated seeding does not reset the demo or re-apply movements. Fixed historical reservation timestamps are test fixtures; a live demo/reset clock belongs to #271.
+`seed-data.ts`, `db:seed`, and `demo:reset` own the exact synthetic Mid-Project fixture: two demo perfumes and its historical active Citrus quiz. Repeated seeding does not reset the demo or re-apply movements; `demo:reset` intentionally returns its isolated environment to that synthetic state and deterministic hash. Final deterministic-reset integration with approved catalogue data is separate work.
 
 Seeded examples include two customers, an administrative identity/permission, two perfume variants, profile/address/preferences, visitor/customer carts, a paid and a pending order, a paid invoice, inventory movements/reservation, an unreleased finished batch, pending tracking and a completed quiz with deterministic fallback recommendation. Auth-provider users are not provisioned, so the seeded identities are not yet usable login accounts. No AI, Stripe or email call is made.
 
@@ -79,7 +79,7 @@ Requirements: D-003–D-007, D-014–D-017, D-034–D-047, D-057–D-072, D-096,
 
 ## Approved final catalogue population
 
-`catalogue-data.ts` is the version-controlled source for approved real catalogue vocabulary, products, images, variants and deterministic opening inventory. It is intentionally separate from the synthetic `seed-data.ts` fixtures. Only owner-approved commercial facts may be added; placeholders must never be presented as real catalogue content. Opening quantities are deterministic demo-system inventory and are not claims about Palermo's warehouse stock.
+`catalogue-data.ts` is the version-controlled source for approved real catalogue vocabulary, products, images, variants and deterministic opening inventory. `quiz-data.ts` is the version-controlled source for the customer-facing canonical quiz and references catalogue family IDs directly. `catalogue:populate` owns the combined approved catalogue and canonical customer-quiz state; it is intentionally separate from the synthetic reset fixture. Only owner-approved commercial facts may be added; placeholders must never be presented as real catalogue content. Opening quantities are deterministic demo-system inventory and are not claims about Palermo's warehouse stock.
 
 After the manifest and matching assets have been reviewed, populate an explicitly isolated development/Preview target with:
 
@@ -87,9 +87,9 @@ After the manifest and matching assets have been reviewed, populate an explicitl
 pnpm catalogue:populate
 ```
 
-The command validates the complete manifest and every declared asset before opening a database connection. It then applies one transaction of stable-identity upserts. It can be rerun safely: catalogue facts are reconciled, relation rows use compound-key upserts, opening inventory is created only when absent, and a positive-stock opening movement is never replayed. Zero-stock variants receive an inventory balance but no zero-delta movement. Existing balances are not reset. Identity conflicts fail rather than silently adopting or duplicating existing rows.
+The command validates the complete manifest and every declared asset before opening a database connection. It then applies one transaction of stable-identity upserts for catalogue and canonical quiz data. It can be rerun safely: catalogue facts and quiz/question/options are reconciled, relation rows use compound-key upserts, opening inventory is created only when absent, and a positive-stock opening movement is never replayed. In this populated state, canonical quiz population deactivates stale active quizzes while preserving their historical rows and attempts, including the synthetic Citrus quiz. Zero-stock variants receive an inventory balance but no zero-delta movement. Existing balances are not reset. Identity conflicts fail rather than silently adopting or duplicating existing rows.
 
-The command uses `DIRECT_URL` and the same `assertDevelopmentDatabase` boundary as development seeding, so missing/ambiguous configuration and Production execution fail closed. It touches only catalogue vocabulary, perfumes, images, notes, suitability, collections, variants, and the manifest variants' opening inventory balances and positive-stock movements. It does not read or mutate customer, identity, cart, order, payment, invoice, shipment, recommendation, quiz, or demo-reset ownership.
+The command uses `DIRECT_URL` and the same `assertDevelopmentDatabase` boundary as development seeding, so missing/ambiguous configuration and Production execution fail closed. It touches only catalogue vocabulary, perfumes, images, notes, suitability, collections, variants, manifest opening inventory, and approved quiz configuration. It does not mutate customer, identity, cart, order, payment, invoice, shipment, recommendation attempts/items, or demo-reset ownership.
 
 Image assets use these version-controlled paths:
 
