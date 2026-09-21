@@ -40,7 +40,7 @@ export function ProductDetailShell({ id }: ProductDetailShellProps) {
   return (
     <CustomerShell cart={cart} session={session} isLoading={isShellLoading}>
       <React.Suspense fallback={<div className="p-8 text-center text-sm text-text-muted">Loading fragrance profile...</div>}>
-        <PerfumeDetailView id={id} />
+        <PerfumeDetailView id={id} initialCart={cart} onCartChange={setCart} />
       </React.Suspense>
     </CustomerShell>
   );
