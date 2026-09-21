@@ -20,6 +20,12 @@ export class CatalogueManifestError extends Error {
   }
 }
 
+export class CataloguePopulationConflictError extends Error {
+  constructor(label: string) {
+    super(`Catalogue population conflict: ${label}.`);
+  }
+}
+
 function text(value: unknown, maximum: number): value is string {
   return typeof value === "string" && value.trim() === value && value.length > 0 && value.length <= maximum;
 }
@@ -191,53 +197,159 @@ export async function assertCatalogueAssets(manifest: ApprovedCatalogueManifest,
   if (missing.length) throw new CatalogueManifestError(missing.map(path => `Missing catalogue asset: ${path}.`));
 }
 
-async function identityConflict(
+type IdentityRecord = Readonly<{ id: string }>;
+
+function isIdentityRecordArray<T extends IdentityRecord>(
+  value: T | readonly T[],
+): value is readonly T[] {
+  return Array.isArray(value);
+}
+
+export function assertCatalogueIdentity<T extends IdentityRecord>(
   label: string,
-  byId: Promise<{ id: string } | null>,
-  byNaturalKey: Promise<{ id: string } | null>,
+  manifestId: string,
+  existingById: T | null,
+  existingByNaturalKey: T | readonly T[] | null,
+  matchesDeclaredIdentity: (record: T) => boolean,
+): void {
+  if (existingById && (existingById.id !== manifestId || !matchesDeclaredIdentity(existingById))) {
+    throw new CataloguePopulationConflictError(`${label} stable ID has a different identity`);
+  }
+  const naturalKeyRows = existingByNaturalKey === null
+    ? []
+    : isIdentityRecordArray(existingByNaturalKey) ? existingByNaturalKey : [existingByNaturalKey];
+  if (naturalKeyRows.some(record => record.id !== manifestId || !matchesDeclaredIdentity(record))) {
+    throw new CataloguePopulationConflictError(`${label} natural key has a different identity`);
+  }
+}
+
+export function assertNoCatalogueRelationDrift(
+  productSlug: string,
+  relation: string,
+  declaredKeys: ReadonlySet<string>,
+  existingKeys: readonly string[],
+): void {
+  if (existingKeys.some(key => !declaredKeys.has(key))) {
+    throw new CataloguePopulationConflictError(
+      `managed ${relation} drift for product ${productSlug}`,
+    );
+  }
+}
+
+async function identityConflict<T extends IdentityRecord>(
+  label: string,
+  byId: Promise<T | null>,
+  byNaturalKey: Promise<T | readonly T[] | null>,
   id: string,
+  matchesDeclaredIdentity: (record: T) => boolean,
 ): Promise<void> {
   const [existingId, existingNaturalKey] = await Promise.all([byId, byNaturalKey]);
-  if (existingId && existingNaturalKey && existingId.id !== existingNaturalKey.id
-    || existingNaturalKey && existingNaturalKey.id !== id) {
-    throw new Error(`Catalogue population identity conflict for ${label}.`);
-  }
+  assertCatalogueIdentity(label, id, existingId, existingNaturalKey, matchesDeclaredIdentity);
+}
+
+async function assertManagedProductRelations(
+  tx: Prisma.TransactionClient,
+  product: ApprovedCatalogueProduct,
+): Promise<void> {
+  const [notes, suitability, collections, images, variants] = await Promise.all([
+    tx.perfumeNote.findMany({
+      where: { perfumeId: product.id },
+      select: { noteId: true, layer: true },
+    }),
+    tx.perfumeSuitability.findMany({
+      where: { perfumeId: product.id },
+      select: { tagId: true },
+    }),
+    tx.collectionPerfume.findMany({
+      where: { perfumeId: product.id },
+      select: { collectionId: true },
+    }),
+    tx.perfumeImage.findMany({
+      where: { perfumeId: product.id },
+      select: { id: true },
+    }),
+    tx.perfumeVariant.findMany({
+      where: { perfumeId: product.id },
+      select: { id: true },
+    }),
+  ]);
+
+  assertNoCatalogueRelationDrift(
+    product.slug,
+    "PerfumeNote",
+    new Set(product.notes.map(note => `${note.noteId}:${note.layer}`)),
+    notes.map(note => `${note.noteId}:${note.layer}`),
+  );
+  assertNoCatalogueRelationDrift(
+    product.slug,
+    "PerfumeSuitability",
+    new Set(product.suitabilityTagIds),
+    suitability.map(relation => relation.tagId),
+  );
+  assertNoCatalogueRelationDrift(
+    product.slug,
+    "CollectionPerfume",
+    new Set(product.collectionIds),
+    collections.map(relation => relation.collectionId),
+  );
+  assertNoCatalogueRelationDrift(
+    product.slug,
+    "PerfumeImage",
+    new Set(product.images.map(image => image.id)),
+    images.map(image => image.id),
+  );
+  assertNoCatalogueRelationDrift(
+    product.slug,
+    "PerfumeVariant",
+    new Set(product.variants.map(variant => variant.id)),
+    variants.map(variant => variant.id),
+  );
 }
 
 async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogueManifest): Promise<void> {
   for (const family of manifest.vocabulary.families) {
-    await identityConflict(`family ${family.name}`, tx.fragranceFamily.findUnique({ where: { id: family.id }, select: { id: true } }),
-      tx.fragranceFamily.findUnique({ where: { name: family.name }, select: { id: true } }), family.id);
+    await identityConflict(`family ${family.name}`,
+      tx.fragranceFamily.findUnique({ where: { id: family.id }, select: { id: true, name: true } }),
+      tx.fragranceFamily.findUnique({ where: { name: family.name }, select: { id: true, name: true } }),
+      family.id, record => record.name === family.name);
     await tx.fragranceFamily.upsert({ where: { id: family.id }, update: {
       name: family.name, description: family.description, active: family.active,
     }, create: family });
   }
   for (const note of manifest.vocabulary.notes) {
-    await identityConflict(`note ${note.name}`, tx.fragranceNote.findUnique({ where: { id: note.id }, select: { id: true } }),
-      tx.fragranceNote.findUnique({ where: { name: note.name }, select: { id: true } }), note.id);
+    await identityConflict(`note ${note.name}`,
+      tx.fragranceNote.findUnique({ where: { id: note.id }, select: { id: true, name: true } }),
+      tx.fragranceNote.findUnique({ where: { name: note.name }, select: { id: true, name: true } }),
+      note.id, record => record.name === note.name);
     await tx.fragranceNote.upsert({ where: { id: note.id }, update: {
       name: note.name, description: note.description, active: note.active,
     }, create: note });
   }
   for (const intensity of manifest.vocabulary.intensities) {
-    await identityConflict(`intensity ${intensity.name}`, tx.intensity.findUnique({ where: { id: intensity.id }, select: { id: true } }),
-      tx.intensity.findUnique({ where: { name: intensity.name }, select: { id: true } }), intensity.id);
+    await identityConflict(`intensity ${intensity.name}`,
+      tx.intensity.findUnique({ where: { id: intensity.id }, select: { id: true, name: true } }),
+      tx.intensity.findUnique({ where: { name: intensity.name }, select: { id: true, name: true } }),
+      intensity.id, record => record.name === intensity.name);
     await tx.intensity.upsert({ where: { id: intensity.id }, update: {
       name: intensity.name, active: intensity.active,
     }, create: intensity });
   }
   for (const tag of manifest.vocabulary.suitabilityTags) {
     await identityConflict(`suitability ${tag.category}:${tag.value}`,
-      tx.suitabilityTag.findUnique({ where: { id: tag.id }, select: { id: true } }),
-      tx.suitabilityTag.findUnique({ where: { category_value: { category: tag.category, value: tag.value } }, select: { id: true } }), tag.id);
+      tx.suitabilityTag.findUnique({ where: { id: tag.id }, select: { id: true, category: true, value: true } }),
+      tx.suitabilityTag.findUnique({
+        where: { category_value: { category: tag.category, value: tag.value } },
+        select: { id: true, category: true, value: true },
+      }), tag.id, record => record.category === tag.category && record.value === tag.value);
     await tx.suitabilityTag.upsert({ where: { id: tag.id }, update: {
       category: tag.category, value: tag.value, active: tag.active,
     }, create: tag });
   }
   for (const collection of manifest.vocabulary.collections) {
     await identityConflict(`collection ${collection.name}`,
-      tx.collection.findUnique({ where: { id: collection.id }, select: { id: true } }),
-      tx.collection.findFirst({ where: { name: collection.name }, select: { id: true } }), collection.id);
+      tx.collection.findUnique({ where: { id: collection.id }, select: { id: true, name: true } }),
+      tx.collection.findMany({ where: { name: collection.name }, select: { id: true, name: true } }),
+      collection.id, record => record.name === collection.name);
     await tx.collection.upsert({ where: { id: collection.id }, update: {
       name: collection.name, type: collection.type, active: collection.active,
     }, create: collection });
@@ -245,8 +357,10 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
 
   for (const product of manifest.products) {
     await identityConflict(`product ${product.slug}`,
-      tx.perfume.findUnique({ where: { id: product.id }, select: { id: true } }),
-      tx.perfume.findUnique({ where: { slug: product.slug }, select: { id: true } }), product.id);
+      tx.perfume.findUnique({ where: { id: product.id }, select: { id: true, slug: true } }),
+      tx.perfume.findUnique({ where: { slug: product.slug }, select: { id: true, slug: true } }),
+      product.id, record => record.slug === product.slug);
+    await assertManagedProductRelations(tx, product);
     await tx.perfume.upsert({ where: { id: product.id }, update: {
       name: product.name, slug: product.slug, description: product.description, status: product.status,
       primaryFamilyId: product.primaryFamilyId, intensityId: product.intensityId,
@@ -270,10 +384,14 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
     });
     for (const image of product.images) {
       await identityConflict(`image ${image.url}`,
-        tx.perfumeImage.findUnique({ where: { id: image.id }, select: { id: true } }),
-        tx.perfumeImage.findFirst({ where: { url: image.url }, select: { id: true } }), image.id);
-      const existing = await tx.perfumeImage.findUnique({ where: { id: image.id }, select: { perfumeId: true } });
-      if (existing && existing.perfumeId !== product.id) throw new Error(`Catalogue population identity conflict for image ${image.id}.`);
+        tx.perfumeImage.findUnique({
+          where: { id: image.id },
+          select: { id: true, url: true, perfumeId: true },
+        }),
+        tx.perfumeImage.findMany({
+          where: { url: image.url },
+          select: { id: true, url: true, perfumeId: true },
+        }), image.id, record => record.url === image.url && record.perfumeId === product.id);
       await tx.perfumeImage.upsert({ where: { id: image.id }, update: {
         url: image.url, alt: image.alt, sortOrder: image.sortOrder,
       }, create: { ...image, perfumeId: product.id } });
@@ -281,10 +399,14 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
 
     for (const variant of product.variants) {
       await identityConflict(`variant ${variant.sku}`,
-        tx.perfumeVariant.findUnique({ where: { id: variant.id }, select: { id: true } }),
-        tx.perfumeVariant.findUnique({ where: { sku: variant.sku }, select: { id: true } }), variant.id);
-      const existing = await tx.perfumeVariant.findUnique({ where: { id: variant.id }, select: { perfumeId: true } });
-      if (existing && existing.perfumeId !== product.id) throw new Error(`Catalogue population identity conflict for variant ${variant.sku}.`);
+        tx.perfumeVariant.findUnique({
+          where: { id: variant.id },
+          select: { id: true, sku: true, perfumeId: true },
+        }),
+        tx.perfumeVariant.findUnique({
+          where: { sku: variant.sku },
+          select: { id: true, sku: true, perfumeId: true },
+        }), variant.id, record => record.sku === variant.sku && record.perfumeId === product.id);
       const data = {
         sku: variant.sku, bottleSize: variant.bottleSize, concentration: variant.concentration,
         priceMinor: variant.priceMinor, currency: variant.currency, availability: variant.availability,
@@ -300,14 +422,25 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
         variantId: variant.id, onHand: inventory.onHand, reserved: inventory.reserved,
         lowStockThreshold: inventory.lowStockThreshold,
       } });
-      await identityConflict(`opening movement ${inventory.movementReference}`,
-        tx.inventoryMovement.findUnique({ where: { id: inventory.movementId }, select: { id: true } }),
-        tx.inventoryMovement.findUnique({ where: { reference: inventory.movementReference }, select: { id: true } }),
-        inventory.movementId);
-      const movement = await tx.inventoryMovement.findUnique({ where: { id: inventory.movementId } });
-      if (movement && (movement.variantId !== variant.id || movement.quantityDelta !== inventory.onHand
-        || movement.reason !== "CATALOGUE_OPENING_STOCK" || movement.reference !== inventory.movementReference)) {
-        throw new Error(`Catalogue population identity conflict for opening movement ${inventory.movementReference}.`);
+      const [movementById, movementByReference] = await Promise.all([
+        tx.inventoryMovement.findUnique({ where: { id: inventory.movementId } }),
+        tx.inventoryMovement.findUnique({ where: { reference: inventory.movementReference } }),
+      ]);
+      assertCatalogueIdentity(
+        `opening movement ${inventory.movementReference}`,
+        inventory.movementId,
+        movementById,
+        movementByReference,
+        record => record.reference === inventory.movementReference && record.variantId === variant.id,
+      );
+      for (const movement of [movementById, movementByReference]) {
+        if (movement && (movement.variantId !== variant.id || movement.quantityDelta !== inventory.onHand
+          || movement.reason !== "CATALOGUE_OPENING_STOCK"
+          || movement.reference !== inventory.movementReference)) {
+          throw new CataloguePopulationConflictError(
+            `opening movement ${inventory.movementReference} does not match declared stock`,
+          );
+        }
       }
       await tx.inventoryMovement.upsert({ where: { id: inventory.movementId }, update: {}, create: {
         id: inventory.movementId, variantId: variant.id, quantityDelta: inventory.onHand,
