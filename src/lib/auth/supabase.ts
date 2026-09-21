@@ -8,7 +8,7 @@ function identity(user: User | null): ProviderIdentity {
   return { id: user.id, email: user.email.toLowerCase(), verified: Boolean(user.email_confirmed_at) };
 }
 
-function check(error: AuthError | null): void {
+function check(error: AuthError | null, operation: "authentication" | "registration" = "authentication"): void {
   if (!error) return;
   if (error.code === "email_address_not_authorized" || error.code === "unexpected_failure") {
     throw new AuthFault("TEMPORARILY_UNAVAILABLE", "Authentication email delivery is temporarily unavailable.");
@@ -18,6 +18,9 @@ function check(error: AuthError | null): void {
   }
   if (error.code === "user_already_exists" || error.code === "email_exists") {
     throw new AuthFault("CONFLICT", "An account already uses this email address.");
+  }
+  if (operation === "registration") {
+    throw new AuthFault("INTEGRATION_ERROR", "We couldn’t create your account. Please try again later.");
   }
   throw new AuthFault("UNAUTHENTICATED", "The credentials or verification link are invalid or expired.");
 }
@@ -37,7 +40,7 @@ export function createSupabaseIdentityProvider(): IdentityProvider {
     async register(input) {
       const auth = client().auth;
       const { data, error } = await auth.signUp({ email: input.email, password: input.password, options: { data: { name: input.name } } });
-      check(error);
+      check(error, "registration");
       if (data.user?.identities?.length === 0) throw new AuthFault("CONFLICT", "An account already uses this email address.");
       if (data.session || data.user?.email_confirmed_at) {
         await auth.signOut({ scope: "local" });

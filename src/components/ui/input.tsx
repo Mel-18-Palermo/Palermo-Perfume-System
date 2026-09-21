@@ -26,7 +26,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
-          className={`w-full min-h-[44px] px-3 py-2 border rounded-md bg-surface text-text placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          className={`w-full min-h-[44px] px-3 py-2 border rounded-md bg-surface text-text placeholder:text-text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info ${
             error ? "border-danger focus-visible:ring-danger" : "border-border"
           } ${className}`}
           {...props}
