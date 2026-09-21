@@ -4,9 +4,12 @@ import {
   type ApprovedCatalogueManifest,
 } from "../../prisma/catalogue-data";
 import {
+  assertCatalogueIdentity,
   assertApprovedCatalogueManifest,
   assertCatalogueAssets,
+  assertNoCatalogueRelationDrift,
   CatalogueManifestError,
+  CataloguePopulationConflictError,
   validateApprovedCatalogueManifest,
 } from "../../prisma/catalogue-population";
 
@@ -132,5 +135,58 @@ describe("approved catalogue manifest", () => {
       "palermo-woman": 0,
       baran: 0,
     });
+  });
+});
+
+describe("catalogue population identity safety", () => {
+  const manifestId = id(100);
+  const matches = (record: { naturalKey: string }): boolean => record.naturalKey === "approved-key";
+
+  it("rejects a stable ID already assigned to a different natural key", () => {
+    expect(() => assertCatalogueIdentity(
+      "test identity",
+      manifestId,
+      { id: manifestId, naturalKey: "unrelated-existing-key" },
+      null,
+      matches,
+    )).toThrow(CataloguePopulationConflictError);
+  });
+
+  it("rejects a natural key already assigned to a different stable ID", () => {
+    expect(() => assertCatalogueIdentity(
+      "test identity",
+      manifestId,
+      null,
+      { id: id(101), naturalKey: "approved-key" },
+      matches,
+    )).toThrow(CataloguePopulationConflictError);
+  });
+
+  it("accepts matching stable ID and natural-key records", () => {
+    const existing = { id: manifestId, naturalKey: "approved-key" };
+    expect(() => assertCatalogueIdentity(
+      "test identity",
+      manifestId,
+      existing,
+      existing,
+      matches,
+    )).not.toThrow();
+  });
+
+  it("fails closed for every managed product relation with undeclared rows", () => {
+    for (const relation of [
+      "PerfumeNote",
+      "PerfumeSuitability",
+      "CollectionPerfume",
+      "PerfumeImage",
+      "PerfumeVariant",
+    ]) {
+      expect(() => assertNoCatalogueRelationDrift(
+        "approved-product",
+        relation,
+        new Set(["declared"]),
+        ["declared", "stale"],
+      )).toThrow(CataloguePopulationConflictError);
+    }
   });
 });
