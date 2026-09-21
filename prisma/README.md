@@ -76,3 +76,27 @@ The database foundation does not itself implement durable checkout replay, payme
 Seeded examples include two customers, an administrative identity/permission, two perfume variants, profile/address/preferences, visitor/customer carts, a paid and a pending order, a paid invoice, inventory movements/reservation, an unreleased finished batch, pending tracking and a completed quiz with deterministic fallback recommendation. Auth-provider users are not provisioned, so the seeded identities are not yet usable login accounts. No AI, Stripe or email call is made.
 
 Requirements: D-003–D-007, D-014–D-017, D-034–D-047, D-057–D-072, D-096, D-111 and the #242 issue scope. Validation evidence belongs in the integration PR; these design notes do not claim future service tests passed.
+
+## Approved final catalogue population
+
+`catalogue-data.ts` is the version-controlled source for approved real catalogue vocabulary, products, images, variants and deterministic opening inventory. It is intentionally separate from the synthetic `seed-data.ts` fixtures. Until commercial facts are owner-approved, its product and vocabulary arrays remain empty; placeholders must never be presented as real catalogue content.
+
+After the manifest and matching assets have been reviewed, populate an explicitly isolated development/Preview target with:
+
+```bash
+pnpm catalogue:populate
+```
+
+The command validates the complete manifest and every declared asset before opening a database connection. It then applies one transaction of stable-identity upserts. It can be rerun safely: catalogue facts are reconciled, relation rows use compound-key upserts, opening inventory is created only when absent, and the unique opening movement is never replayed. Existing balances are not reset. Identity conflicts fail rather than silently adopting or duplicating existing rows.
+
+The command uses `DIRECT_URL` and the same `assertDevelopmentDatabase` boundary as development seeding, so missing/ambiguous configuration and Production execution fail closed. It touches only catalogue vocabulary, perfumes, images, notes, suitability, collections, variants, and the manifest variants' opening inventory balance/movement. It does not read or mutate customer, identity, cart, order, payment, invoice, shipment, recommendation, quiz, or demo-reset ownership.
+
+Image assets use these version-controlled paths:
+
+```text
+public/catalogue/products/<slug>/primary.png
+public/catalogue/products/<slug>/detail-01.png
+public/catalogue/products/<slug>/detail-02.png
+```
+
+For #286, first approve the real catalogue facts and images, then populate and verify the isolated environment. Only after that acceptance should the deterministic reset incorporate the final manifest and should `demo-state.ts` expectations/hash be deliberately updated. This foundation does not make either change early.
