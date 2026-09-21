@@ -9,6 +9,10 @@ import {
   type ApprovedCatalogueManifest,
   type ApprovedCatalogueProduct,
 } from "./catalogue-data";
+import {
+  populateApprovedQuizInTransaction,
+} from "./quiz-population";
+import type { ApprovedQuizManifest } from "./quiz-data";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -484,5 +488,23 @@ export async function populateApprovedCatalogue(
     products: manifest.products.length,
     variants: manifest.products.reduce((total, product) => total + product.variants.length, 0),
     images: manifest.products.reduce((total, product) => total + product.images.length, 0),
+  };
+}
+
+/** Populate approved catalogue facts and their dependent canonical quiz atomically. */
+export async function populateApprovedCatalogueAndQuiz(
+  db: PrismaClient,
+  catalogue: ApprovedCatalogueManifest,
+  quiz: ApprovedQuizManifest,
+): Promise<CataloguePopulationSummary> {
+  assertApprovedCatalogueManifest(catalogue);
+  await db.$transaction(async tx => {
+    await populate(tx, catalogue);
+    await populateApprovedQuizInTransaction(tx, quiz, catalogue);
+  }, { timeout: 60_000 });
+  return {
+    products: catalogue.products.length,
+    variants: catalogue.products.reduce((total, product) => total + product.variants.length, 0),
+    images: catalogue.products.reduce((total, product) => total + product.images.length, 0),
   };
 }

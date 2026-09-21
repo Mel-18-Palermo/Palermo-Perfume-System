@@ -32,8 +32,6 @@ cartCases(db);
 profileCases(db);
 wishlistCases(db);
 availabilityCases(db);
-discoveryCases(db);
-discoveryCompletionCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
@@ -162,5 +160,9 @@ orderCases(db);
 adminCatalogueCases(db);
 reportingCases(db);
 deliveryCases(db);
+// Canonical discovery population must run after suites that depend on the exact synthetic seed baseline.
+discoveryCases(db);
+discoveryCompletionCases(db);
+
 // Keep population last because this suite shares one disposable schema across cases.
 cataloguePopulationCases(db);

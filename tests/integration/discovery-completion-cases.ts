@@ -1,11 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { PrismaClient } from "../../src/lib/db/generated/client";
 import type { RecommendationRequest } from "../../src/contracts/recommendations";
 import { ids, seedId } from "../../prisma/seed-data";
 import { DiscoveryService } from "../../src/modules/discovery/service";
+import { approvedCatalogueManifest, approvedCatalogueFamilyIds } from "../../prisma/catalogue-data";
+import { populateApprovedCatalogueAndQuiz } from "../../prisma/catalogue-population";
+import { approvedQuizManifest } from "../../prisma/quiz-data";
 
+const familyQuestion = approvedQuizManifest.questions[0];
+const amberOption = familyQuestion?.options[0];
+const matchingAmberPerfume = approvedCatalogueManifest.products.find(product => product.primaryFamilyId === approvedCatalogueFamilyIds.amber);
+if (!familyQuestion || !amberOption || !matchingAmberPerfume) throw new Error("Canonical quiz fixtures are incomplete.");
+const amberPerfume = matchingAmberPerfume;
 const request: RecommendationRequest = {
-  quizId: ids.quiz, quizVersion: "1", answers: [{ questionId: ids.question, optionIds: [ids.option] }],
+  quizId: approvedQuizManifest.id, quizVersion: approvedQuizManifest.version,
+  answers: [{ questionId: familyQuestion.id, optionIds: [amberOption.id] }],
 };
 
 async function removeRun(db: PrismaClient, runId: string): Promise<void> {
@@ -21,6 +30,10 @@ async function removeRun(db: PrismaClient, runId: string): Promise<void> {
 export function discoveryCompletionCases(db: PrismaClient): void {
   describe("completed deterministic discovery", () => {
     const service = new DiscoveryService(db, () => new Date("2026-09-08T00:00:00.000Z"));
+
+    beforeAll(async () => {
+      await populateApprovedCatalogueAndQuiz(db, approvedCatalogueManifest, approvedQuizManifest);
+    });
 
     it("maps controlled mood, occasion and weather tags to active catalogue perfumes", async () => {
       const tags = [
@@ -52,7 +65,7 @@ export function discoveryCompletionCases(db: PrismaClient): void {
       const questionId = seedId(9310);
       const optionIds = [seedId(9311), seedId(9312), seedId(9313)];
       await db.quizQuestion.create({ data: {
-        id: questionId, quizId: ids.quiz, prompt: "Synthetic optional preferences", sortOrder: 2,
+        id: questionId, quizId: approvedQuizManifest.id, prompt: "Synthetic optional preferences", sortOrder: 2,
         required: false, minSelections: 0, maxSelections: 2,
       } });
       let runId: string | undefined;
@@ -63,7 +76,7 @@ export function discoveryCompletionCases(db: PrismaClient): void {
           await db.quizOption.create({ data: { id: optionId, questionId, label: `Synthetic option ${index}`, value, sortOrder: index } });
         }
         const definition = await service.getQuiz();
-        expect(definition).toMatchObject({ ok: true, data: { questions: [{ id: ids.question }, { id: questionId, required: false, minSelections: 0, maxSelections: 2 }] } });
+        expect(definition).toMatchObject({ ok: true, data: { questions: [{ id: familyQuestion.id }, { id: questionId, required: false, minSelections: 0, maxSelections: 2 }] } });
         expect(await service.getCandidateContext({ ...request, quizVersion: "obsolete" })).toMatchObject({ ok: false, error: { code: "CONFLICT" } });
         expect(await service.generate({ ...request, answers: [...request.answers, { questionId, optionIds }] })).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } });
         const result = await service.generate({ ...request, answers: [...request.answers, { questionId, optionIds: optionIds.slice(0, 2) }] });
@@ -85,20 +98,20 @@ export function discoveryCompletionCases(db: PrismaClient): void {
     it("builds repeatable bounded context from visible active catalogue only", async () => {
       const unpricedId = seedId(9320);
       await db.perfume.create({ data: {
-        id: unpricedId, slug: "synthetic-unpriced", name: "Synthetic Unpriced", description: "Test-only perfume", primaryFamilyId: ids.family,
+        id: unpricedId, slug: "synthetic-unpriced", name: "Synthetic Unpriced", description: "Test-only perfume", primaryFamilyId: approvedCatalogueFamilyIds.amber,
       } });
       try {
         const first = await service.getCandidateContext(request);
         expect(first).toEqual(await service.getCandidateContext(request));
         expect(first).toMatchObject({ ok: true, data: {
-          selectedFamilies: [{ id: ids.family, label: "Citrus" }],
-          candidates: [{ perfume: { id: ids.perfume, priceFrom: { amountMinor: 12000 } } }],
+          selectedFamilies: [{ id: approvedCatalogueFamilyIds.amber, label: "Amber" }],
+          candidates: [{ perfume: { id: amberPerfume.id, priceFrom: { amountMinor: 3500 } } }],
         } });
         if (first.ok) expect(first.data.candidates.map(item => item.perfume.id)).not.toContain(unpricedId);
-        await db.perfume.update({ where: { id: ids.perfume }, data: { status: "ARCHIVED", archivedAt: new Date("2026-09-08T00:00:00.000Z") } });
+        await db.perfume.update({ where: { id: amberPerfume.id }, data: { status: "ARCHIVED", archivedAt: new Date("2026-09-08T00:00:00.000Z") } });
         expect(await service.getCandidateContext(request)).toMatchObject({ ok: true, data: { candidates: [] } });
       } finally {
-        await db.perfume.update({ where: { id: ids.perfume }, data: { status: "ACTIVE", archivedAt: null } });
+        await db.perfume.update({ where: { id: amberPerfume.id }, data: { status: "ACTIVE", archivedAt: null } });
         await db.perfume.delete({ where: { id: unpricedId } });
       }
     });

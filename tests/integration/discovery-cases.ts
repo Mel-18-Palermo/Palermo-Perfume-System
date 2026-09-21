@@ -1,31 +1,120 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { PrismaClient } from "../../src/lib/db/generated/client";
 import { ids } from "../../prisma/seed-data";
 import { DiscoveryService } from "../../src/modules/discovery/service";
 import type { ApiResult } from "../../src/contracts/common";
+import { approvedCatalogueManifest } from "../../prisma/catalogue-data";
+import { populateApprovedCatalogueAndQuiz } from "../../prisma/catalogue-population";
+import { approvedQuizManifest } from "../../prisma/quiz-data";
 function code<T>(result: ApiResult<T>): string { expect(result.ok).toBe(false); return result.ok ? "" : result.error.code; }
 export function discoveryCases(db: PrismaClient): void {
   describe("deterministic discovery and quiz authority", () => {
     const service = new DiscoveryService(db, () => new Date("2026-09-08T00:00:00.000Z"));
-    it("returns the approved ordered quiz definition", async () => { const result = await service.getQuiz(); expect(result.ok).toBe(true); if (result.ok) { expect(result.data.id).toBe(ids.quiz); expect(result.data.questions[0]?.options[0]?.id).toBe(ids.option); } });
-    it("rejects missing, duplicate and foreign quiz answers", async () => { expect(code(await service.generate({ quizId: ids.quiz, quizVersion: "1", answers: [] }))).toBe("VALIDATION_ERROR"); expect(code(await service.generate({ quizId: ids.quiz, quizVersion: "1", answers: [{ questionId: ids.question, optionIds: [ids.option, ids.option] }] }))).toBe("VALIDATION_ERROR"); expect(code(await service.generate({ quizId: ids.quiz, quizVersion: "1", answers: [{ questionId: ids.question, optionIds: [ids.option, "24200000-0000-4000-8000-000000000999"] }] }))).toBe("VALIDATION_ERROR"); });
-    it("persists a deterministic fallback run with canonical catalogue candidates", async () => { const result = await service.generate({ quizId: ids.quiz, quizVersion: "1", answers: [{ questionId: ids.question, optionIds: [ids.option] }] }); expect(result.ok).toBe(true); if (result.ok) { expect(result.data.fallback).toBe(true); expect(result.data.items[0]?.perfumeId).toBe(ids.perfume); expect(result.data.items[0]?.reason).toContain("Deterministic"); expect(await db.recommendationRun.count({ where: { id: result.data.runId, status: "FALLBACK" } })).toBe(1); await db.recommendationItem.deleteMany({ where: { runId: result.data.runId } }); await db.recommendationRun.delete({ where: { id: result.data.runId } }); const attempt = await db.quizAttempt.findFirst({ where: { visitorSessionKey: { startsWith: "quiz-" }, quizId: ids.quiz }, orderBy: { completedAt: "desc" } }); if (attempt) { await db.quizResponse.deleteMany({ where: { attemptId: attempt.id } }); await db.quizAttempt.delete({ where: { id_quizId: { id: attempt.id, quizId: ids.quiz } } }); } } });
+    const question = approvedQuizManifest.questions[0];
+    if (!question) throw new Error("Canonical quiz requires a family question.");
+    const request = (optionId: string) => ({
+      quizId: approvedQuizManifest.id,
+      quizVersion: approvedQuizManifest.version,
+      answers: [{ questionId: question.id, optionIds: [optionId] }],
+    });
+
+    beforeAll(async () => { await populateApprovedCatalogueAndQuiz(db, approvedCatalogueManifest, approvedQuizManifest); });
+
+    it("returns only the active canonical family quiz and deactivates the synthetic fixture", async () => {
+      const result = await service.getQuiz();
+      expect(result).toMatchObject({ ok: true, data: {
+        id: approvedQuizManifest.id, version: "2", questions: [{
+          id: question.id, prompt: "Which fragrance family would you like to explore?",
+          required: true, minSelections: 1, maxSelections: 1,
+          options: [
+            { id: question.options[0]?.id, label: "Amber" },
+            { id: question.options[1]?.id, label: "Fruity" },
+            { id: question.options[2]?.id, label: "Vanilla" },
+            { id: question.options[3]?.id, label: "Warm Spicy" },
+          ],
+        }],
+      } });
+      expect(await db.quiz.findUnique({ where: { id: ids.quiz }, select: { active: true } })).toEqual({ active: false });
+      expect(await db.quizOption.findMany({ where: { questionId: question.id }, orderBy: { sortOrder: "asc" }, select: { label: true, value: true } }))
+        .toEqual(question.options.map(option => ({ label: option.label, value: option.value })));
+    });
+
+    it("reconciles the canonical quiz idempotently and leaves no other quiz active", async () => {
+      const before = {
+        quizzes: await db.quiz.count(),
+        questions: await db.quizQuestion.count({ where: { quizId: approvedQuizManifest.id } }),
+        options: await db.quizOption.count({ where: { questionId: question.id } }),
+      };
+      await populateApprovedCatalogueAndQuiz(db, approvedCatalogueManifest, approvedQuizManifest);
+      await populateApprovedCatalogueAndQuiz(db, approvedCatalogueManifest, approvedQuizManifest);
+      expect({
+        quizzes: await db.quiz.count(),
+        questions: await db.quizQuestion.count({ where: { quizId: approvedQuizManifest.id } }),
+        options: await db.quizOption.count({ where: { questionId: question.id } }),
+      }).toEqual(before);
+      expect(await db.quiz.findMany({ where: { active: true }, select: { id: true, version: true } }))
+        .toEqual([{ id: approvedQuizManifest.id, version: approvedQuizManifest.version }]);
+    });
+
+    it("rejects missing, duplicate and foreign canonical quiz answers", async () => {
+      const option = question.options[0];
+      if (!option) throw new Error("Canonical quiz requires an option.");
+      expect(code(await service.generate({ ...request(option.id), answers: [] }))).toBe("VALIDATION_ERROR");
+      expect(code(await service.generate({ ...request(option.id), answers: [{ questionId: question.id, optionIds: [option.id, option.id] }] }))).toBe("VALIDATION_ERROR");
+      expect(code(await service.generate({ ...request(option.id), answers: [{ questionId: question.id, optionIds: ["24200000-0000-4000-8000-000000000999"] }] }))).toBe("VALIDATION_ERROR");
+    });
+
+    it("maps every exposed option to a real canonical family and recommendation candidates", async () => {
+      const approvedProductIds = new Set(approvedCatalogueManifest.products.map(product => product.id));
+      for (const option of question.options) {
+        const context = await service.getCandidateContext(request(option.id));
+        expect(context).toMatchObject({ ok: true, data: { selectedFamilies: [{ id: option.value, label: option.label }] } });
+        if (!context.ok) continue;
+        expect(context.data.candidates.length).toBeGreaterThan(0);
+        expect(context.data.candidates.every(candidate => approvedProductIds.has(candidate.perfume.id))).toBe(true);
+        expect(context.data.candidates.map(candidate => candidate.perfume.id)).not.toContain(ids.perfume);
+        expect(context.data.candidates.map(candidate => candidate.perfume.id)).not.toContain(ids.woodyPerfume);
+      }
+    });
+
+    it("persists deterministic canonical-family recommendations", async () => {
+      const option = question.options[0];
+      if (!option) throw new Error("Canonical quiz requires an option.");
+      const result = await service.generate(request(option.id));
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      try {
+        expect(result.data.fallback).toBe(true);
+        expect(result.data.items.length).toBeGreaterThan(0);
+        expect(result.data.items.map(item => item.perfumeId)).not.toContain(ids.perfume);
+        expect(result.data.items.map(item => item.perfumeId)).not.toContain(ids.woodyPerfume);
+        expect(await db.recommendationRun.count({ where: { id: result.data.runId, status: "FALLBACK" } })).toBe(1);
+      } finally {
+        const run = await db.recommendationRun.findUniqueOrThrow({ where: { id: result.data.runId } });
+        await db.recommendationItem.deleteMany({ where: { runId: result.data.runId } });
+        await db.recommendationRun.delete({ where: { id: result.data.runId } });
+        if (run.quizAttemptId) {
+          await db.quizResponse.deleteMany({ where: { attemptId: run.quizAttemptId } });
+          await db.quizAttempt.delete({ where: { id_quizId: { id: run.quizAttemptId, quizId: approvedQuizManifest.id } } });
+        }
+      }
+    });
 
     it("persists a provider recommendation as a succeeded run with canonical catalogue data", async () => {
       const result = await service.persistProviderRecommendations(
         {
-          quizId: ids.quiz,
-          quizVersion: "1",
+          quizId: approvedQuizManifest.id,
+          quizVersion: approvedQuizManifest.version,
           answers: [
             {
-              questionId: ids.question,
-              optionIds: [ids.option],
+              questionId: question.id,
+              optionIds: [question.options[0]?.id ?? ""],
             },
           ],
         },
         [
           {
-            perfumeId: ids.perfume,
+            perfumeId: approvedCatalogueManifest.products.find(product => product.primaryFamilyId === question.options[0]?.value)?.id ?? "",
             reason: "Grounded provider recommendation.",
           },
         ],
@@ -43,11 +132,11 @@ export function discoveryCases(db: PrismaClient): void {
         expect(result.data.items).toHaveLength(1);
 
         const item = result.data.items[0];
-        expect(item?.perfumeId).toBe(ids.perfume);
-        expect(item?.perfume.id).toBe(ids.perfume);
-        expect(item?.perfume.name).toBe("Demo Citrus");
+        expect(item?.perfumeId).toBe(approvedCatalogueManifest.products.find(product => product.primaryFamilyId === question.options[0]?.value)?.id);
+        expect(item?.perfume.id).toBe(item?.perfumeId);
+        expect(item?.perfume.name).toBe("Saphire Chocolate");
         expect(item?.perfume.priceFrom).toEqual({
-          amountMinor: 12000,
+          amountMinor: 3500,
           currency: "AUD",
         });
         expect(item?.reason).toBe(
@@ -70,7 +159,7 @@ export function discoveryCases(db: PrismaClient): void {
         expect(run.providerReference).toBe("resp_test_persisted");
         expect(run.items).toEqual([
           expect.objectContaining({
-            perfumeId: ids.perfume,
+            perfumeId: item?.perfumeId,
             rank: 1,
             explanation: "Grounded provider recommendation.",
           }),
@@ -78,8 +167,8 @@ export function discoveryCases(db: PrismaClient): void {
         expect(run.quizAttempt?.status).toBe("COMPLETED");
         expect(run.quizAttempt?.responses).toEqual([
           expect.objectContaining({
-            questionId: ids.question,
-            optionId: ids.option,
+            questionId: question.id,
+            optionId: question.options[0]?.id,
           }),
         ]);
       } finally {

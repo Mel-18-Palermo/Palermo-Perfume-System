@@ -184,8 +184,11 @@ describe("recommendation and admin fixtures", () => {
     const client = createMockApi();
     const quiz = data(await client.recommendations.getQuiz());
     expect(await client.recommendations.generate({ quizId: quiz.id, quizVersion: quiz.version, answers: [] })).toEqual(failure("VALIDATION_ERROR"));
+    const question = quiz.questions[0];
+    const option = question?.options[0];
+    if (!question || !option) throw new Error("Canonical quiz fixture is incomplete.");
     const result = data(await client.recommendations.generate({ quizId: quiz.id, quizVersion: quiz.version,
-      answers: [{ questionId: "question-family", optionIds: ["option-citrus"] }] }));
+      answers: [{ questionId: question.id, optionIds: [option.id] }] }));
     expect(result.fallback).toBe(true);
     expect(result.generatedAt).toBe(fixtures.FIXTURE_TIME);
   });
