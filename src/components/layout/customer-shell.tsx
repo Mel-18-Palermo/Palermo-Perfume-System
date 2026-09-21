@@ -6,6 +6,8 @@ import { StoreFooter } from "./store-footer";
 import { MobileNav } from "./mobile-nav";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
+import { api } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 export interface CustomerShellProps {
   children: React.ReactNode;
@@ -22,20 +24,56 @@ export function CustomerShell({
   isLoading = false,
   contentLayout = "contained",
 }: CustomerShellProps) {
+  const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const [hasLoggedOut, setHasLoggedOut] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const [logoutError, setLogoutError] = React.useState<string | null>(null);
+  const currentSession = hasLoggedOut ? null : session;
+  const currentCart = hasLoggedOut ? null : cart;
+
+  const handleLogout = React.useCallback(async (): Promise<boolean> => {
+    setLogoutError(null);
+    setIsLoggingOut(true);
+
+    try {
+      const result = await api.auth.logout();
+      if (!result.ok) {
+        setLogoutError(result.error.message || "Unable to log out. Please try again.");
+        return false;
+      }
+
+      setHasLoggedOut(true);
+      setMobileNavOpen(false);
+      router.replace("/");
+      router.refresh();
+      return true;
+    } catch {
+      setLogoutError("Unable to log out. Please check your connection and try again.");
+      return false;
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [router]);
 
   return (
     <div className="flex min-h-screen flex-col bg-bg text-text">
       <StoreHeader
-        cart={cart}
-        session={session}
+        cart={currentCart}
+        session={currentSession}
         isLoading={isLoading}
+        isLoggingOut={isLoggingOut}
+        logoutError={logoutError}
+        onLogout={handleLogout}
         onOpenMobileNav={() => setMobileNavOpen(true)}
       />
       <MobileNav
         isOpen={mobileNavOpen}
-        session={session}
+        session={currentSession}
         isLoading={isLoading}
+        isLoggingOut={isLoggingOut}
+        logoutError={logoutError}
+        onLogout={handleLogout}
         onClose={() => setMobileNavOpen(false)}
       />
       <main

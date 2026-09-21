@@ -16,6 +16,8 @@ export function StoreFooter() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-text">Navigation</h4>
             <div className="mt-3 flex flex-col space-y-2">
               <Link href="/catalogue" className="text-xs text-text-muted hover:text-text">Catalogue</Link>
+              <Link href="/quiz" className="text-xs text-text-muted hover:text-text">Quiz</Link>
+              <Link href="/cart" className="text-xs text-text-muted hover:text-text">Cart</Link>
             </div>
           </div>
           <div>
