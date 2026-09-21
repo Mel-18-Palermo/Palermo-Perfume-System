@@ -26,13 +26,22 @@ const manifest: ApprovedCatalogueManifest = {
     notes: [{ noteId: seedId(951), layer: "BASE" }], suitabilityTagIds: [seedId(953)], collectionIds: [seedId(954)],
     images: [{ id: seedId(956), url: "/catalogue/products/integration-only-product/primary.png",
       alt: "Integration-only product image", sortOrder: 0 }],
-    variants: [{
-      id: seedId(957), sku: "INTEGRATION-ONLY-SKU", bottleSize: "Integration-only size",
-      concentration: "Integration-only concentration", priceMinor: 0, currency: "AUD", availability: "AVAILABLE",
-      personalisedLabel: false, engravingName: false, giftMessage: false, giftPackagingOptions: [],
-      openingInventory: { onHand: 1, reserved: 0, lowStockThreshold: 0,
-        movementId: seedId(958), movementReference: "integration-only-opening" },
-    }],
+    variants: [
+      {
+        id: seedId(957), sku: "INTEGRATION-ONLY-SKU", bottleSize: "Integration-only size",
+        concentration: "Integration-only concentration", priceMinor: 0, currency: "AUD", availability: "AVAILABLE",
+        personalisedLabel: false, engravingName: false, giftMessage: false, giftPackagingOptions: [],
+        openingInventory: { onHand: 1, reserved: 0, lowStockThreshold: 0,
+          movementId: seedId(958), movementReference: "integration-only-opening" },
+      },
+      {
+        id: seedId(975), sku: "INTEGRATION-ZERO-STOCK-SKU", bottleSize: "Integration-only size",
+        concentration: "Integration-only concentration", priceMinor: 0, currency: "AUD", availability: "UNAVAILABLE",
+        personalisedLabel: false, engravingName: false, giftMessage: false, giftPackagingOptions: [],
+        openingInventory: { onHand: 0, reserved: 0, lowStockThreshold: 3,
+          movementId: null, movementReference: null },
+      },
+    ],
   }],
 };
 
@@ -60,19 +69,25 @@ export function cataloguePopulationCases(db: PrismaClient): void {
       const first = await populateApprovedCatalogue(db, manifest);
       const countsAfterFirst = {
         products: await db.perfume.count({ where: { id: seedId(955) } }),
-        variants: await db.perfumeVariant.count({ where: { id: seedId(957) } }),
+        variants: await db.perfumeVariant.count({ where: { id: { in: [seedId(957), seedId(975)] } } }),
         images: await db.perfumeImage.count({ where: { id: seedId(956) } }),
         movements: await db.inventoryMovement.count({ where: { id: seedId(958) } }),
+        zeroStockMovements: await db.inventoryMovement.count({ where: { variantId: seedId(975) } }),
       };
+      expect(countsAfterFirst).toMatchObject({ variants: 2, movements: 1, zeroStockMovements: 0 });
+      expect(await db.inventoryBalance.findUnique({ where: { variantId: seedId(975) } }))
+        .toMatchObject({ onHand: 0, reserved: 0, lowStockThreshold: 3 });
       const second = await populateApprovedCatalogue(db, manifest);
-      expect(first).toEqual({ products: 1, variants: 1, images: 1 });
+      expect(first).toEqual({ products: 1, variants: 2, images: 1 });
       expect(second).toEqual(first);
       expect({
         products: await db.perfume.count({ where: { id: seedId(955) } }),
-        variants: await db.perfumeVariant.count({ where: { id: seedId(957) } }),
+        variants: await db.perfumeVariant.count({ where: { id: { in: [seedId(957), seedId(975)] } } }),
         images: await db.perfumeImage.count({ where: { id: seedId(956) } }),
         movements: await db.inventoryMovement.count({ where: { id: seedId(958) } }),
+        zeroStockMovements: await db.inventoryMovement.count({ where: { variantId: seedId(975) } }),
       }).toEqual(countsAfterFirst);
+      expect(await db.inventoryBalance.count({ where: { variantId: seedId(975) } })).toBe(1);
       expect({
         customers: await db.customer.count(), orders: await db.order.count(), payments: await db.payment.count(),
         carts: await db.cart.count(), shipments: await db.shipment.count(),
@@ -80,7 +95,7 @@ export function cataloguePopulationCases(db: PrismaClient): void {
     });
 
     it("rejects both directions of product identity collision and accepts an exact match", async () => {
-      await expect(populateApprovedCatalogue(db, manifest)).resolves.toEqual({ products: 1, variants: 1, images: 1 });
+      await expect(populateApprovedCatalogue(db, manifest)).resolves.toEqual({ products: 1, variants: 2, images: 1 });
 
       const idCollision = manifestWithProduct({
         ...approvedProduct,
@@ -213,7 +228,7 @@ export function cataloguePopulationCases(db: PrismaClient): void {
           await testCase.cleanup();
         }
       }
-      await expect(populateApprovedCatalogue(db, manifest)).resolves.toEqual({ products: 1, variants: 1, images: 1 });
+      await expect(populateApprovedCatalogue(db, manifest)).resolves.toEqual({ products: 1, variants: 2, images: 1 });
     });
 
     it("preserves an existing balance and rejects a mismatched opening movement", async () => {
@@ -230,10 +245,10 @@ export function cataloguePopulationCases(db: PrismaClient): void {
         ...approvedProduct,
         variants: approvedProduct.variants.map(variant => ({
           ...variant,
-          openingInventory: {
+          openingInventory: variant.id === seedId(957) ? {
             ...variant.openingInventory,
             onHand: 2,
-          },
+          } : variant.openingInventory,
         })),
       });
       try {

@@ -87,9 +87,9 @@ After the manifest and matching assets have been reviewed, populate an explicitl
 pnpm catalogue:populate
 ```
 
-The command validates the complete manifest and every declared asset before opening a database connection. It then applies one transaction of stable-identity upserts. It can be rerun safely: catalogue facts are reconciled, relation rows use compound-key upserts, opening inventory is created only when absent, and the unique opening movement is never replayed. Existing balances are not reset. Identity conflicts fail rather than silently adopting or duplicating existing rows.
+The command validates the complete manifest and every declared asset before opening a database connection. It then applies one transaction of stable-identity upserts. It can be rerun safely: catalogue facts are reconciled, relation rows use compound-key upserts, opening inventory is created only when absent, and a positive-stock opening movement is never replayed. Zero-stock variants receive an inventory balance but no zero-delta movement. Existing balances are not reset. Identity conflicts fail rather than silently adopting or duplicating existing rows.
 
-The command uses `DIRECT_URL` and the same `assertDevelopmentDatabase` boundary as development seeding, so missing/ambiguous configuration and Production execution fail closed. It touches only catalogue vocabulary, perfumes, images, notes, suitability, collections, variants, and the manifest variants' opening inventory balance/movement. It does not read or mutate customer, identity, cart, order, payment, invoice, shipment, recommendation, quiz, or demo-reset ownership.
+The command uses `DIRECT_URL` and the same `assertDevelopmentDatabase` boundary as development seeding, so missing/ambiguous configuration and Production execution fail closed. It touches only catalogue vocabulary, perfumes, images, notes, suitability, collections, variants, and the manifest variants' opening inventory balances and positive-stock movements. It does not read or mutate customer, identity, cart, order, payment, invoice, shipment, recommendation, quiz, or demo-reset ownership.
 
 Image assets use these version-controlled paths:
 

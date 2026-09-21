@@ -34,7 +34,7 @@ function fixture(): ApprovedCatalogueManifest {
         id: id(12), sku: "TEST-ONLY-SKU", bottleSize: "Test-only size", concentration: "Test-only concentration",
         priceMinor: 0, currency: "AUD", availability: "OUT_OF_STOCK",
         personalisedLabel: false, engravingName: false, giftMessage: false, giftPackagingOptions: [],
-        openingInventory: { onHand: 0, reserved: 0, lowStockThreshold: 0, movementId: id(13), movementReference: "test-only-opening" },
+        openingInventory: { onHand: 0, reserved: 0, lowStockThreshold: 0, movementId: null, movementReference: null },
       }],
     }],
   };
@@ -82,6 +82,39 @@ describe("approved catalogue manifest", () => {
       .rejects.toBeInstanceOf(CatalogueManifestError);
   });
 
+  it("validates opening movement metadata against the declared opening stock", () => {
+    const valid = fixture();
+    const product = valid.products[0];
+    const variant = product?.variants[0];
+    expect(product).toBeDefined();
+    expect(variant).toBeDefined();
+    if (!product || !variant) return;
+    const withInventory = (
+      openingInventory: typeof variant.openingInventory,
+    ): ApprovedCatalogueManifest => ({
+      ...valid,
+      products: [{ ...product, variants: [{ ...variant, openingInventory }] }],
+    });
+
+    expect(validateApprovedCatalogueManifest(withInventory({
+      ...variant.openingInventory,
+      onHand: 1,
+    })).some(issue => issue.includes("positive opening stock requires"))).toBe(true);
+    expect(validateApprovedCatalogueManifest(withInventory({
+      ...variant.openingInventory,
+      movementId: id(13),
+      movementReference: "test-only-opening",
+    })).some(issue => issue.includes("zero opening stock cannot declare"))).toBe(true);
+    const malformedIssues = validateApprovedCatalogueManifest(withInventory({
+      ...variant.openingInventory,
+      onHand: 1,
+      movementId: "not-a-uuid",
+      movementReference: "",
+    }));
+    expect(malformedIssues.some(issue => issue.includes("stable UUID"))).toBe(true);
+    expect(malformedIssues.some(issue => issue.includes("invalid opening movement reference"))).toBe(true);
+  });
+
   it("validates the ten approved Palermo products and their local primary assets", async () => {
     expect(validateApprovedCatalogueManifest(approvedCatalogueManifest)).toEqual([]);
     await expect(assertCatalogueAssets(approvedCatalogueManifest)).resolves.toBeUndefined();
@@ -92,6 +125,7 @@ describe("approved catalogue manifest", () => {
     const variants = approvedCatalogueManifest.products.flatMap(product => product.variants);
     expect(new Set(variants.map(variant => variant.sku))).toHaveProperty("size", 10);
     for (const variant of variants) {
+      const expectedOnHand = variant.availability === "AVAILABLE" ? 10 : 0;
       expect(variant).toMatchObject({
         priceMinor: 3500,
         currency: "AUD",
@@ -99,18 +133,37 @@ describe("approved catalogue manifest", () => {
         concentration: "Eau de Parfum",
       });
       expect(variant.openingInventory).toMatchObject({
-        onHand: variant.availability === "AVAILABLE" ? 10 : 0,
-        reserved: 0,
-        lowStockThreshold: 3,
-        movementReference: `catalogue-opening-${variant.sku}`,
+  	onHand: expectedOnHand,
+  	reserved: 0,
+  	lowStockThreshold: 3,
+  	movementReference: expectedOnHand > 0 ? `catalogue-opening-${variant.sku}` : null,
       });
+
+if (expectedOnHand > 0) {
+  expect(typeof variant.openingInventory.movementId).toBe("string");
+} else {
+  expect(variant.openingInventory.movementId).toBeNull();
+}
     }
 
     const bySlug = new Map(approvedCatalogueManifest.products.map(product => [product.slug, product]));
     expect(bySlug.get("baran")?.variants[0]).toMatchObject({
       sku: "W263",
       availability: "UNAVAILABLE",
+      openingInventory: {
+        onHand: 0,
+        reserved: 0,
+        lowStockThreshold: 3,
+        movementId: null,
+        movementReference: null,
+      },
     });
+    expect(variants.filter(variant => variant.openingInventory.onHand === 0)).toHaveLength(1);
+    expect(variants.filter(variant => variant.openingInventory.onHand > 0)).toHaveLength(9);
+    expect(variants
+      .filter(variant => variant.openingInventory.onHand > 0)
+      .every(variant => variant.openingInventory.movementId !== null
+        && variant.openingInventory.movementReference !== null)).toBe(true);
     expect(
       approvedCatalogueManifest.products
         .filter(product => product.slug !== "baran")
