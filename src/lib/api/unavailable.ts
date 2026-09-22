@@ -7,7 +7,7 @@ export function createUnavailableApi(): PalermoApi {
   const unavailable = (): Promise<ApiResult<never>> => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE"));
   return {
     auth: {
-      register: unavailable, verify: unavailable, login: unavailable, logout: unavailable,
+      register: unavailable, verify: unavailable, login: unavailable, adminLogin: unavailable, logout: unavailable,
       getSession: unavailable, requestPasswordReset: unavailable, completePasswordReset: unavailable,
     },
     catalogue: { list: unavailable, get: unavailable, getFilters: unavailable },

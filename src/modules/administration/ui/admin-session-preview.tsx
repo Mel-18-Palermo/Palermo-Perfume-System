@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import type { Session } from "@/contracts/auth";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { adminLoginHref } from "./admin-auth-routing";
 
 type AdminSessionPreviewProps = Readonly<{
   children: ReactNode;
@@ -18,12 +20,13 @@ type SessionState =
 export function AdminSessionPreview({
   children,
 }: AdminSessionPreviewProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [state, setState] = useState<SessionState>({
     status: "loading",
   });
   const [reloadToken, setReloadToken] = useState(0);
-
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -56,9 +59,27 @@ export function AdminSessionPreview({
     };
   }, [reloadToken]);
 
+  useEffect(() => {
+    if (state.status !== "ready" || state.session.user) return;
+    router.replace(adminLoginHref(pathname));
+  }, [pathname, router, state]);
+
   function retry() {
     setState({ status: "loading" });
     setReloadToken(value => value + 1);
+  }
+
+  async function logout(): Promise<void> {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    const result = await api.auth.logout();
+    if (!result.ok) {
+      setState({ status: "error", message: result.error.message });
+      setLoggingOut(false);
+      return;
+    }
+    router.replace("/admin/login");
+    router.refresh();
   }
 
   if (state.status === "loading") {
@@ -70,9 +91,12 @@ export function AdminSessionPreview({
   if (user?.role === "ADMIN") {
     return (
       <div className="space-y-6">
-        <p className="text-sm text-text-muted">
-          Administrator: {user.displayName}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <p className="text-sm text-text-muted">Administrator: {user.displayName}</p>
+          <Button type="button" variant="outline" isLoading={loggingOut} onClick={() => { void logout(); }}>
+            Sign out
+          </Button>
+        </div>
         {children}
       </div>
     );
@@ -91,6 +115,10 @@ export function AdminSessionPreview({
       : user
         ? "The current account is not an administrator."
         : "No signed-in administrator session was found.";
+
+  if (state.status === "ready" && !user) {
+    return <p role="status">Redirecting to administrator sign-in…</p>;
+  }
 
   return (
     <div className="space-y-6">
@@ -113,16 +141,8 @@ export function AdminSessionPreview({
           Check session again
         </Button>
 
-        {isDevelopment && (
-          <p className="text-sm text-text-muted">
-            Development UI preview only. No administrator access has
-            been established. Real operations still require server
-            authorization; mock screens are labelled separately.
-          </p>
-        )}
       </section>
 
-      {isDevelopment ? children : null}
     </div>
   );
 }

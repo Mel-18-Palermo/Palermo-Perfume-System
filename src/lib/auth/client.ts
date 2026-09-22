@@ -31,6 +31,7 @@ export function createAuthHttpClient(fetcher: typeof fetch = fetch): AuthApi {
     register: (input) => call("register", input, pending),
     verify: (input) => call("verify", input, active),
     login: (input) => call("login", input, session),
+    adminLogin: (input) => call("admin-login", input, session),
     logout: () => call("logout", undefined, acknowledged),
     getSession: () => call("session", undefined, session, "GET"),
     requestPasswordReset: (input) => call("request-password-reset", input, acknowledged),
