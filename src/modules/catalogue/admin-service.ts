@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "../../lib/db/generated/client";
-import type { AdminPerfume, PerfumeInput, VariantInput } from "../../contracts/admin";
+import type { AdminCatalogueReferences, AdminPerfume, PerfumeInput, VariantInput } from "../../contracts/admin";
 import type { PerfumeVariantSummary, SuitabilitySummary } from "../../contracts/catalogue";
 import type { ApiResult, Option, PageRequest, Page } from "../../contracts/common";
 import { failure, success } from "../../lib/api/result";
@@ -148,6 +148,22 @@ export class AdminCatalogueService {
     const tags = Object.values(input.suitability).flatMap(values => values.map(value => ({ perfumeId, tagId: value.id })));
     if (tags.length) await tx.perfumeSuitability.createMany({ data: tags });
     if (input.images.length) await tx.perfumeImage.createMany({ data: input.images.map((image, index) => ({ id: image.id, perfumeId, url: image.url, alt: image.alt, sortOrder: index })) });
+  }
+  async references(): Promise<ApiResult<AdminCatalogueReferences>> {
+    const [family, note, intensity, tags] = await Promise.all([
+      this.db.fragranceFamily.findMany({ where: { active: true }, orderBy: [{ name: "asc" }, { id: "asc" }] }),
+      this.db.fragranceNote.findMany({ where: { active: true }, orderBy: [{ name: "asc" }, { id: "asc" }] }),
+      this.db.intensity.findMany({ where: { active: true }, orderBy: [{ name: "asc" }, { id: "asc" }] }),
+      this.db.suitabilityTag.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { value: "asc" }, { id: "asc" }] }),
+    ]);
+    const suitability: { [Key in keyof SuitabilitySummary]: Option[] } = { occasion: [], mood: [], weather: [], daypart: [], season: [] };
+    for (const tag of tags) suitability[tag.category.toLowerCase() as keyof SuitabilitySummary].push(option(tag));
+    return success({
+      family: family.map(option),
+      note: note.map(item => ({ ...option(item), description: item.description })),
+      intensity: intensity.map(option),
+      suitability,
+    });
   }
   async list(request: PageRequest): Promise<ApiResult<Page<AdminPerfume>>> { const page = request.page ?? 1; const pageSize = request.pageSize ?? 20; if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100) return failure("VALIDATION_ERROR"); const [rows, total] = await Promise.all([this.db.perfume.findMany({ include, orderBy: [{ name: "asc" }, { id: "asc" }], skip: (page - 1) * pageSize, take: pageSize }), this.db.perfume.count()]); return success({ items: rows.map(dto), page, pageSize, hasMore: page * pageSize < total }); }
   async get(idValue: string): Promise<ApiResult<AdminPerfume>> { const row = await this.load(idValue); return row ? success(dto(row)) : failure("NOT_FOUND"); }
