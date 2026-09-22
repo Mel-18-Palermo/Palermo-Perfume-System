@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ShoppingBag, Menu } from "lucide-react";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
@@ -25,8 +26,11 @@ export function StoreHeader({
   logoutError = null,
   onLogout,
 }: StoreHeaderProps) {
+  const pathname = usePathname();
   const itemCount = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) ?? 0;
   const user = session?.user;
+  const navigationClassName = (href: string) =>
+    `inline-flex min-h-[44px] items-center text-sm font-medium text-text transition-colors hover:underline ${pathname === href ? "underline underline-offset-4" : ""}`;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-surface/95 backdrop-blur-md">
@@ -47,10 +51,10 @@ export function StoreHeader({
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 ml-4" aria-label="Main Navigation">
-            <Link href="/catalogue" className="text-sm font-medium text-text hover:underline transition-colors">
+            <Link href="/catalogue" className={navigationClassName("/catalogue")} aria-current={pathname === "/catalogue" ? "page" : undefined}>
               Catalogue
             </Link>
-            <Link href="/quiz" className="text-sm font-medium text-text hover:underline transition-colors">
+            <Link href="/quiz" className={navigationClassName("/quiz")} aria-current={pathname === "/quiz" ? "page" : undefined}>
               Quiz
             </Link>
           </nav>
@@ -61,7 +65,7 @@ export function StoreHeader({
             <span className="text-xs text-text-muted">Loading...</span>
           ) : user ? (
             <>
-              <Link href="/account" className="text-xs font-medium text-text hover:underline transition-colors">
+              <Link href="/account" className="inline-flex min-h-[44px] items-center text-xs font-medium text-text transition-colors hover:underline" aria-current={pathname === "/account" ? "page" : undefined}>
                 Account
               </Link>
               <button
@@ -75,10 +79,10 @@ export function StoreHeader({
             </>
           ) : (
             <>
-              <Link href="/login" className="text-xs font-medium text-text hover:underline transition-colors">
+              <Link href="/login" className="inline-flex min-h-[44px] items-center text-xs font-medium text-text transition-colors hover:underline" aria-current={pathname === "/login" ? "page" : undefined}>
                 Login
               </Link>
-              <Link href="/signup" className="text-xs font-medium text-text hover:underline transition-colors">
+              <Link href="/signup" className="inline-flex min-h-[44px] items-center text-xs font-medium text-text transition-colors hover:underline" aria-current={pathname === "/signup" ? "page" : undefined}>
                 Sign Up
               </Link>
             </>

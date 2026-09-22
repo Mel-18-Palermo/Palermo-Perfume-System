@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Drawer } from "@/components/ui/drawer";
 import type { Session } from "@/contracts/auth";
 
@@ -24,7 +25,10 @@ export function MobileNav({
   logoutError = null,
   onLogout,
 }: MobileNavProps) {
+  const pathname = usePathname();
   const user = session?.user;
+  const navigationClassName = (href: string) =>
+    `flex min-h-[44px] items-center text-base font-medium text-text transition-colors hover:underline ${pathname === href ? "underline underline-offset-4" : ""}`;
 
   return (
     <Drawer isOpen={isOpen} onClose={onClose} title="Navigation">
@@ -32,21 +36,24 @@ export function MobileNav({
         <Link
           href="/catalogue"
           onClick={onClose}
-          className="flex min-h-[44px] items-center text-base font-medium text-text hover:underline transition-colors"
+          className={navigationClassName("/catalogue")}
+          aria-current={pathname === "/catalogue" ? "page" : undefined}
         >
           Catalogue
         </Link>
         <Link
           href="/quiz"
           onClick={onClose}
-          className="flex min-h-[44px] items-center text-base font-medium text-text hover:underline transition-colors"
+          className={navigationClassName("/quiz")}
+          aria-current={pathname === "/quiz" ? "page" : undefined}
         >
           Quiz
         </Link>
         <Link
           href="/cart"
           onClick={onClose}
-          className="flex min-h-[44px] items-center text-base font-medium text-text hover:underline transition-colors"
+          className={navigationClassName("/cart")}
+          aria-current={pathname === "/cart" ? "page" : undefined}
         >
           Cart
         </Link>
@@ -61,7 +68,8 @@ export function MobileNav({
               <Link
                 href="/account"
                 onClick={onClose}
-                className="flex min-h-[44px] items-center text-base font-medium text-text hover:underline transition-colors"
+                className={navigationClassName("/account")}
+                aria-current={pathname === "/account" ? "page" : undefined}
               >
                 Account
               </Link>
@@ -79,14 +87,16 @@ export function MobileNav({
               <Link
                 href="/login"
                 onClick={onClose}
-                className="flex min-h-[44px] items-center text-base font-medium text-text hover:underline transition-colors"
+                className={navigationClassName("/login")}
+                aria-current={pathname === "/login" ? "page" : undefined}
               >
                 Login
               </Link>
               <Link
                 href="/signup"
                 onClick={onClose}
-                className="flex min-h-[44px] items-center text-base font-medium text-text hover:underline transition-colors"
+                className={navigationClassName("/signup")}
+                aria-current={pathname === "/signup" ? "page" : undefined}
               >
                 Sign Up
               </Link>
