@@ -17,4 +17,16 @@ describe("authentication HTTP adapter", () => {
     expect(await api.login({ email: "synthetic@example.test", password: "synthetic-password" })).toEqual({ ok: false, error: { code: "UNAUTHENTICATED", message: "Invalid credentials." } });
     expect(await api.getSession()).toEqual({ ok: false, error: { code: "TEMPORARILY_UNAVAILABLE", message: "Authentication is temporarily unavailable." } });
   });
+  it("routes administrator login through the dedicated admin-login operation", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({
+      ok: true,
+      data: { user: { id: "admin-1", role: "ADMIN", email: "admin@example.test", displayName: "Administrator" } },
+    }));
+    const input = { email: "admin@example.test", password: "safe-password" };
+    expect(await createAuthHttpClient(fetcher).adminLogin(input)).toMatchObject({ ok: true });
+    expect(fetcher).toHaveBeenCalledWith("/api/auth/admin-login", {
+      method: "POST", credentials: "same-origin", cache: "no-store",
+      headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+    });
+  });
 });

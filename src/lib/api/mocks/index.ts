@@ -102,6 +102,12 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         session = settings.actor === "ADMIN" ? fixtures.administrator : fixtures.customer;
         return success({ user: session });
       }),
+      adminLogin: run("auth.adminLogin", "PUBLIC", input => {
+        if (!input.email.trim() || !input.password) return failure("VALIDATION_ERROR");
+        if (settings.actor !== "ADMIN") return failure("UNAUTHENTICATED");
+        session = fixtures.administrator;
+        return success({ user: session });
+      }),
       logout: run("auth.logout", "PUBLIC", () => { session = null; return success({ acknowledged: true }); }),
       requestPasswordReset: run("auth.requestPasswordReset", "PUBLIC", input => input.email.trim()
         ? success({ acknowledged: true }) : failure("VALIDATION_ERROR")),

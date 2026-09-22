@@ -14,6 +14,7 @@ export type AuthApi = Readonly<{
   register: Endpoint<RegisterRequest, { readonly status: "PENDING_VERIFICATION" }>;
   verify: Endpoint<{ readonly token: string }, { readonly status: "ACTIVE" }>;
   login: Endpoint<LoginRequest, Session>;
+  adminLogin: Endpoint<LoginRequest, Session>;
   logout: Endpoint<void, Acknowledgement>;
   getSession: Endpoint<void, Session>;
   requestPasswordReset: Endpoint<{ readonly email: string }, Acknowledgement>;
