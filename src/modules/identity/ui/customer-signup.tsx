@@ -24,8 +24,10 @@ function validate({ name, email, password, confirmPassword }: Record<Fields, str
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     errors.email = "Enter a valid email address.";
   }
-  if (password.length < 12 || new TextEncoder().encode(password).length > 72) {
-    errors.password = "Use at least 12 characters. Very long passwords aren’t supported.";
+  if (password.length < 12) {
+    errors.password = "Use at least 12 characters.";
+  } else if (new TextEncoder().encode(password).length > 72) {
+    errors.password = "Choose a shorter password.";
   }
   if (!confirmPassword) {
     errors.confirmPassword = "Confirm your password.";
@@ -128,7 +130,7 @@ export function CustomerSignup({ loginHref }: CustomerSignupProps) {
             <form className="mt-8 space-y-5" noValidate onSubmit={event => { void submit(event); }}>
               <Input id="name" name="name" label="Name" autoComplete="name" value={fields.name} onChange={event => update("name", event.target.value)} disabled={submitting} error={errors.name} required />
               <Input id="email" name="email" type="email" label="Email" autoComplete="email" value={fields.email} onChange={event => update("email", event.target.value)} disabled={submitting} error={errors.email} required />
-              <Input id="password" name="password" type="password" label="Password" autoComplete="new-password" helperText="Use at least 12 characters. Very long passwords aren’t supported." value={fields.password} onChange={event => update("password", event.target.value)} disabled={submitting} error={errors.password} required />
+              <Input id="password" name="password" type="password" label="Password" autoComplete="new-password" helperText="Use at least 12 characters." value={fields.password} onChange={event => update("password", event.target.value)} disabled={submitting} error={errors.password} required />
               <Input id="confirm-password" name="confirmPassword" type="password" label="Confirm password" autoComplete="new-password" value={fields.confirmPassword} onChange={event => update("confirmPassword", event.target.value)} disabled={submitting} error={errors.confirmPassword} required />
 
               {requestError && <Alert variant="danger">{requestError}</Alert>}

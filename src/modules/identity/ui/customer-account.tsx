@@ -18,12 +18,26 @@ const emptyAddress = (): AddressFields => ({
   recipientName: "", line1: "", line2: "", suburb: "", state: "", postcode: "", country: "AU",
 });
 
-function addressFields(address: AddressInput | null): AddressFields {
-  return address ? { ...address, line2: address.line2 ?? "" } : emptyAddress();
+function customerFacingFixtureText(value: string, fallback: string): string {
+  return /\b(demo|demonstration|synthetic|fixture|test|implementation|university)\b/i.test(value) ? fallback : value;
 }
 
-function addressInput(fields: AddressFields): AddressInput {
-  return { ...fields, line2: fields.line2.trim() || null, country: fields.country.trim().toUpperCase() };
+function addressFields(address: AddressInput | null): AddressFields {
+  return address ? { ...address, recipientName: customerFacingFixtureText(address.recipientName, "Customer"), line2: address.line2 ?? "" } : emptyAddress();
+}
+
+function addressInput(fields: AddressFields, savedAddress: AddressInput | null): AddressInput {
+  const savedRecipientName = savedAddress?.recipientName;
+  const recipientName = savedRecipientName && fields.recipientName === customerFacingFixtureText(savedRecipientName, "Customer")
+    ? savedRecipientName
+    : fields.recipientName;
+  return { ...fields, recipientName, line2: fields.line2.trim() || null, country: fields.country.trim().toUpperCase() };
+}
+
+function customerFacingIdentityExplanation(explanation: string): string {
+  return /\b(demo|demonstration|synthetic|fixture|deterministic|implementation|university)\b/i.test(explanation)
+    ? "Based on your saved preferences."
+    : explanation;
 }
 
 function AddressForm({ prefix, value, onChange, disabled }: Readonly<{
@@ -39,7 +53,7 @@ function AddressForm({ prefix, value, onChange, disabled }: Readonly<{
     { key: "suburb", label: "Suburb", autoComplete: "address-level2" },
     { key: "state", label: "State", autoComplete: "address-level1" },
     { key: "postcode", label: "Postcode", autoComplete: "postal-code" },
-    { key: "country", label: "Country code", autoComplete: "country" },
+    { key: "country", label: "Country/region", autoComplete: "country" },
   ];
   return <div className="grid gap-4 sm:grid-cols-2">
     {fields.map(field => <label key={field.key} className={field.key === "line1" || field.key === "line2" ? "sm:col-span-2" : ""}>
@@ -72,7 +86,7 @@ export function CustomerAccount() {
   const [sameAsDelivery, setSameAsDelivery] = React.useState(true);
 
   const sync = React.useCallback((next: CustomerProfile) => {
-    setProfile(next); setName(next.name); setNoteIds(next.preferences.favouriteNoteIds);
+    setProfile(next); setName(customerFacingFixtureText(next.name, "Customer")); setNoteIds(next.preferences.favouriteNoteIds);
     setIntensityId(next.preferences.preferredIntensityId ?? ""); setAvoidance(next.preferences.sensitivityAvoidance ?? "");
     setDelivery(addressFields(next.deliveryAddress)); setBilling(addressFields(next.billingAddress)); setSameAsDelivery(next.billingSameAsDelivery);
   }, []);
@@ -117,15 +131,15 @@ export function CustomerAccount() {
 
   function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void mutate("profile", "Your profile and fragrance preferences have been saved.", current => api.profile.update({ expectedRevision: current.revision, name, preferences: { favouriteNoteIds: noteIds, preferredIntensityId: intensityId || null, sensitivityAvoidance: avoidance.trim() || null } }));
+    void mutate("profile", "Your profile and fragrance preferences have been saved.", current => api.profile.update({ expectedRevision: current.revision, name: name === customerFacingFixtureText(current.name, "Customer") ? current.name : name, preferences: { favouriteNoteIds: noteIds, preferredIntensityId: intensityId || null, sensitivityAvoidance: avoidance.trim() || null } }));
   }
   function saveDelivery(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void mutate("delivery", "Your delivery address has been saved.", current => api.profile.setDeliveryAddress({ expectedRevision: current.revision, address: addressInput(delivery) }));
+    void mutate("delivery", "Your delivery address has been saved.", current => api.profile.setDeliveryAddress({ expectedRevision: current.revision, address: addressInput(delivery, current.deliveryAddress) }));
   }
   function saveBilling(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void mutate("billing", "Your billing address has been saved.", current => api.profile.setBillingAddress({ expectedRevision: current.revision, billing: sameAsDelivery ? { kind: "USE_DELIVERY" } : { kind: "SEPARATE", address: addressInput(billing) } }));
+    void mutate("billing", "Your billing address has been saved.", current => api.profile.setBillingAddress({ expectedRevision: current.revision, billing: sameAsDelivery ? { kind: "USE_DELIVERY" } : { kind: "SEPARATE", address: addressInput(billing, current.billingAddress) } }));
   }
   function generateIdentity() { void mutate("identity", "Your fragrance identity has been generated.", current => api.profile.generateIdentity({ expectedRevision: current.revision })); }
   async function deactivate() {
@@ -142,25 +156,34 @@ export function CustomerAccount() {
 
   const disabled = loading || busy !== null;
   return <CustomerShell cart={cart} session={session} isLoading={loading}>
-    <div className="mx-auto max-w-[var(--container-page)] space-y-6">
+    <div className="mx-auto max-w-[1100px] space-y-8">
       <div><h1 className="text-h1 text-text">Account</h1><p className="mt-1 text-sm text-text-muted">Manage your profile, fragrance preferences and saved addresses.</p></div>
       {message && <Alert variant={message.variant}>{message.text}</Alert>}
       {loading && <Card aria-busy="true" aria-label="Loading account details"><CardContent className="space-y-4"><div className="h-6 w-48 animate-pulse rounded bg-surface-muted" /><div className="h-11 w-full animate-pulse rounded bg-surface-muted" /><div className="h-11 w-3/4 animate-pulse rounded bg-surface-muted" /></CardContent></Card>}
       {!loading && profile && <>
-        <Card><CardHeader><CardTitle>Profile and preferences</CardTitle></CardHeader><CardContent>
+        <div className="grid gap-6 lg:grid-cols-12">
+        <Card className="lg:col-span-8"><CardHeader><CardTitle>Profile and preferences</CardTitle></CardHeader><CardContent>
           <form className="space-y-5" onSubmit={saveProfile}>
             <label><span className="mb-1 block text-label text-text">Name</span><input required maxLength={100} autoComplete="name" disabled={disabled} value={name} onChange={event => setName(event.target.value)} className="min-h-[44px] w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60" /></label>
             <p className="text-sm text-text-muted">Email: {profile.email}</p>
-            <fieldset disabled={disabled}><legend className="mb-2 text-label text-text">Favourite notes</legend><div className="flex flex-wrap gap-x-4 gap-y-2">{filters?.note.map(note => <label key={note.id} className="flex items-center gap-2 text-sm text-text"><input type="checkbox" checked={noteIds.includes(note.id)} onChange={() => setNoteIds(current => current.includes(note.id) ? current.filter(id => id !== note.id) : [...current, note.id])} />{note.label}</label>)}</div></fieldset>
+            <fieldset disabled={disabled}><legend className="text-label text-text">Favourite notes</legend><p className="mt-1 text-sm text-text-muted">Choose any notes you enjoy.</p><div className="mt-3 flex flex-wrap gap-2">{filters?.note.map(note => {
+              const selected = noteIds.includes(note.id);
+              return <label key={note.id} className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-4 py-2 text-sm transition-colors focus-within:ring-2 focus-within:ring-info focus-within:ring-offset-2 ${selected ? "border-primary bg-primary text-primary-text" : "border-border-strong bg-surface text-text hover:bg-surface-muted"}`}><input type="checkbox" checked={selected} onChange={() => setNoteIds(current => current.includes(note.id) ? current.filter(id => id !== note.id) : [...current, note.id])} className="sr-only" />{note.label}</label>;
+            })}</div></fieldset>
             <label><span className="mb-1 block text-label text-text">Preferred intensity</span><select disabled={disabled || !filters} value={intensityId} onChange={event => setIntensityId(event.target.value)} className="min-h-[44px] w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60"><option value="">No preference</option>{filters?.intensity.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
             <label><span className="mb-1 block text-label text-text">Fragrance avoidance (optional)</span><textarea disabled={disabled} maxLength={500} value={avoidance} onChange={event => setAvoidance(event.target.value)} className="min-h-24 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60" /><span className="mt-1 block text-xs text-text-muted">Share scent preferences only; do not include medical information.</span></label>
             <Button type="submit" isLoading={busy === "profile"}>Save profile</Button>
           </form>
         </CardContent></Card>
-        <Card><CardHeader><CardTitle>Delivery address</CardTitle></CardHeader><CardContent><form className="space-y-5" onSubmit={saveDelivery}><AddressForm prefix="delivery" value={delivery} onChange={setDelivery} disabled={disabled} /><Button type="submit" isLoading={busy === "delivery"}>Save delivery address</Button></form></CardContent></Card>
-        <Card><CardHeader><CardTitle>Billing address</CardTitle></CardHeader><CardContent><form className="space-y-5" onSubmit={saveBilling}><label className="flex items-center gap-2 text-sm text-text"><input type="checkbox" checked={sameAsDelivery} disabled={disabled} onChange={event => setSameAsDelivery(event.target.checked)} />Same as delivery address</label>{sameAsDelivery && !profile.deliveryAddress && <p className="text-sm text-text-muted">Save a delivery address before using it for billing.</p>}{!sameAsDelivery && <AddressForm prefix="billing" value={billing} onChange={setBilling} disabled={disabled} />}<Button type="submit" disabled={sameAsDelivery && !profile.deliveryAddress} isLoading={busy === "billing"}>Save billing address</Button></form></CardContent></Card>
-        <Card><CardHeader><CardTitle>Fragrance identity</CardTitle></CardHeader><CardContent className="space-y-4">{profile.fragranceIdentity ? <div><p className="font-medium text-text">{profile.fragranceIdentity.primaryFamily.label}</p><p className="mt-1 text-sm text-text-muted">{profile.fragranceIdentity.explanation}</p><p className="mt-2 text-xs text-text-muted">Status: {profile.fragranceIdentity.status}</p></div> : <p className="text-sm text-text-muted">Save at least one favourite note or a preferred intensity to generate your fragrance identity.</p>}<Button type="button" variant="outline" onClick={generateIdentity} disabled={!profile.preferences.favouriteNoteIds.length && !profile.preferences.preferredIntensityId} isLoading={busy === "identity"}>Generate fragrance identity</Button></CardContent></Card>
-        <Card><CardHeader><CardTitle>Account status</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-sm text-text-muted">Status: {profile.accountStatus}</p><Button type="button" variant="danger" onClick={() => void deactivate()} isLoading={busy === "deactivate"}>Deactivate account</Button></CardContent></Card>
+        <div className="space-y-6 lg:col-span-4">
+          <Card><CardHeader><CardTitle>Fragrance identity</CardTitle></CardHeader><CardContent className="space-y-4">{profile.fragranceIdentity ? <div><p className="font-medium text-text">{profile.fragranceIdentity.primaryFamily.label}</p><p className="mt-1 text-sm text-text-muted">{customerFacingIdentityExplanation(profile.fragranceIdentity.explanation)}</p><p className="mt-2 text-xs text-text-muted">Status: {profile.fragranceIdentity.status}</p></div> : <p className="text-sm text-text-muted">Save at least one favourite note or a preferred intensity to generate your fragrance identity.</p>}<Button type="button" variant="outline" onClick={generateIdentity} disabled={!profile.preferences.favouriteNoteIds.length && !profile.preferences.preferredIntensityId} isLoading={busy === "identity"}>Generate fragrance identity</Button></CardContent></Card>
+          <Card className="border-danger/40"><CardHeader><CardTitle>Account status</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-sm text-text-muted">Status: {profile.accountStatus}</p><div className="border-t border-danger/20 pt-4"><p className="mb-3 text-sm text-text-muted">Deactivation signs you out and cannot be undone here.</p><Button type="button" variant="danger" onClick={() => void deactivate()} isLoading={busy === "deactivate"}>Deactivate account</Button></div></CardContent></Card>
+        </div>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card><CardHeader><CardTitle>Delivery address</CardTitle></CardHeader><CardContent><form className="space-y-5" onSubmit={saveDelivery}><AddressForm prefix="delivery" value={delivery} onChange={setDelivery} disabled={disabled} /><Button type="submit" isLoading={busy === "delivery"}>Save delivery address</Button></form></CardContent></Card>
+          <Card><CardHeader><CardTitle>Billing address</CardTitle></CardHeader><CardContent><form className="space-y-5" onSubmit={saveBilling}><label className="flex min-h-11 items-center gap-2 text-sm text-text"><input type="checkbox" checked={sameAsDelivery} disabled={disabled} onChange={event => setSameAsDelivery(event.target.checked)} />Same as delivery address</label>{sameAsDelivery && !profile.deliveryAddress && <p className="text-sm text-text-muted">Save a delivery address before using it for billing.</p>}{!sameAsDelivery && <AddressForm prefix="billing" value={billing} onChange={setBilling} disabled={disabled} />}<Button type="submit" disabled={sameAsDelivery && !profile.deliveryAddress} isLoading={busy === "billing"}>Save billing address</Button></form></CardContent></Card>
+        </div>
       </>}
     </div>
   </CustomerShell>;
