@@ -12,7 +12,7 @@ export function readSessionCookie(request: Request): string | undefined {
   return request.headers.get("cookie")?.split(";").map((part) => part.trim()).find((part) => part.startsWith(`${SESSION_COOKIE}=`))?.slice(SESSION_COOKIE.length + 1);
 }
 
-function setSession(response: NextResponse, login?: LoginResult): void {
+export function setSessionCookie(response: NextResponse, login?: LoginResult): void {
   response.cookies.set(SESSION_COOKIE, login?.token ?? "", { httpOnly: true, secure: process.env["NODE_ENV"] === "production", sameSite: "lax", path: "/", expires: login?.expiresAt ?? new Date(0) });
 }
 
@@ -58,26 +58,26 @@ export async function handleAuthRequest(request: Request, operation: string, ser
         const login = await auth.login(input, operation === "admin-login" ? "ADMIN" : "CUSTOMER");
         await auth.logout(token);
         const result = response({ ok: true, data: login.session });
-        setSession(result, login);
+        setSessionCookie(result, login);
         return result;
       }
       case "logout": {
         await auth.logout(token);
         const result = response({ ok: true, data: acknowledged });
-        setSession(result);
+        setSessionCookie(result);
         return result;
       }
       case "deactivate": {
         await auth.deactivate(token);
         const result = response({ ok: true, data: acknowledged });
-        setSession(result);
+        setSessionCookie(result);
         return result;
       }
       case "request-password-reset": await auth.requestPasswordReset(input); return response({ ok: true, data: acknowledged });
       case "complete-password-reset": {
         await auth.completePasswordReset(input);
         const result = response({ ok: true, data: acknowledged });
-        setSession(result);
+        setSessionCookie(result);
         return result;
       }
       default: return response({ ok: false, error: { code: "NOT_FOUND", message: "Authentication operation not found." } }, 404);

@@ -4,6 +4,8 @@ import type { Session, SessionUser } from "../../contracts/auth";
 import { AuthFault } from "../../lib/auth/errors";
 import type { IdentityProvider, ProviderIdentity } from "../../lib/auth/provider";
 import * as validate from "../../lib/auth/validation";
+import type { AuthenticationResponseJSON, RegistrationResponseJSON } from "@simplewebauthn/server";
+import { defaultWebAuthnVerifier, WEBAUTHN_CHALLENGE_SECONDS, type WebAuthnConfig, type WebAuthnVerifier } from "../../lib/auth/webauthn";
 
 export const SESSION_SECONDS = 24 * 60 * 60;
 export const SESSION_INACTIVITY_SECONDS = 30 * 60;
@@ -15,7 +17,15 @@ function denied(): never { throw new AuthFault("UNAUTHENTICATED", "An active, ve
 function isUniqueError(error: unknown): boolean { return typeof error === "object" && error !== null && "code" in error && error.code === "P2002"; }
 
 export class IdentityService {
-  constructor(private readonly db: PrismaClient, private readonly provider: IdentityProvider, private readonly now: () => Date = () => new Date()) {}
+  constructor(private readonly db: PrismaClient, private readonly provider: IdentityProvider, private readonly now: () => Date = () => new Date(), private readonly webauthn: () => Promise<WebAuthnVerifier> = defaultWebAuthnVerifier) {}
+
+  private async createAdminLogin(account: { id: string; email: string; name: string; active: boolean; role: { active: boolean } }): Promise<LoginResult> {
+    if (!account.active || !account.role.active) denied();
+    const token = randomBytes(32).toString("base64url");
+    const createdAt = this.now(); const expiresAt = new Date(createdAt.getTime() + SESSION_SECONDS * 1000);
+    await this.db.identitySession.create({ data: { tokenHash: hash(token), adminId: account.id, createdAt, expiresAt, lastActivityAt: createdAt } });
+    return { token, expiresAt, session: { user: { id: account.id, role: "ADMIN", email: account.email, displayName: account.name } } };
+  }
 
   async register(value: unknown): Promise<{ status: "PENDING_VERIFICATION" }> {
     const input = validate.object(value);
@@ -70,9 +80,61 @@ export class IdentityService {
       return { token, expiresAt, session: { user: { id: account.id, role, email: account.email, displayName: account.name } } };
     }
     const account = await this.db.adminAccount.findUnique({ where: { authUserId: identity.id }, include: { role: true } });
-    if (!account || account.email !== email || !account.active || !account.role.active) denied();
-    await this.db.identitySession.create({ data: { tokenHash: hash(token), adminId: account.id, createdAt, expiresAt, lastActivityAt: createdAt } });
-    return { token, expiresAt, session: { user: { id: account.id, role, email: account.email, displayName: account.name } } };
+    if (!account || account.email !== email) denied();
+    return this.createAdminLogin(account);
+  }
+
+  async passkeyRegistrationOptions(adminId: string, config: WebAuthnConfig): Promise<unknown> {
+    const account = await this.db.adminAccount.findUnique({ where: { id: adminId }, include: { role: true, passkeys: { where: { revokedAt: null } } } });
+    if (!account || !account.active || !account.role.active) denied();
+    const { generateRegistrationOptions } = await import("@simplewebauthn/server");
+    const options = await generateRegistrationOptions({ rpName: "Palermo", rpID: config.rpID, userName: account.email, userID: Buffer.from(account.id), userDisplayName: account.name, timeout: WEBAUTHN_CHALLENGE_SECONDS * 1000, attestationType: "none", excludeCredentials: account.passkeys.map(value => ({ id: value.credentialId, transports: value.transports })), authenticatorSelection: { residentKey: "preferred", userVerification: "required" } });
+    await this.db.webAuthnChallenge.create({ data: { adminId: account.id, email: account.email, challenge: options.challenge, type: "REGISTRATION", expiresAt: new Date(this.now().getTime() + WEBAUTHN_CHALLENGE_SECONDS * 1000) } });
+    return options;
+  }
+
+  async verifyPasskeyRegistration(adminId: string, response: RegistrationResponseJSON, label: string | null, config: WebAuthnConfig): Promise<void> {
+    const challenge = await this.db.webAuthnChallenge.findFirst({ where: { adminId, type: "REGISTRATION", consumedAt: null, expiresAt: { gt: this.now() } }, orderBy: { createdAt: "desc" }, include: { admin: { include: { role: true } } } });
+    if (!challenge?.admin || !challenge.admin.active || !challenge.admin.role.active) denied();
+    const verified = await (await this.webauthn()).registration(response, { ...config, challenge: challenge.challenge });
+    if (!verified.verified || !verified.credential || !verified.credentialDeviceType || verified.credentialBackedUp === undefined) denied();
+    const credential = verified.credential;
+    const deviceType = verified.credentialDeviceType;
+    const backedUp = verified.credentialBackedUp;
+    const result = await this.db.$transaction(async tx => {
+      const consumed = await tx.webAuthnChallenge.updateMany({ where: { id: challenge.id, consumedAt: null, expiresAt: { gt: this.now() } }, data: { consumedAt: this.now() } });
+      if (consumed.count !== 1) return false;
+      await tx.adminPasskeyCredential.create({ data: { adminId, credentialId: credential.id, publicKey: new Uint8Array(credential.publicKey), counter: credential.counter, transports: credential.transports ?? [], credentialDeviceType: deviceType, credentialBackedUp: backedUp, label } });
+      return true;
+    }).catch(error => { if (isUniqueError(error)) denied(); throw error; });
+    if (!result) denied();
+  }
+
+  async passkeyAuthenticationOptions(email: string, config: WebAuthnConfig): Promise<unknown> {
+    const account = await this.db.adminAccount.findUnique({ where: { email }, include: { role: true, passkeys: { where: { revokedAt: null } } } });
+    if (!account || !account.active || !account.role.active || account.passkeys.length === 0) denied();
+    const { generateAuthenticationOptions } = await import("@simplewebauthn/server");
+    const options = await generateAuthenticationOptions({ rpID: config.rpID, timeout: WEBAUTHN_CHALLENGE_SECONDS * 1000, userVerification: "required", allowCredentials: account.passkeys.map(value => ({ id: value.credentialId, transports: value.transports })) });
+    await this.db.webAuthnChallenge.create({ data: { adminId: account.id, email: account.email, challenge: options.challenge, type: "AUTHENTICATION", expiresAt: new Date(this.now().getTime() + WEBAUTHN_CHALLENGE_SECONDS * 1000) } });
+    return options;
+  }
+
+  async verifyPasskeyAuthentication(email: string, response: AuthenticationResponseJSON, config: WebAuthnConfig): Promise<LoginResult> {
+    const challenge = await this.db.webAuthnChallenge.findFirst({ where: { email, type: "AUTHENTICATION", consumedAt: null, expiresAt: { gt: this.now() } }, orderBy: { createdAt: "desc" }, include: { admin: { include: { role: true } } } });
+    if (!challenge?.admin || !challenge.admin.active || !challenge.admin.role.active) denied();
+    const credential = await this.db.adminPasskeyCredential.findFirst({ where: { adminId: challenge.adminId ?? "", credentialId: response.id, revokedAt: null } });
+    if (!credential) denied();
+    const verified = await (await this.webauthn()).authentication(response, { id: credential.credentialId, publicKey: credential.publicKey, counter: credential.counter, transports: credential.transports }, { ...config, challenge: challenge.challenge });
+    if (!verified.verified || verified.newCounter === undefined || !verified.credentialDeviceType || verified.credentialBackedUp === undefined) denied();
+    const newCounter = verified.newCounter; const deviceType = verified.credentialDeviceType; const backedUp = verified.credentialBackedUp;
+    const consumed = await this.db.$transaction(async tx => {
+      const count = await tx.webAuthnChallenge.updateMany({ where: { id: challenge.id, consumedAt: null, expiresAt: { gt: this.now() } }, data: { consumedAt: this.now() } });
+      if (count.count !== 1) return false;
+      await tx.adminPasskeyCredential.update({ where: { id: credential.id }, data: { counter: newCounter, credentialDeviceType: deviceType, credentialBackedUp: backedUp, lastUsedAt: this.now() } });
+      return true;
+    });
+    if (!consumed) denied();
+    return this.createAdminLogin(challenge.admin);
   }
 
   async principal(token: string | undefined): Promise<Principal | null> {
@@ -87,7 +149,7 @@ export class IdentityService {
       principal = { user: { id: customer.id, role: "CUSTOMER", email: customer.email, displayName: customer.name }, permissions: [] };
     }
     const admin = session.admin;
-    if (!principal && admin?.active && admin.authUserId && admin.role.active) {
+    if (!principal && admin?.active && admin.role.active) {
       principal = { user: { id: admin.id, role: "ADMIN", email: admin.email, displayName: admin.name }, permissions: admin.role.permissions.map(({ permission }) => permission.code) };
     }
     if (!principal) return null;

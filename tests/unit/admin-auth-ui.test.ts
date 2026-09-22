@@ -3,6 +3,7 @@ import type { Session } from "../../src/contracts/auth";
 import { createMockApi } from "../../src/lib/api/mocks";
 import { adminLoginHref, adminSessionDestination } from "../../src/modules/administration/ui/admin-auth-routing";
 import { safeNextPath } from "../../src/modules/identity/ui/safe-next-path";
+import { adminSections } from "../../src/modules/administration/ui/admin-sections";
 
 const administrator: Session = {
   user: { id: "admin-1", role: "ADMIN", email: "admin@example.test", displayName: "Administrator" },
@@ -32,6 +33,10 @@ describe("administrator authentication UI behaviour", () => {
 
   it("sends an anonymous admin route to administrator sign-in", () => {
     expect(adminLoginHref("/admin/reporting")).toBe("/admin/login?next=%2Fadmin%2Freporting");
+  });
+
+  it("includes a dedicated Security destination in administrator navigation", () => {
+    expect(adminSections.security).toMatchObject({ href: "/admin/security", title: "Security" });
   });
 
   it("rejects external next paths", () => {
