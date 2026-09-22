@@ -204,13 +204,13 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
   const topNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "TOP");
   const middleNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "MIDDLE");
   const baseNotes = perfume.notes.filter((n: NoteAssignment) => n.layer === "BASE");
-  const suitabilityTags = [
-    ...perfume.suitability.season,
-    ...perfume.suitability.occasion,
-    ...perfume.suitability.daypart,
-    ...perfume.suitability.mood,
-    ...perfume.suitability.weather,
-  ];
+  const suitabilityGroups = [
+    { label: "Season", tags: perfume.suitability.season },
+    { label: "Occasion", tags: perfume.suitability.occasion },
+    { label: "Time of day", tags: perfume.suitability.daypart },
+    { label: "Mood", tags: perfume.suitability.mood },
+    { label: "Weather", tags: perfume.suitability.weather },
+  ].filter((group) => group.tags.length > 0);
 
   const displayImage = perfume.images && perfume.images.length > 0 ? perfume.images[0] : null;
 
@@ -409,29 +409,33 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
             </CardContent>
           </Card>
 
-          <section className="space-y-3 pt-2 text-xs text-text-muted" aria-labelledby="atmospheric-suitability-heading">
-            <h3 id="atmospheric-suitability-heading" className="font-semibold text-text uppercase tracking-wider">Atmospheric Suitability</h3>
-            {suitabilityTags.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {perfume.suitability.season?.map((s) => (
-                  <Badge key={s.id} variant="neutral" className="text-xs">{s.label}</Badge>
-                ))}
-                {perfume.suitability.occasion?.map((o) => (
-                  <Badge key={o.id} variant="neutral" className="text-xs">{o.label}</Badge>
-                ))}
-                {perfume.suitability.daypart?.map((d) => (
-                  <Badge key={d.id} variant="neutral" className="text-xs">{d.label}</Badge>
-                ))}
-                {perfume.suitability.mood?.map((m) => (
-                  <Badge key={m.id} variant="neutral" className="text-xs">{m.label}</Badge>
-                ))}
-                {perfume.suitability.weather?.map((w) => (
-                  <Badge key={w.id} variant="neutral" className="text-xs">{w.label}</Badge>
-                ))}
-              </div>
-            ) : (
-              <p>Suitability information is currently unavailable.</p>
-            )}
+          <section aria-labelledby="atmospheric-suitability-heading">
+            <Card className="border-border">
+              <CardContent className="space-y-5 p-6">
+                <div className="space-y-1">
+                  <h2 id="atmospheric-suitability-heading" className="text-base font-semibold text-text tracking-wide uppercase">Atmospheric Suitability</h2>
+                  <p className="text-sm leading-relaxed text-text-muted">Catalogue tags for when this fragrance is suited.</p>
+                </div>
+                {suitabilityGroups.length > 0 ? (
+                  <dl className="space-y-4">
+                    {suitabilityGroups.map((group) => (
+                      <div key={group.label} className="space-y-2 border-l-2 border-primary/40 pl-4">
+                        <dt className="text-xs font-semibold uppercase tracking-wider text-text-muted">{group.label}</dt>
+                        <dd className="flex flex-wrap gap-2">
+                          {group.tags.map((tag) => (
+                            <Badge key={tag.id} variant="neutral" className="max-w-full whitespace-normal break-words px-2.5 py-1 text-xs">{tag.label}</Badge>
+                          ))}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="border-l-2 border-border pl-4 text-sm leading-relaxed text-text-muted">
+                    No atmospheric suitability tags have been recorded for this fragrance.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </section>
         </div>
       </div>
