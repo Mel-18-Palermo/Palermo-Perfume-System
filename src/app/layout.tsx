@@ -12,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Palermo Perfume System",
-  description: "Palermo implementation scaffold",
+  description: "Discover fragrance with Palermo.",
 };
 
 type RootLayoutProps = Readonly<{

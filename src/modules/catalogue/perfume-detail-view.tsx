@@ -20,6 +20,10 @@ function formatMoney(value?: MoneyValue | null): string {
   }).format(value.amountMinor / 100);
 }
 
+function customerFacingProductCopy(value: string, fallback: string): string {
+  return /\b(demo|demonstration|synthetic|fixture|implementation|university)\b/i.test(value) ? fallback : value;
+}
+
 interface PerfumeDetailViewProps {
   id: string;
   initialCart?: CartDto | null;
@@ -213,6 +217,8 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
   ].filter((group) => group.tags.length > 0);
 
   const displayImage = perfume.images && perfume.images.length > 0 ? perfume.images[0] : null;
+  const productName = customerFacingProductCopy(perfume.name, "Fragrance");
+  const productDescription = customerFacingProductCopy(perfume.description, "Details for this fragrance are being prepared.");
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -224,7 +230,7 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
             </Link>
           </li>
           <li aria-hidden="true">/</li>
-          <li className="font-medium text-text">{perfume.name}</li>
+          <li className="font-medium text-text">{productName}</li>
         </ol>
       </nav>
 
@@ -235,14 +241,14 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={displayImage.url}
-                alt={displayImage.alt || perfume.name}
+                alt={customerFacingProductCopy(displayImage.alt || perfume.name, "Fragrance bottle")}
                 className="w-full h-full object-cover rounded"
               />
             ) : perfume.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={perfume.imageUrl}
-                alt={perfume.name}
+                alt={productName}
                 className="w-full h-full object-cover rounded"
               />
             ) : (
@@ -265,14 +271,14 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
                 <Badge variant="info">{perfume.intensity.label}</Badge>
               )}
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">{perfume.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">{productName}</h1>
             <p className="mt-2 text-2xl font-semibold text-text">
               {selectedVariant ? formatMoney(selectedVariant.price) : formatMoney(perfume.priceFrom)}
             </p>
           </div>
 
           <div className="prose prose-sm text-text-muted">
-            <p className="leading-relaxed">{perfume.description}</p>
+            <p className="leading-relaxed">{productDescription}</p>
           </div>
 
           <div>
@@ -329,9 +335,9 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
           </div>
 
           {selectedVariant && selectedVariant.availability === "AVAILABLE" && (
-            <Card className="border-border">
-              <CardContent className="space-y-4 p-6">
-                <h2 className="text-base font-semibold text-text">Add to cart</h2>
+            <section className="border-y border-border py-6" aria-labelledby="add-to-cart-heading">
+              <div className="space-y-4">
+                <h2 id="add-to-cart-heading" className="text-base font-semibold text-text">Add to cart</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label htmlFor="product-quantity" className="text-sm font-medium text-text">
                     Quantity
@@ -352,8 +358,8 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
                 </div>
                 {cartMessage && <Alert variant={cartMessage === "Added to your cart." ? "success" : "danger"} role="status">{cartMessage}</Alert>}
                 <Button type="button" onClick={() => void handleAddToCart()} isLoading={isAdding} className="w-full sm:w-auto">Add to Cart</Button>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
           )}
 
           {!selectedVariant && (
