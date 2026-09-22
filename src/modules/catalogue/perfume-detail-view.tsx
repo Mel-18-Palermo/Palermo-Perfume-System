@@ -317,9 +317,9 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
                           </p>
                           <p className="text-xs text-text-muted mt-0.5">{formatMoney(v.price)}</p>
                         </div>
-                        <div id={`variant-status-${v.id}`} className="text-right">
+                        <div id={`variant-status-${v.id}`} className="shrink-0 pl-3 text-right">
                           {v.availability === "AVAILABLE" ? (
-                            <span className="text-xs font-medium text-primary">In Stock</span>
+                            <span className="whitespace-nowrap text-xs font-medium text-primary">In Stock</span>
                           ) : v.availability === "OUT_OF_STOCK" ? (
                             <span className="text-xs font-medium text-danger">Out of Stock</span>
                           ) : (
@@ -420,7 +420,7 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
               <CardContent className="space-y-5 p-6">
                 <div className="space-y-1">
                   <h2 id="atmospheric-suitability-heading" className="text-base font-semibold text-text tracking-wide uppercase">Atmospheric Suitability</h2>
-                  <p className="text-sm leading-relaxed text-text-muted">Catalogue tags for when this fragrance is suited.</p>
+                  <p className="text-sm leading-relaxed text-text-muted">Guidance for the settings and occasions associated with this fragrance.</p>
                 </div>
                 {suitabilityGroups.length > 0 ? (
                   <dl className="space-y-4">
@@ -437,7 +437,7 @@ export function PerfumeDetailView({ id, initialCart = null, onCartChange }: Perf
                   </dl>
                 ) : (
                   <p className="border-l-2 border-border pl-4 text-sm leading-relaxed text-text-muted">
-                    No atmospheric suitability tags have been recorded for this fragrance.
+                    Suitability guidance isn’t available for this fragrance yet.
                   </p>
                 )}
               </CardContent>

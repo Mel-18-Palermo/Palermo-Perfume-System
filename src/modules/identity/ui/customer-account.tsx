@@ -84,6 +84,7 @@ export function CustomerAccount() {
   const [delivery, setDelivery] = React.useState<AddressFields>(emptyAddress);
   const [billing, setBilling] = React.useState<AddressFields>(emptyAddress);
   const [sameAsDelivery, setSameAsDelivery] = React.useState(true);
+  const [notesExpanded, setNotesExpanded] = React.useState(false);
 
   const sync = React.useCallback((next: CustomerProfile) => {
     setProfile(next); setName(customerFacingFixtureText(next.name, "Customer")); setNoteIds(next.preferences.favouriteNoteIds);
@@ -155,6 +156,7 @@ export function CustomerAccount() {
   }
 
   const disabled = loading || busy !== null;
+  const selectedNotes = filters?.note.filter(note => noteIds.includes(note.id)) ?? [];
   return <CustomerShell cart={cart} session={session} isLoading={loading}>
     <div className="mx-auto max-w-[1100px] space-y-8">
       <div><h1 className="text-h1 text-text">Account</h1><p className="mt-1 text-sm text-text-muted">Manage your profile, fragrance preferences and saved addresses.</p></div>
@@ -166,7 +168,7 @@ export function CustomerAccount() {
           <form className="space-y-5" onSubmit={saveProfile}>
             <label><span className="mb-1 block text-label text-text">Name</span><input required maxLength={100} autoComplete="name" disabled={disabled} value={name} onChange={event => setName(event.target.value)} className="min-h-[44px] w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60" /></label>
             <p className="text-sm text-text-muted">Email: {profile.email}</p>
-            <fieldset disabled={disabled}><legend className="text-label text-text">Favourite notes</legend><p className="mt-1 text-sm text-text-muted">Choose any notes you enjoy.</p><div className="mt-3 flex flex-wrap gap-2">{filters?.note.map(note => {
+            <fieldset disabled={disabled}><legend className="text-label text-text">Favourite notes</legend><p className="mt-1 text-sm text-text-muted">Choose any notes you enjoy.</p><div className="mt-3 md:hidden">{selectedNotes.length > 0 && <div className="flex flex-wrap gap-2" aria-label="Selected favourite notes">{selectedNotes.map(note => <span key={note.id} className="inline-flex min-h-11 items-center rounded-full border border-primary bg-primary px-4 py-2 text-sm text-primary-text">{note.label}</span>)}</div>}<button type="button" onClick={() => setNotesExpanded(expanded => !expanded)} aria-expanded={notesExpanded} aria-controls="favourite-note-options" className="mt-3 min-h-11 rounded-full border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2">{notesExpanded ? "Hide notes" : "Choose notes"}</button></div><div id="favourite-note-options" className={`mt-3 flex flex-wrap gap-2 ${notesExpanded ? "" : "hidden"} md:flex`}>{filters?.note.map(note => {
               const selected = noteIds.includes(note.id);
               return <label key={note.id} className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-4 py-2 text-sm transition-colors focus-within:ring-2 focus-within:ring-info focus-within:ring-offset-2 ${selected ? "border-primary bg-primary text-primary-text" : "border-border-strong bg-surface text-text hover:bg-surface-muted"}`}><input type="checkbox" checked={selected} onChange={() => setNoteIds(current => current.includes(note.id) ? current.filter(id => id !== note.id) : [...current, note.id])} className="sr-only" />{note.label}</label>;
             })}</div></fieldset>
