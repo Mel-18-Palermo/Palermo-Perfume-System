@@ -288,6 +288,18 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         return success({ ...fixtures.dashboard, period, totalOrders: hasOrder ? 1 : 0,
           totalSales: fixtures.money(hasOrder ? 13000 : 0), bestSelling: hasOrder ? fixtures.dashboard.bestSelling : [] });
       }),
+      getCatalogueReferences: run("admin.getCatalogueReferences", "ADMIN", () => success({
+        family: fixtures.filters.family,
+        note: fixtures.filters.note,
+        intensity: fixtures.filters.intensity,
+        suitability: {
+          occasion: fixtures.filters.occasion,
+          mood: fixtures.filters.mood,
+          weather: fixtures.filters.weather,
+          daypart: [],
+          season: [],
+        },
+      })),
       listCatalogue: run("admin.listCatalogue", "ADMIN", input => paginate(settings.empty ? [] : [fixtures.adminPerfume], input)),
       getPerfume: run("admin.getPerfume", "ADMIN", ({ id }) => id === fixtures.citrus.id ? success(fixtures.adminPerfume) : failure("NOT_FOUND")),
       // Admin write responses are canned UI fixtures; catalogue/inventory authority is implemented later.

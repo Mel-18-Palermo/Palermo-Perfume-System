@@ -26,7 +26,7 @@ export function createUnavailableApi(): PalermoApi {
     payment: { initiate: unavailable },
     tracking: { get: unavailable },
     admin: {
-      getDashboard: unavailable, listCatalogue: unavailable, getPerfume: unavailable,
+      getDashboard: unavailable, getCatalogueReferences: unavailable, listCatalogue: unavailable, getPerfume: unavailable,
       createPerfume: unavailable, updatePerfume: unavailable, archivePerfume: unavailable,
       createVariant: unavailable, updateVariant: unavailable, listInventory: unavailable,
       listBatches: unavailable, createBatch: unavailable, releaseBatch: unavailable,

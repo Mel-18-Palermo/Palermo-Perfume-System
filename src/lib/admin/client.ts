@@ -1,5 +1,6 @@
 import type {
   AdminApi,
+  AdminCatalogueReferences,
   AdminPerfume,
   Dashboard,
   InventoryBalance,
@@ -103,6 +104,9 @@ export function createAdminHttpClient(
       catalogue<Dashboard>(
         `dashboard?from=${encodeURIComponent(period.from)}&to=${encodeURIComponent(period.to)}`,
       ),
+
+    getCatalogueReferences: () =>
+      catalogue<AdminCatalogueReferences>("references"),
 
     listCatalogue: input =>
       catalogue<Page<AdminPerfume>>("list", input),

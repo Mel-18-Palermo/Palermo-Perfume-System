@@ -1,5 +1,5 @@
 import type { Endpoint, EntityId, MoneyValue, Option, Page, PageRequest, Revision, Timestamp } from "./common";
-import type { NoteAssignment, PerfumeDetail, PerfumeVariantSummary, SuitabilitySummary } from "./catalogue";
+import type { FragranceNoteSummary, NoteAssignment, PerfumeDetail, PerfumeVariantSummary, SuitabilitySummary } from "./catalogue";
 
 export type ReportingPeriod = Readonly<{ from: Timestamp; to: Timestamp }>;
 export type Dashboard = Readonly<{
@@ -12,6 +12,12 @@ export type Dashboard = Readonly<{
 /** An administrator may create a perfume before adding its first priced variant. */
 export type AdminPerfumeDetail = Omit<PerfumeDetail, "priceFrom"> & Readonly<{ priceFrom: MoneyValue | null }>;
 export type AdminPerfume = Readonly<{ perfume: AdminPerfumeDetail; status: "ACTIVE" | "ARCHIVED"; revision: Revision }>;
+export type AdminCatalogueReferences = Readonly<{
+  family: readonly Option[];
+  note: readonly FragranceNoteSummary[];
+  intensity: readonly Option[];
+  suitability: SuitabilitySummary;
+}>;
 export type PerfumeInput = Readonly<{
   name: string; slug: string; description: string; primaryFamilyId: EntityId;
   intensity: Option | null; notes: readonly NoteAssignment[]; suitability: SuitabilitySummary;
@@ -28,6 +34,7 @@ export type ProductionBatch = Readonly<{
 }>;
 export type AdminApi = Readonly<{
   getDashboard: Endpoint<ReportingPeriod, Dashboard>;
+  getCatalogueReferences: Endpoint<void, AdminCatalogueReferences>;
   listCatalogue: Endpoint<PageRequest, Page<AdminPerfume>>;
   getPerfume: Endpoint<{ readonly id: EntityId }, AdminPerfume>;
   createPerfume: Endpoint<PerfumeInput & { readonly idempotencyKey: string }, AdminPerfume>;
