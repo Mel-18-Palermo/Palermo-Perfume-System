@@ -108,6 +108,12 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         session = fixtures.administrator;
         return success({ user: session });
       }),
+      adminPasskeyLoginOptions: run("auth.adminPasskeyLoginOptions", "PUBLIC", input => input.email.trim() && settings.actor === "ADMIN" ? success({ options: {} }) : failure("UNAUTHENTICATED")),
+      adminPasskeyLoginVerify: run("auth.adminPasskeyLoginVerify", "PUBLIC", input => {
+        if (!input.email.trim() || settings.actor !== "ADMIN") return failure("UNAUTHENTICATED"); session = fixtures.administrator; return success({ user: session });
+      }),
+      adminPasskeyRegisterOptions: run("auth.adminPasskeyRegisterOptions", "ADMIN", () => success({ options: {} })),
+      adminPasskeyRegisterVerify: run("auth.adminPasskeyRegisterVerify", "ADMIN", () => success({ registered: true })),
       logout: run("auth.logout", "PUBLIC", () => { session = null; return success({ acknowledged: true }); }),
       requestPasswordReset: run("auth.requestPasswordReset", "PUBLIC", input => input.email.trim()
         ? success({ acknowledged: true }) : failure("VALIDATION_ERROR")),

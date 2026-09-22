@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { adminSessionDestination } from "./admin-auth-routing";
+import { startAuthentication } from "@simplewebauthn/browser";
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 
 type AdminLoginProps = Readonly<{ nextPath: string }>;
 
@@ -59,6 +61,22 @@ export function AdminLogin({ nextPath }: AdminLoginProps) {
     router.refresh();
   }
 
+  async function passkey(): Promise<void> {
+    if (submitting || !email.trim()) { setError("Enter your administrator email to continue with a passkey."); return; }
+    setError(null); setSubmitting(true);
+    try {
+      const options = await api.auth.adminPasskeyLoginOptions({ email });
+      if (!options.ok) { setError(options.error.message); return; }
+      const assertion = await startAuthentication({ optionsJSON: options.data.options as PublicKeyCredentialRequestOptionsJSON });
+      const result = await api.auth.adminPasskeyLoginVerify({ email, response: assertion });
+      if (!result.ok) { setError(result.error.message); return; }
+      const destination = adminSessionDestination(result.data, nextPath);
+      if (!destination) { setError("Administrator session could not be established."); return; }
+      router.replace(destination); router.refresh();
+    } catch { setError("Passkey authentication could not be completed."); }
+    finally { setSubmitting(false); }
+  }
+
   return (
     <main className="min-h-screen bg-text px-4 py-12 text-surface sm:px-6">
       <div className="mx-auto w-full max-w-[var(--container-form)]">
@@ -83,6 +101,10 @@ export function AdminLogin({ nextPath }: AdminLoginProps) {
                   aria-invalid={error ? true : undefined} aria-describedby={error ? "admin-login-error" : undefined}
                   className="min-h-[44px] w-full border border-border-strong bg-surface px-3 py-2 text-base text-text outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60" />
               </div>
+              <button type="button" disabled={submitting} onClick={() => { void passkey(); }} className="min-h-[44px] w-full border border-text bg-surface px-4 py-2 text-label text-text transition hover:bg-text/5 disabled:cursor-not-allowed disabled:opacity-60">
+                {submitting ? "Waiting for passkey…" : "Continue with passkey"}
+              </button>
+              <p className="text-center text-xs text-text-muted">or use your password</p>
               <div>
                 <label htmlFor="admin-password" className="mb-2 block text-label text-text">Password</label>
                 <input id="admin-password" name="password" type="password" autoComplete="current-password" required value={password}

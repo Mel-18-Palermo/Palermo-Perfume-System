@@ -40,6 +40,11 @@ enum IdentityStatus {
   STALE
 }
 
+enum WebAuthnChallengeType {
+  REGISTRATION
+  AUTHENTICATION
+}
+
 enum CollectionType {
   GENERAL
   SEASONAL
@@ -221,10 +226,46 @@ model AdminAccount {
   createdAt  DateTime          @default(now()) @db.Timestamptz(3)
   role       AdminRole         @relation(fields: [roleId], references: [id], onDelete: Restrict)
   sessions   IdentitySession[]
+  passkeys   AdminPasskeyCredential[]
+  webAuthnChallenges WebAuthnChallenge[]
   batchesRecorded ProductionBatch[] @relation("BatchRecordedBy")
   batchesReleased ProductionBatch[] @relation("BatchReleasedBy")
 
   @@index([roleId])
+}
+
+model AdminPasskeyCredential {
+  id                     String       @id @default(uuid()) @db.Uuid
+  adminId                String       @db.Uuid
+  credentialId           String       @unique
+  publicKey              Bytes
+  counter                Int
+  transports             String[]     @default([])
+  credentialDeviceType   String
+  credentialBackedUp     Boolean
+  label                  String?
+  createdAt              DateTime     @default(now()) @db.Timestamptz(3)
+  lastUsedAt             DateTime?    @db.Timestamptz(3)
+  revokedAt              DateTime?    @db.Timestamptz(3)
+  admin                  AdminAccount @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([adminId, revokedAt])
+}
+
+model WebAuthnChallenge {
+  id         String               @id @default(uuid()) @db.Uuid
+  challenge  String               @unique
+  adminId    String?              @db.Uuid
+  email      String?
+  type       WebAuthnChallengeType
+  expiresAt  DateTime             @db.Timestamptz(3)
+  consumedAt DateTime?            @db.Timestamptz(3)
+  createdAt  DateTime             @default(now()) @db.Timestamptz(3)
+  admin      AdminAccount?        @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, type, expiresAt])
+  @@index([email, type, expiresAt])
 }
 
 // Only hashes of opaque browser credentials are stored; no provider/password tokens.

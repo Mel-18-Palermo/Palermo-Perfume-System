@@ -10,11 +10,16 @@ export type SessionUser = Readonly<{
 export type Session = Readonly<{ user: SessionUser | null }>;
 export type RegisterRequest = Readonly<{ name: string; email: string; password: string }>;
 export type LoginRequest = Readonly<{ email: string; password: string }>;
+export type PasskeyOptions = Readonly<{ options: unknown }>;
 export type AuthApi = Readonly<{
   register: Endpoint<RegisterRequest, { readonly status: "PENDING_VERIFICATION" }>;
   verify: Endpoint<{ readonly token: string }, { readonly status: "ACTIVE" }>;
   login: Endpoint<LoginRequest, Session>;
   adminLogin: Endpoint<LoginRequest, Session>;
+  adminPasskeyLoginOptions: Endpoint<{ readonly email: string }, PasskeyOptions>;
+  adminPasskeyLoginVerify: Endpoint<{ readonly email: string; readonly response: unknown }, Session>;
+  adminPasskeyRegisterOptions: Endpoint<void, PasskeyOptions>;
+  adminPasskeyRegisterVerify: Endpoint<{ readonly response: unknown; readonly label?: string }, { readonly registered: true }>;
   logout: Endpoint<void, Acknowledgement>;
   getSession: Endpoint<void, Session>;
   requestPasswordReset: Endpoint<{ readonly email: string }, Acknowledgement>;
