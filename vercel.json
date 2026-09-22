@@ -5,5 +5,8 @@
   "buildCommand": "pnpm build",
   "git": {
     "deploymentEnabled": true
-  }
+  },
+  "regions": [
+    "syd1"
+  ]
 }
