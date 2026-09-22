@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from "next";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { CustomerShell } from "@/components/layout/customer-shell";
@@ -7,6 +8,8 @@ import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 import type { CatalogueFilters, PerfumeSummary } from "@/contracts/catalogue";
 import { api } from "@/lib/api";
+import { SESSION_COOKIE } from "@/lib/auth/http";
+import { getIdentityService } from "@/lib/auth/runtime";
 import { getCatalogueService } from "@/modules/catalogue/runtime";
 import { LandingPage } from "@/modules/landing/landing-page";
 
@@ -90,17 +93,17 @@ export default async function Home({ searchParams }: HomeProps) {
     redirect(`/catalogue?${legacyCatalogueParams.toString()}`);
   }
 
+  const sessionToken = (await cookies()).get(SESSION_COOKIE)?.value;
   const [
     { products, filters, availabilityByProductId },
-    sessionResult,
+    session,
     cartResult,
   ] = await Promise.all([
     getLandingCatalogue(),
-    api.auth.getSession().catch(() => ({ ok: false as const })),
+    getIdentityService().session(sessionToken).catch((): Session => ({ user: null })),
     api.cart.get().catch(() => ({ ok: false as const })),
   ]);
 
-  const session: Session | null = sessionResult.ok ? sessionResult.data : null;
   const cart: CartDto | null = cartResult.ok ? cartResult.data : null;
 
   return (
