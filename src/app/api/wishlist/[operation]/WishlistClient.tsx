@@ -100,7 +100,7 @@ export function WishlistClient() {
                 />
               )}
               <div className="min-w-0 flex-1">
-                <a
+                
                   href={`/catalogue/${item.perfume.slug}`}
                   className="text-sm font-semibold text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
                 >
@@ -130,6 +130,7 @@ export function WishlistClient() {
                 variant="ghost"
                 size="sm"
                 isLoading={removingId === item.perfumeId}
+                disabled={removingId !== null}
                 onClick={() => handleRemove(item.perfumeId)}
                 aria-label={`Remove ${item.perfume.name} from wishlist`}
               >
