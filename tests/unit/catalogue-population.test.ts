@@ -54,6 +54,15 @@ describe("approved catalogue manifest", () => {
     expect(validateApprovedCatalogueManifest(fixture())).toEqual([]);
   });
 
+  it("requires every active canonical product to declare a primary image at sort order zero", () => {
+    const valid = fixture();
+    const product = valid.products[0];
+    expect(product).toBeDefined();
+    if (!product) return;
+    expect(validateApprovedCatalogueManifest({ ...valid, products: [{ ...product, images: [] }] }))
+      .toContain(`Product ${product.slug} images require a primary image with sortOrder 0.`);
+  });
+
   it("rejects duplicate identity, commercial and inventory errors before persistence", () => {
     const valid = fixture();
     const product = valid.products[0];

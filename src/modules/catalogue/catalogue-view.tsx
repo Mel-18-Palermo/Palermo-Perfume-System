@@ -35,10 +35,11 @@ function formatPrice(money: MoneyValue): string {
 function isUsefulFamily(label: string): boolean {
   return label.trim().toLowerCase() !== "unclassified";
 }
-function audienceFor(perfume: PerfumeSummary): Audience {
+function audienceFor(perfume: PerfumeSummary): Audience | null {
   if (perfume.audience === "MEN") return "Men";
   if (perfume.audience === "UNISEX") return "Unisex";
-  return "Women";
+  if (perfume.audience === "WOMEN") return "Women";
+  return null;
 }
 
 export function CatalogueView({ initialItems = [], initialFilters = null, initialError = null }: CatalogueViewProps) {
@@ -149,7 +150,8 @@ export function CatalogueView({ initialItems = [], initialFilters = null, initia
   };
   const productTile = (perfume: PerfumeSummary, index: number) => {
     const family = isUsefulFamily(perfume.primaryFamily.label) ? perfume.primaryFamily.label : null;
-    return <article key={perfume.id} className="group min-w-0"><Link href={`/product/${perfume.id}`} className="relative block aspect-[4/5] overflow-hidden bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2" aria-label={`View ${perfume.name}`}>{perfume.imageUrl ? <Image src={perfume.imageUrl} alt={perfume.name} fill loading={index < 4 ? "eager" : "lazy"} className="object-contain p-3 motion-safe:transition-transform motion-safe:duration-[var(--duration-slow)] motion-safe:group-hover:scale-[1.015] sm:p-6" sizes="(max-width: 1023px) calc((100vw - 4rem) / 2), 18rem" /> : <div className="flex h-full items-center justify-center text-xs text-text-muted">Image unavailable</div>}</Link><div className="flex min-h-[7.5rem] flex-col pt-3 sm:min-h-[8.25rem] sm:pt-4"><p className="min-h-4 text-[10px] font-medium uppercase leading-4 tracking-[0.12em] text-text-muted sm:text-[11px]">{audienceFor(perfume)}{family ? ` · ${family}` : ""}</p><h2 className="mt-1 line-clamp-2 min-h-10 text-sm font-medium leading-5 tracking-[-0.02em] text-text sm:text-[1.05rem]"><Link href={`/product/${perfume.id}`} className="decoration-border-strong underline-offset-4 hover:underline focus-visible:outline-none">{perfume.name}</Link></h2><p className="mt-1.5 text-xs tabular-nums text-text-muted sm:mt-2 sm:text-sm">{formatPrice(perfume.priceFrom)}</p>{perfume.availability === "OUT_OF_STOCK" && <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-text-muted">Sold out</p>}</div></article>;
+    const audience = audienceFor(perfume);
+    return <article key={perfume.id} className="group min-w-0"><Link href={`/product/${perfume.id}`} className="relative block aspect-[4/5] overflow-hidden bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2" aria-label={`View ${perfume.name}`}>{perfume.imageUrl ? <Image src={perfume.imageUrl} alt={perfume.name} fill loading={index < 4 ? "eager" : "lazy"} className="object-contain p-3 motion-safe:transition-transform motion-safe:duration-[var(--duration-slow)] motion-safe:group-hover:scale-[1.015] sm:p-6" sizes="(max-width: 1023px) calc((100vw - 4rem) / 2), 18rem" /> : <div className="flex h-full items-center justify-center text-xs text-text-muted">Image unavailable</div>}</Link><div className="flex min-h-[7.5rem] flex-col pt-3 sm:min-h-[8.25rem] sm:pt-4"><p className="min-h-4 text-[10px] font-medium uppercase leading-4 tracking-[0.12em] text-text-muted sm:text-[11px]">{audience}{family ? ` · ${family}` : ""}</p><h2 className="mt-1 line-clamp-2 min-h-10 text-sm font-medium leading-5 tracking-[-0.02em] text-text sm:text-[1.05rem]"><Link href={`/product/${perfume.id}`} className="decoration-border-strong underline-offset-4 hover:underline focus-visible:outline-none">{perfume.name}</Link></h2><p className="mt-1.5 text-xs tabular-nums text-text-muted sm:mt-2 sm:text-sm">{formatPrice(perfume.priceFrom)}</p>{perfume.availability === "OUT_OF_STOCK" && <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-text-muted">Sold out</p>}</div></article>;
   };
   const featureBand = (perfume: PerfumeSummary) => {
     const audience = audienceFor(perfume);

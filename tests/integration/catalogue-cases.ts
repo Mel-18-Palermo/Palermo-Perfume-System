@@ -29,6 +29,33 @@ export function catalogueCases(db: PrismaClient): void {
       expect(result.data.variants[0]).toMatchObject({ sku: "DEMO-CITRUS-50", availability: "AVAILABLE" });
       expect(result.data.priceFrom).toEqual({ amountMinor: 12000, currency: "AUD" });
     });
+    it("marks an AVAILABLE variant as out of stock in summary when inventory is exhausted", async () => {
+      const balance = await db.inventoryBalance.findUniqueOrThrow({ where: { variantId: ids.variant } });
+      await db.inventoryBalance.update({
+        where: { variantId: ids.variant },
+        data: { onHand: 0, reserved: 0 },
+      });
+      try {
+        const listed = await service.list({ q: "citrus" });
+        expect(listed.ok).toBe(true);
+        if (listed.ok) expect(listed.data.items[0]).toMatchObject({
+          id: ids.perfume,
+          availability: "OUT_OF_STOCK",
+        });
+        const detail = await service.get(ids.perfume);
+        expect(detail.ok).toBe(true);
+        if (detail.ok) expect(detail.data.variants[0]).toMatchObject({ availability: "OUT_OF_STOCK" });
+      } finally {
+        await db.inventoryBalance.update({
+          where: { variantId: ids.variant },
+          data: {
+            onHand: balance.onHand,
+            reserved: balance.reserved,
+            lowStockThreshold: balance.lowStockThreshold,
+          },
+        });
+      }
+    });
     it("applies AND across filter groups and OR within each group", async () => {
       const result = await service.list({ family: [ids.family, ids.woodyFamily], note: [ids.note], minPrice: 10000, maxPrice: 13000 });
       expect(result.ok).toBe(true);
