@@ -63,7 +63,7 @@ function summary(perfume: LoadedPerfume): PerfumeSummary {
     intensity: perfume.intensity ? option(perfume.intensity.id, perfume.intensity.name) : null,
     ...(audience ? { audience } : {}),
     sku: cheapest?.sku ?? null,
-    availability: visible.some(variant => variant.availability === "AVAILABLE")
+    availability: visible.some(variant => publicVariantAvailability(variant.availability, variant.inventory) === "AVAILABLE")
       ? "AVAILABLE"
       : "OUT_OF_STOCK",
   };

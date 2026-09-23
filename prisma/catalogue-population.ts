@@ -141,7 +141,7 @@ export function validateApprovedCatalogueManifest(manifest: ApprovedCatalogueMan
       if (!collectionIds.has(collectionId)) issues.push(`Product ${product.slug} references an unknown collection.`);
     }
 
-    if (product.images.length > 0 && !product.images.some(image => image.sortOrder === 0)) {
+    if (!product.images.some(image => image.sortOrder === 0)) {
       issues.push(`Product ${product.slug} images require a primary image with sortOrder 0.`);
     }
     addDuplicateIssues(`product ${product.slug} image sortOrder`, product.images.map(image => String(image.sortOrder)), issues);
@@ -490,7 +490,9 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
       } });
     }
   }
+}
 
+async function archiveSyntheticDemoProducts(tx: Prisma.TransactionClient): Promise<void> {
   // Synthetic demo products have order and cart references. Archive their parent
   // records instead of deleting or rewriting commerce history.
   await tx.perfume.updateMany({
@@ -514,6 +516,23 @@ export async function populateApprovedCatalogue(
   };
 }
 
+/** Populate the final catalogue and explicitly retire synthetic demo products. */
+export async function populateFinalCatalogue(
+  db: PrismaClient,
+  manifest: ApprovedCatalogueManifest,
+): Promise<CataloguePopulationSummary> {
+  assertApprovedCatalogueManifest(manifest);
+  await db.$transaction(async tx => {
+    await populate(tx, manifest);
+    await archiveSyntheticDemoProducts(tx);
+  }, { timeout: 60_000 });
+  return {
+    products: manifest.products.length,
+    variants: manifest.products.reduce((total, product) => total + product.variants.length, 0),
+    images: manifest.products.reduce((total, product) => total + product.images.length, 0),
+  };
+}
+
 /** Populate approved catalogue facts and their dependent canonical quiz atomically. */
 export async function populateApprovedCatalogueAndQuiz(
   db: PrismaClient,
@@ -524,6 +543,28 @@ export async function populateApprovedCatalogueAndQuiz(
   await db.$transaction(async tx => {
     await populate(tx, catalogue);
     await populateApprovedQuizInTransaction(tx, quiz, catalogue);
+  }, { timeout: 60_000 });
+  return {
+    products: catalogue.products.length,
+    variants: catalogue.products.reduce((total, product) => total + product.variants.length, 0),
+    images: catalogue.products.reduce((total, product) => total + product.images.length, 0),
+  };
+}
+
+/**
+ * Final-catalogue population is deliberately separate from generic population:
+ * it retires seeded demos only when the final public catalogue is installed.
+ */
+export async function populateFinalCatalogueAndQuiz(
+  db: PrismaClient,
+  catalogue: ApprovedCatalogueManifest,
+  quiz: ApprovedQuizManifest,
+): Promise<CataloguePopulationSummary> {
+  assertApprovedCatalogueManifest(catalogue);
+  await db.$transaction(async tx => {
+    await populate(tx, catalogue);
+    await populateApprovedQuizInTransaction(tx, quiz, catalogue);
+    await archiveSyntheticDemoProducts(tx);
   }, { timeout: 60_000 });
   return {
     products: catalogue.products.length,

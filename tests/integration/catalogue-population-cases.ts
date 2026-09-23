@@ -7,6 +7,7 @@ import type {
 import {
   CataloguePopulationConflictError,
   populateApprovedCatalogue,
+  populateFinalCatalogue,
 } from "../../prisma/catalogue-population";
 import { ids, seedId } from "../../prisma/seed-data";
 
@@ -92,6 +93,41 @@ export function cataloguePopulationCases(db: PrismaClient): void {
         customers: await db.customer.count(), orders: await db.order.count(), payments: await db.payment.count(),
         carts: await db.cart.count(), shipments: await db.shipment.count(),
       }).toEqual(protectedBefore);
+    });
+
+    it("leaves unrelated seeded demos untouched during generic population and archives them only during final population", async () => {
+      const demoIds = [ids.perfume, ids.woodyPerfume];
+      await db.perfume.updateMany({
+        where: { id: { in: demoIds } },
+        data: { status: "ACTIVE", archivedAt: null },
+      });
+
+      await populateApprovedCatalogue(db, manifest);
+      expect(await db.perfume.findMany({
+        where: { id: { in: demoIds } },
+        orderBy: { id: "asc" },
+        select: { id: true, status: true, archivedAt: true },
+      })).toEqual([
+        { id: ids.perfume, status: "ACTIVE", archivedAt: null },
+        { id: ids.woodyPerfume, status: "ACTIVE", archivedAt: null },
+      ]);
+
+      await populateFinalCatalogue(db, manifest);
+      const archived = await db.perfume.findMany({
+        where: { id: { in: demoIds } },
+        orderBy: { id: "asc" },
+        select: { id: true, status: true, archivedAt: true },
+      });
+      expect(archived.map(({ id, status }) => ({ id, status }))).toEqual([
+        { id: ids.perfume, status: "ARCHIVED" },
+        { id: ids.woodyPerfume, status: "ARCHIVED" },
+      ]);
+      expect(archived.every(({ archivedAt }) => archivedAt instanceof Date)).toBe(true);
+
+      await db.perfume.updateMany({
+        where: { id: { in: demoIds } },
+        data: { status: "ACTIVE", archivedAt: null },
+      });
     });
 
     it("rejects both directions of product identity collision and accepts an exact match", async () => {
