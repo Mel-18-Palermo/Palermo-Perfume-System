@@ -265,6 +265,7 @@ Admin priorities:
 - dashboard;
 - catalogue;
 - inventory;
+- security;
 - promotions;
 - reviews/moderation;
 - reporting where implemented.
