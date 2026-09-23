@@ -1,12 +1,11 @@
 ﻿"use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import type {
   QuizDefinition,
   RecommendationResult,
@@ -234,110 +233,153 @@ export function FragranceQuizView() {
   if (result) {
     const items: readonly RecommendationItem[] = result.items;
     const hasItems = items.length > 0;
+    const [featured, ...remaining] = items;
+
+    function productImage(
+      item: RecommendationItem,
+      options: Readonly<{ priority?: boolean; sizes: string }>
+    ) {
+      return (
+        <div className="relative h-full w-full overflow-hidden bg-surface-muted">
+          {item.perfume.imageUrl ? (
+            <Image
+              src={item.perfume.imageUrl}
+              alt={item.perfume.name}
+              fill
+              priority={options.priority ?? false}
+              sizes={options.sizes}
+              className="object-contain p-5 transition-transform duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none group-hover:scale-[1.035]"
+            />
+          ) : (
+            <div className="flex h-full items-end p-5">
+              <span className="text-xs font-medium uppercase tracking-[0.16em] text-text-muted">Palermo fragrance</span>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     return (
-      <div className="mx-auto max-w-4xl py-6 space-y-8">
-        <div className="border-b border-border pb-6 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Fragrance Recommendations
+      <div className="mx-auto max-w-[var(--container-wide)] py-8 sm:py-10 lg:py-12">
+        <div className="max-w-[42rem]">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Your consultation</p>
+          <h1 className="mt-3 text-[clamp(2.5rem,5vw,4.75rem)] font-[300] leading-[0.98] tracking-[-0.055em] text-text">
+            Your fragrance edit
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Curated selections based on your responses.
+          <p className="mt-4 max-w-xl text-base leading-7 text-text-muted sm:text-lg">
+            A considered selection shaped by the preferences you shared.
           </p>
         </div>
 
-        {result.fallback && (
-          <Alert variant="warning" role="alert">
-            <p className="font-semibold">Deterministic Fallback Result</p>
-            <p className="text-sm">
-              Deterministic recommendations based on the submitted quiz responses and approved catalogue attributes.
-            </p>
-          </Alert>
-        )}
-
         {!hasItems ? (
-          <div className="rounded-lg border border-border bg-surface p-8 text-center space-y-4">
-            <p className="text-foreground font-medium">No matching fragrances were found.</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-14 border-y border-border py-12 text-center">
+            <p className="font-medium text-text">No matching fragrances were found.</p>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-text-muted">
               Try adjusting your preferences or explore our complete fragrance catalogue.
             </p>
-            <div className="flex justify-center gap-3 pt-2">
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <Button variant="outline" onClick={handleReset}>
-                Retake Questionnaire
+                Retake consultation
               </Button>
               <Link
                 href="/catalogue"
-                className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-surface shadow hover:bg-primary/90 transition-colors"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-text transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
-                Return to Catalogue
+                Browse catalogue
               </Link>
             </div>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            {items.map((item: RecommendationItem) => (
-              <Card key={item.perfume.id} className="flex flex-col justify-between">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      {item.perfume.primaryFamily && (
-                        <Badge variant="accent" className="mb-2">
-                          {item.perfume.primaryFamily.label}
-                        </Badge>
-                      )}
-                      <CardTitle className="text-xl font-bold text-foreground">
-                        {item.perfume.name}
-                      </CardTitle>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm text-muted-foreground">From</span>
-                      <p className="text-lg font-bold text-foreground">
-                        {formatMoney(item.perfume.priceFrom)}
-                      </p>
-                    </div>
+          <div className="mt-10 space-y-20 sm:mt-12 lg:space-y-28">
+            {featured && (
+              <article className="grid gap-8 md:grid-cols-2 md:items-start md:gap-x-10 lg:grid-cols-12 lg:gap-x-12 xl:gap-x-20">
+                <Link
+                  href={`/product/${featured.perfume.id}`}
+                  className="group relative block aspect-[4/5] overflow-hidden bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 lg:col-span-7 lg:aspect-[6/5]"
+                >
+                  {productImage(featured, {
+                    priority: true,
+                    sizes: "(max-width: 1023px) calc(100vw - 2rem), (max-width: 1279px) 56vw, 45vw",
+                  })}
+                </Link>
+                <div className="md:py-3 lg:col-span-5 lg:py-8">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">First to explore</p>
+                  <p className="mt-8 text-sm font-medium text-text">{featured.perfume.primaryFamily.label}</p>
+                  <h2 className="mt-3 max-w-md text-[clamp(2.5rem,4.5vw,4.5rem)] font-[300] leading-[0.98] tracking-[-0.055em] text-text">
+                    {featured.perfume.name}
+                  </h2>
+                  <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-text-muted">
+                    {featured.perfume.intensity && <span>{featured.perfume.intensity.label}</span>}
+                    {featured.perfume.intensity && <span aria-hidden="true">·</span>}
+                    <span>From <strong className="font-medium text-text">{formatMoney(featured.perfume.priceFrom)}</strong></span>
                   </div>
-                </CardHeader>
-
-                <CardContent className="space-y-3">
-                  <div className="rounded-md bg-surface p-3 text-sm border border-border">
-                    <span className="font-semibold text-xs text-muted-foreground uppercase tracking-wider block mb-1">
-                      Match Notes:
-                    </span>
-                    <p className="text-foreground">{item.reason}</p>
-                  </div>
-
-                  {item.perfume.intensity && (
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">Intensity: </span>
-                      {item.perfume.intensity.label}
-                    </p>
+                  {!result.fallback && featured.reason.trim() && (
+                    <p className="mt-8 max-w-sm border-l border-border-strong pl-4 text-sm leading-6 text-text-muted">{featured.reason}</p>
                   )}
-                </CardContent>
-
-                <CardFooter className="pt-2 border-t border-border">
                   <Link
-                    href={`/product/${item.perfume.id}`}
-                    className="inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-surface shadow hover:bg-primary/90 transition-colors"
+                    href={`/product/${featured.perfume.id}`}
+                    className="group mt-10 inline-flex min-h-[44px] items-center gap-3 text-sm font-medium text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
                   >
-                    View Fragrance
+                    View fragrance <span aria-hidden="true" className="text-lg transition-transform duration-200 motion-reduce:transform-none motion-reduce:transition-none group-hover:translate-x-1">→</span>
                   </Link>
-                </CardFooter>
-              </Card>
-            ))}
+                </div>
+              </article>
+            )}
+
+            {remaining.length > 0 && (
+              <section aria-labelledby="more-recommendations-heading">
+                <div className="border-t border-border pt-8 sm:pt-10 lg:grid lg:grid-cols-12 lg:gap-x-12">
+                  <div className="lg:col-span-4 lg:pt-3">
+                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">The rest of your edit</p>
+                    <h2 id="more-recommendations-heading" className="mt-3 text-[clamp(2rem,3.5vw,3.25rem)] font-[300] leading-[1.02] tracking-[-0.045em] text-text">Continue exploring</h2>
+                    <p className="mt-5 max-w-[17rem] text-sm leading-6 text-text-muted">Each fragrance opens a different direction within your selection.</p>
+                  </div>
+                  <div className="mt-10 -mr-4 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 pr-4 sm:mr-0 sm:mt-0 sm:grid sm:grid-cols-3 sm:gap-x-6 sm:gap-y-14 sm:overflow-visible sm:p-0 lg:col-span-8 lg:gap-x-5 lg:gap-y-16">
+                    {remaining.map(item => (
+                    <article key={item.perfume.id} className="group w-[72%] shrink-0 snap-start sm:w-auto sm:shrink">
+                      <Link
+                        href={`/product/${item.perfume.id}`}
+                        className="block aspect-[2/3] overflow-hidden bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
+                      >
+                        {productImage(item, {
+                          sizes: "(max-width: 639px) 72vw, (max-width: 1023px) 29vw, (max-width: 1279px) 21vw, 18vw",
+                        })}
+                      </Link>
+                      <div className="pt-4">
+                        <p className="text-xs font-medium uppercase tracking-[0.14em] text-text-muted">{item.perfume.primaryFamily.label}</p>
+                        <h3 className="mt-2 text-lg font-[400] leading-tight tracking-[-0.025em] text-text sm:text-xl">{item.perfume.name}</h3>
+                        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 text-sm leading-5 text-text-muted">
+                          {item.perfume.intensity && <span>{item.perfume.intensity.label}</span>}
+                          {item.perfume.intensity && <span aria-hidden="true">·</span>}
+                          <span>From <strong className="font-medium text-text">{formatMoney(item.perfume.priceFrom)}</strong></span>
+                        </div>
+                        {!result.fallback && item.reason.trim() && (
+                          <p className="mt-4 max-w-sm text-sm leading-6 text-text-muted">{item.reason}</p>
+                        )}
+                        <Link href={`/product/${item.perfume.id}`} className="group/link mt-3 inline-flex min-h-[44px] items-center gap-2 text-sm font-medium text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4">
+                          View <span aria-hidden="true" className="transition-transform duration-200 motion-reduce:transform-none motion-reduce:transition-none group-hover/link:translate-x-1">→</span>
+                        </Link>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                </div>
+              </section>
+            )}
           </div>
         )}
 
-        <div className="flex justify-center gap-3 pt-4">
+        {hasItems && <div className="mt-16 flex flex-col gap-3 border-t border-border pt-6 sm:mt-20 sm:flex-row sm:items-center sm:justify-between">
           <Button variant="outline" onClick={handleReset}>
-            Retake Questionnaire
+            Retake consultation
           </Button>
           <Link
             href="/catalogue"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+            className="inline-flex min-h-[44px] items-center text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            Return to Catalogue
+            Browse catalogue
           </Link>
-        </div>
+        </div>}
       </div>
     );
   }
@@ -346,49 +388,44 @@ export function FragranceQuizView() {
   const currentSelections = currentQuestion ? answers[currentQuestion.id] ?? [] : [];
 
   return (
-    <div className="mx-auto max-w-2xl py-6">
-      <div className="mb-6 space-y-2">
-        <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <span>
-            Question {currentQuestionIndex + 1} of {totalQuestions}
-          </span>
-          <span>Version {quiz.version}</span>
-        </div>
-        <div className="h-1.5 w-full rounded-full bg-surface border border-border overflow-hidden">
-          <div
-            role="progressbar"
-            aria-label="Questionnaire progress"
-            aria-valuemin={1}
-            aria-valuemax={totalQuestions}
-            aria-valuenow={currentQuestionIndex + 1}
-            className="h-full bg-primary transition-all duration-300"
-            style={{
-              width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%`,
-            }}
-          />
-        </div>
+    <div className="mx-auto max-w-[var(--container-wide)] py-10 sm:py-14 lg:py-20">
+      <div className="flex items-center justify-between border-b border-border pb-3 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
+        <span>Fragrance consultation</span>
+        <span className="tabular-nums">{String(currentQuestionIndex + 1).padStart(2, "0")} / {String(totalQuestions).padStart(2, "0")}</span>
+      </div>
+      <div className="h-px bg-border" aria-hidden="true">
+        <div
+          role="progressbar"
+          aria-label="Questionnaire progress"
+          aria-valuemin={1}
+          aria-valuemax={totalQuestions}
+          aria-valuenow={currentQuestionIndex + 1}
+          className="h-px bg-primary transition-[width] duration-300 motion-reduce:transition-none"
+          style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+        />
       </div>
 
       {currentQuestion && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-foreground">
+        <section className="pt-10 sm:pt-14 lg:grid lg:grid-cols-12 lg:gap-x-16 xl:gap-x-24" aria-labelledby="consultation-question">
+          <header className="lg:col-span-6">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Question {currentQuestionIndex + 1}</p>
+            <h1 id="consultation-question" className="mt-4 max-w-2xl text-[clamp(2.4rem,4.4vw,4.5rem)] font-[300] leading-[1.02] tracking-[-0.055em] text-text">
               {currentQuestion.prompt}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
+            </h1>
+            <p className="mt-5 text-sm leading-6 text-text-muted sm:text-base">
               {currentQuestion.maxSelections === 1
-                ? "Select one option."
-                : `Select up to ${currentQuestion.maxSelections} option${
-                    currentQuestion.maxSelections > 1 ? "s" : ""
-                  }.`}
-              {currentQuestion.required && " (Required)"}
+                ? "Choose the direction that feels closest to you."
+                : `Choose up to ${currentQuestion.maxSelections} directions that feel closest to you.`}
             </p>
-          </CardHeader>
+          </header>
 
-          <CardContent className="space-y-3">
+          <div className="mt-10 lg:col-span-5 lg:col-start-8 lg:mt-1">
             <fieldset disabled={isSubmitting}>
               <legend className="sr-only">{currentQuestion.prompt}</legend>
-              <div className="space-y-2">
+              <p className="mb-3 text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
+                {currentQuestion.maxSelections === 1 ? "Choose one" : `Choose up to ${currentQuestion.maxSelections}`}
+              </p>
+              <div className="border-t border-border">
                 {currentQuestion.options.map((option) => {
                   const isChecked = currentSelections.includes(option.id);
                   const inputType = currentQuestion.maxSelections === 1 ? "radio" : "checkbox";
@@ -396,28 +433,28 @@ export function FragranceQuizView() {
                   return (
                     <label
                       key={option.id}
-                      className={`flex min-h-[48px] cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
-                        isChecked
-                          ? "border-primary bg-primary/5 font-medium text-foreground"
-                          : "border-border bg-surface text-muted-foreground hover:border-primary/50"
-                      } ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className={`group relative flex min-h-[60px] cursor-pointer items-center gap-4 border-b border-border px-1 py-3 transition-colors duration-200 motion-reduce:transition-none ${
+                        isChecked ? "bg-surface-muted text-text" : "text-text-muted hover:bg-surface-muted/70"
+                      } ${isSubmitting ? "cursor-not-allowed opacity-50" : ""}`}
                     >
-                      <span className="text-sm">{option.label}</span>
                       <input
                         type={inputType}
                         name={currentQuestion.id}
                         value={option.id}
                         checked={isChecked}
                         disabled={isSubmitting}
-                        onChange={() =>
-                          handleOptionToggle(
-                            currentQuestion.id,
-                            option.id,
-                            currentQuestion.maxSelections
-                          )
-                        }
-                        className="h-5 w-5 accent-primary"
+                        onChange={() => handleOptionToggle(currentQuestion.id, option.id, currentQuestion.maxSelections)}
+                        className="peer sr-only"
                       />
+                      <span className="min-w-0 flex-1 text-lg leading-6 transition-transform duration-200 motion-reduce:transition-none group-hover:translate-x-1 peer-focus-visible:translate-x-1">
+                        {option.label}
+                      </span>
+                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center border text-sm transition-colors duration-200 motion-reduce:transition-none peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 ${
+                        isChecked ? "border-primary bg-primary text-primary-text" : "border-border-strong bg-transparent text-transparent"
+                      } ${inputType === "radio" ? "rounded-full" : "rounded-none"}`} aria-hidden="true">
+                        ✓
+                      </span>
+                      {isChecked && <span className="sr-only">Selected</span>}
                     </label>
                   );
                 })}
@@ -425,53 +462,40 @@ export function FragranceQuizView() {
             </fieldset>
 
             {validationError && (
-              <Alert variant="warning" className="mt-4" role="alert">
+              <Alert variant="warning" className="mt-6" role="alert">
                 <p className="text-sm">{validationError}</p>
               </Alert>
             )}
 
             {submitError && (
-              <div className="mt-4 space-y-3">
+              <div className="mt-6 space-y-3">
                 <Alert variant="danger" role="alert">
                   <p className="font-semibold">Submission Failed</p>
                   <p className="text-sm">{submitError}</p>
                 </Alert>
-                <div className="text-center">
-                  <Link
-                    href="/catalogue"
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
-                  >
-                    Return to Catalogue
-                  </Link>
-                </div>
+                <Link href="/catalogue" className="inline-flex min-h-[44px] items-center text-sm font-medium text-text underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                  Return to catalogue
+                </Link>
               </div>
             )}
-          </CardContent>
 
-          <CardFooter className="flex justify-between border-t border-border pt-4">
-            <Button
-              variant="outline"
-              onClick={handlePrev}
-              disabled={currentQuestionIndex === 0 || isSubmitting}
-            >
-              Previous
-            </Button>
+            <nav className="mt-10 flex items-center justify-between border-t border-border pt-4" aria-label="Consultation navigation">
+              <Button variant="link" onClick={handlePrev} disabled={currentQuestionIndex === 0 || isSubmitting} className="min-h-[44px] text-sm font-medium">
+                <span aria-hidden="true">←</span> Previous
+              </Button>
 
-            {isLastQuestion ? (
-              <Button
-                onClick={() => void handleSubmit()}
-                isLoading={isSubmitting}
-                disabled={isSubmitting}
-              >
-                Find My Fragrance
-              </Button>
-            ) : (
-              <Button onClick={handleNext} disabled={isSubmitting}>
-                Next Question
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+              {isLastQuestion ? (
+                <Button onClick={() => void handleSubmit()} isLoading={isSubmitting} disabled={isSubmitting} size="lg">
+                  Find my fragrance <span aria-hidden="true">→</span>
+                </Button>
+              ) : (
+                <Button onClick={handleNext} disabled={isSubmitting} size="lg">
+                  Next <span aria-hidden="true">→</span>
+                </Button>
+              )}
+            </nav>
+          </div>
+        </section>
       )}
     </div>
   );
