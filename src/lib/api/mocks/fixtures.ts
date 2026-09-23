@@ -58,7 +58,12 @@ export const woody: PerfumeDetail = {
 export const perfumes: readonly PerfumeDetail[] = [citrus, woody];
 export function summary(perfume: PerfumeDetail): PerfumeSummary {
   const { id, slug, name, primaryFamily, imageUrl, priceFrom, intensity } = perfume;
-  return { id, slug, name, primaryFamily, imageUrl, priceFrom, intensity };
+  return {
+    id, slug, name, primaryFamily, imageUrl, priceFrom, intensity,
+    audience: "UNISEX",
+    sku: perfume.variants[0]?.sku ?? null,
+    availability: perfume.variants[0]?.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : "AVAILABLE",
+  };
 }
 const addressSnapshot: AddressInput = {
   recipientName: "Demo Customer", line1: "1 Example Street", line2: null,
