@@ -29,6 +29,11 @@ export const adminSections = {
     title: "Reporting",
     description: "Approved reports will appear here when connected.",
   },
+  security: {
+    href: "/admin/security",
+    title: "Security",
+    description: "Administrator authentication and passkey management.",
+  },
 } as const;
 
 export type AdminSection = keyof typeof adminSections;

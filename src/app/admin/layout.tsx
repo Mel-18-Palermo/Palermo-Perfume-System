@@ -1,5 +1,8 @@
+"use client";
+
 import { AdminSessionPreview } from "@/modules/administration/ui/admin-session-preview";
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 import { AdminResponsiveNavigation } from "@/modules/administration/ui/admin-responsive-navigation";
 
@@ -8,6 +11,12 @@ type AdminLayoutProps = Readonly<{
 }>;
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const pathname = usePathname();
+
+  // A nested App Router layout cannot opt out of its parent. Keep the login
+  // endpoint inside /admin without moving the established admin route tree.
+  if (pathname === "/admin/login") return children;
+
   return (
     <div className="min-h-screen bg-bg text-text">
       <a

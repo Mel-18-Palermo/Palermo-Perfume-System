@@ -102,6 +102,18 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         session = settings.actor === "ADMIN" ? fixtures.administrator : fixtures.customer;
         return success({ user: session });
       }),
+      adminLogin: run("auth.adminLogin", "PUBLIC", input => {
+        if (!input.email.trim() || !input.password) return failure("VALIDATION_ERROR");
+        if (settings.actor !== "ADMIN") return failure("UNAUTHENTICATED");
+        session = fixtures.administrator;
+        return success({ user: session });
+      }),
+      adminPasskeyLoginOptions: run("auth.adminPasskeyLoginOptions", "PUBLIC", input => input.email.trim() && settings.actor === "ADMIN" ? success({ options: {} }) : failure("UNAUTHENTICATED")),
+      adminPasskeyLoginVerify: run("auth.adminPasskeyLoginVerify", "PUBLIC", input => {
+        if (!input.email.trim() || settings.actor !== "ADMIN") return failure("UNAUTHENTICATED"); session = fixtures.administrator; return success({ user: session });
+      }),
+      adminPasskeyRegisterOptions: run("auth.adminPasskeyRegisterOptions", "ADMIN", () => success({ options: {} })),
+      adminPasskeyRegisterVerify: run("auth.adminPasskeyRegisterVerify", "ADMIN", () => success({ registered: true })),
       logout: run("auth.logout", "PUBLIC", () => { session = null; return success({ acknowledged: true }); }),
       requestPasswordReset: run("auth.requestPasswordReset", "PUBLIC", input => input.email.trim()
         ? success({ acknowledged: true }) : failure("VALIDATION_ERROR")),
@@ -282,6 +294,18 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         return success({ ...fixtures.dashboard, period, totalOrders: hasOrder ? 1 : 0,
           totalSales: fixtures.money(hasOrder ? 13000 : 0), bestSelling: hasOrder ? fixtures.dashboard.bestSelling : [] });
       }),
+      getCatalogueReferences: run("admin.getCatalogueReferences", "ADMIN", () => success({
+        family: fixtures.filters.family,
+        note: fixtures.filters.note,
+        intensity: fixtures.filters.intensity,
+        suitability: {
+          occasion: fixtures.filters.occasion,
+          mood: fixtures.filters.mood,
+          weather: fixtures.filters.weather,
+          daypart: [],
+          season: [],
+        },
+      })),
       listCatalogue: run("admin.listCatalogue", "ADMIN", input => paginate(settings.empty ? [] : [fixtures.adminPerfume], input)),
       getPerfume: run("admin.getPerfume", "ADMIN", ({ id }) => id === fixtures.citrus.id ? success(fixtures.adminPerfume) : failure("NOT_FOUND")),
       // Admin write responses are canned UI fixtures; catalogue/inventory authority is implemented later.

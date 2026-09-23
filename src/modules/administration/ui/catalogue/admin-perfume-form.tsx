@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import type { AdminPerfume } from "@/contracts/admin";
-import type { CatalogueFilters, NoteAssignment, PerfumeImageSummary } from "@/contracts/catalogue";
-import { getAdminCatalogueApi, getCatalogueFilters } from "./admin-catalogue-api";
+import type { AdminCatalogueReferences, AdminPerfume } from "@/contracts/admin";
+import type { NoteAssignment, PerfumeImageSummary } from "@/contracts/catalogue";
+import { getAdminCatalogueApi, getCatalogueReferences } from "./admin-catalogue-api";
 import { AdminButton, AdminErrorState, AdminSkeleton } from "./admin-ui-kit";
 
 type NoteLayer = NoteAssignment["layer"];
@@ -11,7 +11,7 @@ type NoteLayer = NoteAssignment["layer"];
 type FiltersState =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "ready"; filters: CatalogueFilters };
+  | { status: "ready"; references: AdminCatalogueReferences };
 
 interface FormValues {
   name: string;
@@ -23,6 +23,8 @@ interface FormValues {
   occasionIds: string[];
   moodIds: string[];
   weatherIds: string[];
+  daypartIds: string[];
+  seasonIds: string[];
   images: PerfumeImageSummary[];
 }
 
@@ -38,6 +40,8 @@ function initialValues(initialPerfume: AdminPerfume | undefined): FormValues {
     occasionIds: perfume?.suitability.occasion.map(option => option.id) ?? [],
     moodIds: perfume?.suitability.mood.map(option => option.id) ?? [],
     weatherIds: perfume?.suitability.weather.map(option => option.id) ?? [],
+    daypartIds: perfume?.suitability.daypart.map(option => option.id) ?? [],
+    seasonIds: perfume?.suitability.season.map(option => option.id) ?? [],
     images: perfume?.images ? [...perfume.images] : [],
   };
 }
@@ -63,12 +67,12 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
   const [pendingImageAlt, setPendingImageAlt] = React.useState("");
 
   React.useEffect(() => {
-    void getCatalogueFilters().then(result => {
+    void getCatalogueReferences().then(result => {
       if (!result.ok) {
         setFiltersState({ status: "error", message: result.error.message });
         return;
       }
-      setFiltersState({ status: "ready", filters: result.data });
+      setFiltersState({ status: "ready", references: result.data });
     });
   }, []);
 
@@ -82,7 +86,7 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
   const addNote = () => {
     if (!pendingNoteId || filtersState.status !== "ready") return;
     if (values.notes.some(note => note.id === pendingNoteId)) return;
-    const option = filtersState.filters.note.find(note => note.id === pendingNoteId);
+    const option = filtersState.references.note.find(note => note.id === pendingNoteId);
     if (!option) return;
     setValues(current => ({
       ...current,
@@ -136,14 +140,14 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
       slug: values.slug.trim() || values.name.trim().toLowerCase().replace(/\s+/g, "-"),
       description: values.description.trim(),
       primaryFamilyId: values.primaryFamilyId,
-      intensity: values.intensityId ? filtersState.filters.intensity.find(option => option.id === values.intensityId) ?? null : null,
+      intensity: values.intensityId ? filtersState.references.intensity.find(option => option.id === values.intensityId) ?? null : null,
       notes: values.notes,
       suitability: {
-        occasion: filtersState.filters.occasion.filter(option => values.occasionIds.includes(option.id)),
-        mood: filtersState.filters.mood.filter(option => values.moodIds.includes(option.id)),
-        weather: filtersState.filters.weather.filter(option => values.weatherIds.includes(option.id)),
-        daypart: perfumeToEdit?.perfume.suitability.daypart ?? [],
-        season: perfumeToEdit?.perfume.suitability.season ?? [],
+        occasion: filtersState.references.suitability.occasion.filter(option => values.occasionIds.includes(option.id)),
+        mood: filtersState.references.suitability.mood.filter(option => values.moodIds.includes(option.id)),
+        weather: filtersState.references.suitability.weather.filter(option => values.weatherIds.includes(option.id)),
+        daypart: filtersState.references.suitability.daypart.filter(option => values.daypartIds.includes(option.id)),
+        season: filtersState.references.suitability.season.filter(option => values.seasonIds.includes(option.id)),
       },
       images: values.images,
       longevity: perfumeToEdit?.perfume.longevity ?? null,
@@ -187,17 +191,13 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
     return <AdminErrorState title="Could not load form options" message={filtersState.message} />;
   }
 
-  const { filters } = filtersState;
+  const { references } = filtersState;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="max-w-form space-y-6" aria-labelledby="admin-perfume-form-heading">
       <h2 id="admin-perfume-form-heading" className="text-h2 font-semibold">
         {mode === "create" ? "Add perfume" : "Edit perfume"}
       </h2>
-
-      <p className="rounded-md bg-info-bg px-3 py-2 text-sm text-info">
-        This form uses a fixture-based mock. The saved record will be a fixed demo perfume, not your exact input, until real persistence is implemented under #270.
-      </p>
 
       {submitError ? (
         <p role="alert" className="rounded-md bg-danger-bg px-3 py-2 text-sm text-danger">
@@ -259,7 +259,7 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
           aria-invalid={fieldErrors.primaryFamilyId ? true : undefined}
         >
           <option value="">Select a family…</option>
-          {filters.family.map(option => (
+          {references.family.map(option => (
             <option key={option.id} value={option.id}>{option.label}</option>
           ))}
         </select>
@@ -277,7 +277,7 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
           onChange={event => setValues(current => ({ ...current, intensityId: event.target.value }))}
         >
           <option value="">None</option>
-          {filters.intensity.map(option => (
+          {references.intensity.map(option => (
             <option key={option.id} value={option.id}>{option.label}</option>
           ))}
         </select>
@@ -305,7 +305,7 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
               onChange={event => setPendingNoteId(event.target.value)}
             >
               <option value="">Select a note…</option>
-              {filters.note.map(option => (
+              {references.note.map(option => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
             </select>
@@ -332,7 +332,7 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
       <fieldset className="space-y-2">
         <legend className="text-label">Occasion</legend>
         <div className="flex flex-wrap gap-3">
-          {filters.occasion.map(option => (
+          {references.suitability.occasion.map(option => (
             <label key={option.id} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -348,7 +348,7 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
       <fieldset className="space-y-2">
         <legend className="text-label">Mood</legend>
         <div className="flex flex-wrap gap-3">
-          {filters.mood.map(option => (
+          {references.suitability.mood.map(option => (
             <label key={option.id} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -364,7 +364,7 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
       <fieldset className="space-y-2">
         <legend className="text-label">Weather</legend>
         <div className="flex flex-wrap gap-3">
-          {filters.weather.map(option => (
+          {references.suitability.weather.map(option => (
             <label key={option.id} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -377,14 +377,36 @@ export function AdminPerfumeForm({ mode, initialPerfume, onSaved, onCancel }: Ad
         </div>
       </fieldset>
 
-      <fieldset className="space-y-1 opacity-60">
-        <legend className="text-label">Daypart, season, longevity, projection</legend>
-        <p className="text-sm text-text-muted">
-          Not yet available — no contract-approved option list exists for these fields yet.
-        </p>
-        <select disabled className="w-full rounded-md border border-border px-3 py-2" aria-label="Daypart (not yet available)">
-          <option>Not yet available</option>
-        </select>
+      <fieldset className="space-y-2">
+        <legend className="text-label">Daypart</legend>
+        <div className="flex flex-wrap gap-3">
+          {references.suitability.daypart.map(option => (
+            <label key={option.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={values.daypartIds.includes(option.id)}
+                onChange={() => setValues(current => ({ ...current, daypartIds: toggleInArray(current.daypartIds, option.id) }))}
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-2">
+        <legend className="text-label">Season</legend>
+        <div className="flex flex-wrap gap-3">
+          {references.suitability.season.map(option => (
+            <label key={option.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={values.seasonIds.includes(option.id)}
+                onChange={() => setValues(current => ({ ...current, seasonIds: toggleInArray(current.seasonIds, option.id) }))}
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
       </fieldset>
 
       <fieldset className="space-y-2">

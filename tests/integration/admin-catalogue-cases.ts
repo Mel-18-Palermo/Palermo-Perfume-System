@@ -15,6 +15,45 @@ const variantInput: VariantInput = { sku: "MANAGED-50", bottleSize: "50 ml", con
 export function adminCatalogueCases(db: PrismaClient): void {
   describe("administrator catalogue mutation authority", () => {
     const service = new AdminCatalogueService(db);
+    it("lists every active canonical reference, including unused values", async () => {
+      await db.fragranceFamily.createMany({ data: [
+        { id: seedId(9901), name: "Aldehydic unused" },
+        { id: seedId(9902), name: "Inactive family", active: false },
+      ] });
+      await db.fragranceNote.createMany({ data: [
+        { id: seedId(9903), name: "Active unused note", description: "Preserved note description" },
+        { id: seedId(9904), name: "Inactive note", active: false },
+      ] });
+      await db.intensity.createMany({ data: [
+        { id: seedId(9905), name: "Active unused intensity" },
+        { id: seedId(9906), name: "Inactive intensity", active: false },
+      ] });
+      await db.suitabilityTag.createMany({ data: [
+        { id: seedId(9907), category: "OCCASION", value: "Active occasion" },
+        { id: seedId(9908), category: "MOOD", value: "Active mood" },
+        { id: seedId(9909), category: "WEATHER", value: "Active weather" },
+        { id: seedId(9910), category: "DAYPART", value: "Active daypart" },
+        { id: seedId(9911), category: "SEASON", value: "Active season" },
+        { id: seedId(9912), category: "SEASON", value: "Inactive season", active: false },
+      ] });
+
+      const result = await service.references();
+      expect(result.ok).toBe(true); if (!result.ok) return;
+
+      expect(result.data.family.map(item => item.label)).toContain("Aldehydic unused");
+      expect(result.data.family.map(item => item.label)).not.toContain("Inactive family");
+      expect(result.data.note).toContainEqual({ id: seedId(9903), label: "Active unused note", description: "Preserved note description" });
+      expect(result.data.note.map(item => item.label)).not.toContain("Inactive note");
+      expect(result.data.intensity.map(item => item.label)).toContain("Active unused intensity");
+      expect(result.data.intensity.map(item => item.label)).not.toContain("Inactive intensity");
+      expect(result.data.suitability.occasion.map(item => item.label)).toContain("Active occasion");
+      expect(result.data.suitability.mood.map(item => item.label)).toContain("Active mood");
+      expect(result.data.suitability.weather.map(item => item.label)).toContain("Active weather");
+      expect(result.data.suitability.daypart.map(item => item.label)).toContain("Active daypart");
+      expect(result.data.suitability.season.map(item => item.label)).toContain("Active season");
+      expect(result.data.suitability.season.map(item => item.label)).not.toContain("Inactive season");
+      expect(result.data.family.map(item => item.label)).toEqual([...result.data.family.map(item => item.label)].sort());
+    });
     it("creates, updates and archives a perfume with revision conflicts", async () => {
       const created = await service.create({ ...perfumeInput("Perfume"), idempotencyKey: "managed-perfume-key" });
       expect(created.ok).toBe(true); if (!created.ok) return;

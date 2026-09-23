@@ -5,6 +5,7 @@ import type { IdentityProvider, ProviderIdentity, RecoveryGrant } from "../../sr
 import { AuthFault } from "../../src/lib/auth/errors";
 import { IdentityService, SESSION_INACTIVITY_SECONDS, SESSION_SECONDS } from "../../src/modules/identity/service";
 import { handleAuthRequest, SESSION_COOKIE } from "../../src/lib/auth/http";
+import type { WebAuthnVerifier } from "../../src/lib/auth/webauthn";
 import { ids } from "../../prisma/seed-data";
 
 const password = "synthetic-only-password-244";
@@ -189,6 +190,41 @@ export function identityCases(db: PrismaClient): void {
       expect((await service.session(login.token)).user?.role).toBe("ADMIN");
       time = new Date(time.getTime() + SESSION_INACTIVITY_SECONDS * 1000);
       expect(await service.session(login.token)).toEqual({ user: null });
+    });
+    it("persists and verifies administrator passkeys using ordinary Palermo sessions", async () => {
+      const role = await db.adminRole.create({ data: { name: "auth-test-role", permissions: { create: { permission: { connect: { id: ids.permission } } } } } });
+      const admin = await db.adminAccount.create({ data: { name: "Passkey Admin", email, roleId: role.id } });
+      const verifier: WebAuthnVerifier = {
+        registration: async () => ({ verified: true, credential: { id: "credential-test", publicKey: new Uint8Array([1, 2, 3]), counter: 1, transports: ["internal"] }, credentialDeviceType: "multiDevice", credentialBackedUp: true }),
+        authentication: async () => ({ verified: true, newCounter: 2, credentialDeviceType: "multiDevice", credentialBackedUp: true }),
+      };
+      service = new IdentityService(db, provider, () => time, async () => verifier);
+      const config = { rpID: "palermo.example.test", origin: "https://palermo.example.test" };
+      await service.passkeyRegistrationOptions(admin.id, config);
+      await service.verifyPasskeyRegistration(admin.id, { id: "credential-test" } as never, "Work Mac", config);
+      expect(await db.adminPasskeyCredential.findFirstOrThrow({ where: { adminId: admin.id } })).toMatchObject({ label: "Work Mac", counter: 1 });
+      await service.passkeyAuthenticationOptions(email, config);
+      const login = await service.verifyPasskeyAuthentication(email, { id: "credential-test" } as never, config);
+      expect(login.session.user?.role).toBe("ADMIN");
+      expect((await service.principal(login.token))?.permissions).toContain("catalogue:manage");
+      expect((await db.adminPasskeyCredential.findFirstOrThrow({ where: { adminId: admin.id } })).counter).toBe(2);
+    });
+    it("does not accept expired, replayed, revoked, inactive-account, or inactive-role passkey authentication", async () => {
+      const role = await db.adminRole.create({ data: { name: "auth-test-role" } });
+      const admin = await db.adminAccount.create({ data: { name: "Passkey Admin", email, roleId: role.id } });
+      const credential = await db.adminPasskeyCredential.create({ data: { adminId: admin.id, credentialId: "credential-test", publicKey: new Uint8Array([1]), counter: 0, transports: [], credentialDeviceType: "singleDevice", credentialBackedUp: false } });
+      const verifier: WebAuthnVerifier = { registration: async () => ({ verified: false, credential: undefined, credentialDeviceType: undefined, credentialBackedUp: undefined }), authentication: async (_response, _credential, expected) => ({ verified: expected.origin === config.origin, newCounter: 1, credentialDeviceType: "singleDevice", credentialBackedUp: false }) };
+      service = new IdentityService(db, provider, () => time, async () => verifier); const config = { rpID: "palermo.example.test", origin: "https://palermo.example.test" };
+      await service.passkeyAuthenticationOptions(email, config); time = new Date(time.getTime() + 301_000);
+      await expect(service.verifyPasskeyAuthentication(email, { id: credential.credentialId } as never, config)).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+      time = new Date("2026-09-08T00:00:00Z"); await service.passkeyAuthenticationOptions(email, config);
+      await expect(service.verifyPasskeyAuthentication(email, { id: credential.credentialId } as never, { ...config, origin: "https://attacker.example" })).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+      await db.adminPasskeyCredential.update({ where: { id: credential.id }, data: { revokedAt: time } });
+      await expect(service.passkeyAuthenticationOptions(email, config)).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+      await db.adminPasskeyCredential.update({ where: { id: credential.id }, data: { revokedAt: null } }); await db.adminAccount.update({ where: { id: admin.id }, data: { active: false } });
+      await expect(service.passkeyAuthenticationOptions(email, config)).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
+      await db.adminAccount.update({ where: { id: admin.id }, data: { active: true } }); await db.adminRole.update({ where: { id: role.id }, data: { active: false } });
+      await expect(service.passkeyAuthenticationOptions(email, config)).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
     });
     it("does not touch a session after auth-version invalidation", async () => {
       const login = await active();

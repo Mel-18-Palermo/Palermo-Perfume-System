@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import type { Prisma, PrismaClient } from "../src/lib/db/generated/client";
 import {
   availabilityValues,
+  approvedCatalogueAudienceCollectionIds,
   collectionTypes,
   noteLayers,
   suitabilityCategories,
@@ -17,6 +18,7 @@ import type { ApprovedQuizManifest } from "./quiz-data";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const assetNamePattern = /^(?:primary|detail-[0-9]{2})\.(?:png|webp)$/;
+const audienceCollectionIds = new Set(Object.values(approvedCatalogueAudienceCollectionIds));
 
 export class CatalogueManifestError extends Error {
   constructor(readonly issues: readonly string[]) {
@@ -139,8 +141,8 @@ export function validateApprovedCatalogueManifest(manifest: ApprovedCatalogueMan
       if (!collectionIds.has(collectionId)) issues.push(`Product ${product.slug} references an unknown collection.`);
     }
 
-    if (product.images.length === 0 || !product.images.some(image => image.sortOrder === 0)) {
-      issues.push(`Active product ${product.slug} requires a primary image with sortOrder 0.`);
+    if (!product.images.some(image => image.sortOrder === 0)) {
+      issues.push(`Product ${product.slug} images require a primary image with sortOrder 0.`);
     }
     addDuplicateIssues(`product ${product.slug} image sortOrder`, product.images.map(image => String(image.sortOrder)), issues);
     for (const image of product.images) {
@@ -308,7 +310,11 @@ async function assertManagedProductRelations(
     product.slug,
     "CollectionPerfume",
     new Set(product.collectionIds),
-    collections.map(relation => relation.collectionId),
+    // Audience membership is official merchandising metadata that can be
+    // corrected independently of unrelated collection relationships.
+    collections
+      .filter(relation => !audienceCollectionIds.has(relation.collectionId))
+      .map(relation => relation.collectionId),
   );
   assertNoCatalogueRelationDrift(
     product.slug,
@@ -388,6 +394,16 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
       primaryFamilyId: product.primaryFamilyId, intensityId: product.intensityId,
       longevity: product.longevity, projection: product.projection,
     } });
+
+    await tx.collectionPerfume.deleteMany({
+      where: {
+        perfumeId: product.id,
+        collectionId: {
+          in: [...audienceCollectionIds],
+          notIn: [...product.collectionIds],
+        },
+      },
+    });
 
     for (const note of product.notes) await tx.perfumeNote.upsert({
       where: { perfumeId_noteId_layer: { perfumeId: product.id, noteId: note.noteId, layer: note.layer } },
@@ -476,6 +492,15 @@ async function populate(tx: Prisma.TransactionClient, manifest: ApprovedCatalogu
   }
 }
 
+async function archiveSyntheticDemoProducts(tx: Prisma.TransactionClient): Promise<void> {
+  // Synthetic demo products have order and cart references. Archive their parent
+  // records instead of deleting or rewriting commerce history.
+  await tx.perfume.updateMany({
+    where: { slug: { in: ["demo-citrus", "demo-woody"] }, status: { not: "ARCHIVED" } },
+    data: { status: "ARCHIVED", archivedAt: new Date() },
+  });
+}
+
 export type CataloguePopulationSummary = Readonly<{ products: number; variants: number; images: number }>;
 
 export async function populateApprovedCatalogue(
@@ -484,6 +509,23 @@ export async function populateApprovedCatalogue(
 ): Promise<CataloguePopulationSummary> {
   assertApprovedCatalogueManifest(manifest);
   await db.$transaction(tx => populate(tx, manifest), { timeout: 60_000 });
+  return {
+    products: manifest.products.length,
+    variants: manifest.products.reduce((total, product) => total + product.variants.length, 0),
+    images: manifest.products.reduce((total, product) => total + product.images.length, 0),
+  };
+}
+
+/** Populate the final catalogue and explicitly retire synthetic demo products. */
+export async function populateFinalCatalogue(
+  db: PrismaClient,
+  manifest: ApprovedCatalogueManifest,
+): Promise<CataloguePopulationSummary> {
+  assertApprovedCatalogueManifest(manifest);
+  await db.$transaction(async tx => {
+    await populate(tx, manifest);
+    await archiveSyntheticDemoProducts(tx);
+  }, { timeout: 60_000 });
   return {
     products: manifest.products.length,
     variants: manifest.products.reduce((total, product) => total + product.variants.length, 0),
@@ -501,6 +543,28 @@ export async function populateApprovedCatalogueAndQuiz(
   await db.$transaction(async tx => {
     await populate(tx, catalogue);
     await populateApprovedQuizInTransaction(tx, quiz, catalogue);
+  }, { timeout: 60_000 });
+  return {
+    products: catalogue.products.length,
+    variants: catalogue.products.reduce((total, product) => total + product.variants.length, 0),
+    images: catalogue.products.reduce((total, product) => total + product.images.length, 0),
+  };
+}
+
+/**
+ * Final-catalogue population is deliberately separate from generic population:
+ * it retires seeded demos only when the final public catalogue is installed.
+ */
+export async function populateFinalCatalogueAndQuiz(
+  db: PrismaClient,
+  catalogue: ApprovedCatalogueManifest,
+  quiz: ApprovedQuizManifest,
+): Promise<CataloguePopulationSummary> {
+  assertApprovedCatalogueManifest(catalogue);
+  await db.$transaction(async tx => {
+    await populate(tx, catalogue);
+    await populateApprovedQuizInTransaction(tx, quiz, catalogue);
+    await archiveSyntheticDemoProducts(tx);
   }, { timeout: 60_000 });
   return {
     products: catalogue.products.length,

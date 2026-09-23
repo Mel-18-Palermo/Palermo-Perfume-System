@@ -155,4 +155,24 @@ describe("administrator HTTP client routing", () => {
     );
     expect(calls[0]?.init?.method).toBe("GET");
   });
+
+  it("reads catalogue references from the administrator boundary", async () => {
+    const calls: RecordedCall[] = [];
+    const fetcher = async (
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      calls.push({ url: String(input), init });
+      return successResponse({ family: [], note: [], intensity: [], suitability: {
+        occasion: [], mood: [], weather: [], daypart: [], season: [],
+      } });
+    };
+
+    await createAdminHttpClient(fetcher as typeof fetch).getCatalogueReferences();
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.url).toBe("/api/admin/catalogue/references");
+    expect(calls[0]?.init?.method).toBe("GET");
+    expect(calls[0]?.init?.body).toBeUndefined();
+  });
 });

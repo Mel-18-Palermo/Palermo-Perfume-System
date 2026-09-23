@@ -45,12 +45,27 @@ function suitability(perfume: LoadedPerfume): SuitabilitySummary {
 function summary(perfume: LoadedPerfume): PerfumeSummary {
   const visible = perfume.variants.filter(variant => variant.availability !== "UNAVAILABLE");
   const cheapest = [...visible].sort((a, b) => a.priceMinor - b.priceMinor)[0];
+  const audienceName = perfume.collections.find(({ collection }) =>
+    ["Women", "Men", "Unisex"].includes(collection.name)
+  )?.collection.name;
+  const audience = audienceName === "Women"
+    ? "WOMEN"
+    : audienceName === "Men"
+      ? "MEN"
+      : audienceName === "Unisex"
+        ? "UNISEX"
+        : undefined;
   return {
     id: perfume.id, slug: perfume.slug, name: perfume.name,
     primaryFamily: option(perfume.primaryFamily.id, perfume.primaryFamily.name),
     imageUrl: perfume.images[0]?.url ?? null,
     priceFrom: money(cheapest?.priceMinor ?? 0, cheapest?.currency ?? "AUD"),
     intensity: perfume.intensity ? option(perfume.intensity.id, perfume.intensity.name) : null,
+    ...(audience ? { audience } : {}),
+    sku: cheapest?.sku ?? null,
+    availability: visible.some(variant => publicVariantAvailability(variant.availability, variant.inventory) === "AVAILABLE")
+      ? "AVAILABLE"
+      : "OUT_OF_STOCK",
   };
 }
 

@@ -1,29 +1,11 @@
 import { CustomerLogin } from "@/modules/identity/ui/customer-login";
+import { safeNextPath } from "@/modules/identity/ui/safe-next-path";
 
 type LoginPageProps = Readonly<{
   searchParams: Promise<{
     next?: string | string[];
   }>;
 }>;
-
-function safeNext(value: string | string[] | undefined): string {
-  if (typeof value !== "string" || !value.startsWith("/")) {
-    return "/";
-  }
-
-  try {
-    const base = new URL("https://palermo.invalid");
-    const target = new URL(value, base);
-
-    if (target.origin !== base.origin) {
-      return "/";
-    }
-
-    return `${target.pathname}${target.search}${target.hash}`;
-  } catch {
-    return "/";
-  }
-}
 
 export default async function LoginPage({
   searchParams,
@@ -32,7 +14,7 @@ export default async function LoginPage({
 
   return (
     <CustomerLogin
-      nextPath={safeNext(params.next)}
+      nextPath={safeNextPath(params.next, "/")}
     />
   );
 }
