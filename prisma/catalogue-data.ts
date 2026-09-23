@@ -108,6 +108,14 @@ export const approvedCatalogueFamilyIds = {
   rose: catalogueId(6),
 } as const;
 
+// These general collections carry Palermo's published customer audience
+// categorisation. They are deliberately separate from fragrance families.
+export const approvedCatalogueAudienceCollectionIds = {
+  women: catalogueId(200),
+  men: catalogueId(201),
+  unisex: catalogueId(202),
+} as const;
+
 const noteIds = {
   floralNotes: catalogueId(100),
   vanilla: catalogueId(101),
@@ -162,6 +170,8 @@ const noteIds = {
   vetiver: catalogueId(148),
 } as const;
 
+export const approvedCatalogueNoteIds = noteIds;
+
 const named = (
   id: string,
   name: string,
@@ -205,6 +215,45 @@ const standardVariant = (
     reserved: 0,
     lowStockThreshold: 3,
   },
+});
+
+const pyramid = (
+  top: readonly string[],
+  middle: readonly string[],
+  base: readonly string[],
+): readonly Readonly<{ noteId: string; layer: ApprovedNoteLayer }>[] => [
+  ...top.map(noteId => ({ noteId, layer: "TOP" as const })),
+  ...middle.map(noteId => ({ noteId, layer: "MIDDLE" as const })),
+  ...base.map(noteId => ({ noteId, layer: "BASE" as const })),
+];
+
+const sparseProduct = (
+  productId: string,
+  variantId: string,
+  movementId: string | null,
+  imageId: string,
+  name: string,
+  slug: string,
+  primaryFamilyId: string,
+  sku: string,
+  availability: ApprovedAvailability,
+  audienceCollectionId: string,
+  notes: ReadonlyArray<Readonly<{ noteId: string; layer: ApprovedNoteLayer }>> = [],
+): ApprovedCatalogueProduct => ({
+  id: productId,
+  name,
+  slug,
+  description: `${name} is a Palermo Eau de Parfum in the current Palermo collection.`,
+  status: "ACTIVE",
+  primaryFamilyId,
+  intensityId: null,
+  longevity: null,
+  projection: null,
+  notes,
+  suitabilityTagIds: [],
+  collectionIds: [audienceCollectionId],
+  images: [primaryImage(imageId, slug, `Palermo ${name} Eau de Parfum product bottle`)],
+  variants: [standardVariant(variantId, movementId, sku, availability)],
 });
 
 export const approvedCatalogueManifest = {
@@ -275,7 +324,11 @@ export const approvedCatalogueManifest = {
     ],
     intensities: [],
     suitabilityTags: [],
-    collections: [],
+    collections: [
+      { id: approvedCatalogueAudienceCollectionIds.women, name: "Women", type: "GENERAL", active: true },
+      { id: approvedCatalogueAudienceCollectionIds.men, name: "Men", type: "GENERAL", active: true },
+      { id: approvedCatalogueAudienceCollectionIds.unisex, name: "Unisex", type: "GENERAL", active: true },
+    ],
   },
   products: [
     {
@@ -299,7 +352,7 @@ export const approvedCatalogueManifest = {
         { noteId: noteIds.woodsyNotes, layer: "BASE" },
       ],
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.women],
       images: [
         primaryImage(
           catalogueId(1002),
@@ -334,7 +387,7 @@ export const approvedCatalogueManifest = {
         { noteId: noteIds.musk, layer: "BASE" },
       ],
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.women],
       images: [
         primaryImage(catalogueId(1012), "candy", "Palermo Candy Eau de Parfum product bottle"),
       ],
@@ -360,7 +413,7 @@ export const approvedCatalogueManifest = {
         { noteId: noteIds.cedarwood, layer: "BASE" },
       ],
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.women],
       images: [
         primaryImage(
           catalogueId(1022),
@@ -394,7 +447,7 @@ export const approvedCatalogueManifest = {
         { noteId: noteIds.cacao, layer: "BASE" },
       ],
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.unisex],
       images: [
         primaryImage(catalogueId(1032), "vanilla", "Palermo Vanilla Eau de Parfum product bottle"),
       ],
@@ -423,7 +476,7 @@ export const approvedCatalogueManifest = {
         { noteId: noteIds.amber, layer: "BASE" },
       ],
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.women],
       images: [
         primaryImage(
           catalogueId(1042),
@@ -452,7 +505,7 @@ export const approvedCatalogueManifest = {
         { noteId: noteIds.whiteMusk, layer: "BASE" },
       ],
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.men],
       images: [
         primaryImage(
           catalogueId(1052),
@@ -493,7 +546,7 @@ export const approvedCatalogueManifest = {
         { noteId: noteIds.vetiver, layer: "BASE" },
       ],
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.men],
       images: [
         primaryImage(
           catalogueId(1062),
@@ -514,9 +567,13 @@ export const approvedCatalogueManifest = {
       intensityId: null,
       longevity: null,
       projection: null,
-      notes: [],
+      notes: pyramid(
+        [noteIds.bergamot, noteIds.grapefruit],
+        [noteIds.lavender, noteIds.sage, noteIds.juniper],
+        [noteIds.vetiver, noteIds.cedarwood, noteIds.musk],
+      ),
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.men],
       images: [
         primaryImage(
           catalogueId(1072),
@@ -537,9 +594,13 @@ export const approvedCatalogueManifest = {
       intensityId: null,
       longevity: null,
       projection: null,
-      notes: [],
+      notes: pyramid(
+        [noteIds.bergamot, noteIds.raspberry],
+        [noteIds.lotus, noteIds.whiteOrchid, noteIds.jasmine],
+        [noteIds.vanilla, noteIds.sandalwood, noteIds.whiteMusk],
+      ),
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.women],
       images: [
         primaryImage(
           catalogueId(1082),
@@ -560,13 +621,29 @@ export const approvedCatalogueManifest = {
       intensityId: null,
       longevity: null,
       projection: null,
-      notes: [],
+      notes: pyramid(
+        [noteIds.litchi, noteIds.pinkPepper],
+        [noteIds.mayRose, noteIds.floralNotes, noteIds.raspberry],
+        [noteIds.whiteMusk, noteIds.patchouli, noteIds.sandalwood],
+      ),
       suitabilityTagIds: [],
-      collectionIds: [],
+      collectionIds: [approvedCatalogueAudienceCollectionIds.women],
       images: [
         primaryImage(catalogueId(1092), "baran", "Palermo Baran Eau de Parfum product bottle"),
       ],
-      variants: [standardVariant(catalogueId(1091), null, "W263", "UNAVAILABLE")],
+      variants: [standardVariant(catalogueId(1091), null, "W263", "OUT_OF_STOCK")],
     },
+    sparseProduct(catalogueId(1100), catalogueId(1101), catalogueId(1103), catalogueId(1102), "Vanille Divine", "vanille-divine", approvedCatalogueFamilyIds.unclassified, "W409", "AVAILABLE", approvedCatalogueAudienceCollectionIds.unisex, pyramid([noteIds.bergamot, noteIds.tangerine], [noteIds.whiteOrchid, noteIds.jasmine], [noteIds.vanilla, noteIds.tonkaBean, noteIds.sandalwood])),
+    sparseProduct(catalogueId(1110), catalogueId(1111), catalogueId(1113), catalogueId(1112), "Candy Pink", "candy-pink", approvedCatalogueFamilyIds.unclassified, "W388", "AVAILABLE", approvedCatalogueAudienceCollectionIds.unisex, pyramid([noteIds.raspberry, noteIds.litchi], [noteIds.candiedFruits, noteIds.mayRose, noteIds.lotus], [noteIds.vanilla, noteIds.whiteMusk, noteIds.sandalwood])),
+    sparseProduct(catalogueId(1120), catalogueId(1121), catalogueId(1123), catalogueId(1122), "Sweet Floss", "sweet-floss", approvedCatalogueFamilyIds.unclassified, "W387", "AVAILABLE", approvedCatalogueAudienceCollectionIds.women, pyramid([noteIds.sugar, noteIds.tangerine], [noteIds.caramel, noteIds.floralNotes, noteIds.coconut], [noteIds.vanilla, noteIds.tonkaBean, noteIds.whiteMusk])),
+    sparseProduct(catalogueId(1130), catalogueId(1131), catalogueId(1133), catalogueId(1132), "Vanille Sauvage", "vanille-sauvage", approvedCatalogueFamilyIds.unclassified, "W398", "AVAILABLE", approvedCatalogueAudienceCollectionIds.unisex, pyramid([noteIds.bergamot, noteIds.pinkPepper], [noteIds.jasmine, noteIds.saffron, noteIds.lavender], [noteIds.vanilla, noteIds.amber, noteIds.patchouli])),
+    sparseProduct(catalogueId(1140), catalogueId(1141), catalogueId(1143), catalogueId(1142), "Dessert Storm", "dessert-storm", approvedCatalogueFamilyIds.unclassified, "M147", "AVAILABLE", approvedCatalogueAudienceCollectionIds.men, pyramid([noteIds.bitterOrange, noteIds.cinnamon], [noteIds.cacao, noteIds.toffee, noteIds.tobacco], [noteIds.vanilla, noteIds.amber, noteIds.leather])),
+    sparseProduct(catalogueId(1150), catalogueId(1151), catalogueId(1153), catalogueId(1152), "Palermo Men", "palermo-men", approvedCatalogueFamilyIds.unclassified, "M166", "AVAILABLE", approvedCatalogueAudienceCollectionIds.men, pyramid([noteIds.bergamot, noteIds.grapefruit], [noteIds.lavender, noteIds.sage, noteIds.elemi], [noteIds.vetiver, noteIds.cedarwood, noteIds.musk])),
+    sparseProduct(catalogueId(1160), catalogueId(1161), catalogueId(1163), catalogueId(1162), "Dreams", "dreams", approvedCatalogueFamilyIds.unclassified, "W286", "AVAILABLE", approvedCatalogueAudienceCollectionIds.women, pyramid([noteIds.nectarine, noteIds.raspberry], [noteIds.lotus, noteIds.waterLily, noteIds.jasmine], [noteIds.vanilla, noteIds.whiteMusk, noteIds.sandalwood])),
+    sparseProduct(catalogueId(1170), catalogueId(1171), catalogueId(1173), catalogueId(1172), "Prototype", "prototype", approvedCatalogueFamilyIds.unclassified, "M290", "AVAILABLE", approvedCatalogueAudienceCollectionIds.men, pyramid([noteIds.juniper, noteIds.pinkPepper, noteIds.bergamot], [noteIds.elemi, noteIds.sage, noteIds.cinnamon], [noteIds.vetiver, noteIds.leather, noteIds.cedarwood])),
+    sparseProduct(catalogueId(1180), catalogueId(1181), catalogueId(1183), catalogueId(1182), "Palermo Blackinfus", "palermo-blackinfus", approvedCatalogueFamilyIds.unclassified, "M093", "AVAILABLE", approvedCatalogueAudienceCollectionIds.men, pyramid([noteIds.grapefruit, noteIds.pinkPepper], [noteIds.lavender, noteIds.saffron, noteIds.tobacco], [noteIds.vetiver, noteIds.leather, noteIds.amber])),
+    sparseProduct(catalogueId(1190), catalogueId(1191), catalogueId(1193), catalogueId(1192), "Palermo Homme", "palermo-homme", approvedCatalogueFamilyIds.unclassified, "M169", "AVAILABLE", approvedCatalogueAudienceCollectionIds.men, pyramid([noteIds.bergamot, noteIds.bitterOrange], [noteIds.lavender, noteIds.sage, noteIds.cinnamon], [noteIds.tonkaBean, noteIds.vetiver, noteIds.cedarwood])),
+    sparseProduct(catalogueId(1200), catalogueId(1201), catalogueId(1203), catalogueId(1202), "Mondial", "mondial", approvedCatalogueFamilyIds.unclassified, "W195", "AVAILABLE", approvedCatalogueAudienceCollectionIds.women, pyramid([noteIds.litchi, noteIds.tangerine], [noteIds.mayRose, noteIds.jasmine, noteIds.floralNotes], [noteIds.patchouli, noteIds.amber, noteIds.whiteMusk])),
+    sparseProduct(catalogueId(1210), catalogueId(1211), catalogueId(1213), catalogueId(1212), "Hurrem", "hurrem", approvedCatalogueFamilyIds.unclassified, "W274", "AVAILABLE", approvedCatalogueAudienceCollectionIds.women, pyramid([noteIds.pomegranate, noteIds.bergamot], [noteIds.mayRose, noteIds.whiteOrchid, noteIds.jasmine], [noteIds.vanilla, noteIds.amber, noteIds.sandalwood])),
   ],
 } as const satisfies ApprovedCatalogueManifest;
