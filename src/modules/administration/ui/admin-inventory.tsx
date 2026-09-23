@@ -161,7 +161,7 @@ export function AdminInventory() {
                         <span
                           className={
                             item.lowStock
-                              ? "rounded-md border border-border bg-surface-muted px-2 py-1 font-semibold"
+                              ? "rounded-md border border-warning bg-warning-bg px-2 py-1 font-semibold text-warning"
                               : "text-text-muted"
                           }
                         >
