@@ -197,6 +197,7 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
           || (custom.giftPackagingId !== null && !capabilities.giftPackaging.some(option => option.id === custom.giftPackagingId))) return failure("VALIDATION_ERROR");
         return replaceItems([...activeCart().items, {
           id: `mock-item-${++itemSequence}`, perfumeId: perfume.id, variantId: variant.id, title: perfume.name,
+          imageUrl: perfume.images[0]?.url ?? null, imageAlt: perfume.images[0]?.alt || perfume.name,
           bottleSize: variant.bottleSize, concentration: variant.concentration, quantity: input.quantity,
           unitPrice: variant.price, itemTotal: fixtures.money(variant.price.amountMinor * input.quantity), customisation: custom,
         }]);

@@ -47,7 +47,7 @@ export function MobileNav({
           className={navigationClassName("/quiz")}
           aria-current={pathname === "/quiz" ? "page" : undefined}
         >
-          Quiz
+          Consultation
         </Link>
         <Link
           href="/cart"
@@ -72,6 +72,14 @@ export function MobileNav({
                 aria-current={pathname === "/account" ? "page" : undefined}
               >
                 Account
+              </Link>
+              <Link
+                href="/orders"
+                onClick={onClose}
+                className={navigationClassName("/orders")}
+                aria-current={pathname === "/orders" ? "page" : undefined}
+              >
+                Orders
               </Link>
               <button
                 type="button"

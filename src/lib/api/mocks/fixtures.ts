@@ -58,12 +58,7 @@ export const woody: PerfumeDetail = {
 export const perfumes: readonly PerfumeDetail[] = [citrus, woody];
 export function summary(perfume: PerfumeDetail): PerfumeSummary {
   const { id, slug, name, primaryFamily, imageUrl, priceFrom, intensity } = perfume;
-  return {
-    id, slug, name, primaryFamily, imageUrl, priceFrom, intensity,
-    audience: "UNISEX",
-    sku: perfume.variants[0]?.sku ?? null,
-    availability: perfume.variants[0]?.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : "AVAILABLE",
-  };
+  return { id, slug, name, primaryFamily, imageUrl, priceFrom, intensity, audience: "UNISEX", sku: perfume.variants[0]?.sku ?? null, availability: perfume.variants[0]?.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : "AVAILABLE" };
 }
 const addressSnapshot: AddressInput = {
   recipientName: "Demo Customer", line1: "1 Example Street", line2: null,
@@ -83,6 +78,7 @@ export const cart: CartDto = {
   id: "cart-demo", revision: "cart-1", kind: "CUSTOMER", checkoutEligible: true, validationMessages: [],
   items: [{
     id: "cart-item-demo", perfumeId: citrus.id, variantId: "variant-citrus", title: citrus.name,
+    imageUrl: citrus.images[0]?.url ?? null, imageAlt: citrus.images[0]?.alt || citrus.name,
     bottleSize: "50 ml", concentration: "Eau de Parfum", quantity: 1,
     unitPrice: money(12000), itemTotal: money(12000), customisation: noCustomisation,
   }],
@@ -97,7 +93,8 @@ export const checkout: CheckoutResult = {
 };
 export const order: OrderDetail = {
   id: "order-demo", orderNumber: "DEMO-001", placedAt: FIXTURE_TIME, status: "CONFIRMED",
-  paymentStatus: "SUCCEEDED", total: money(13000), subtotal: money(12000), discountTotal: money(0),
+  paymentStatus: "SUCCEEDED", total: money(13000), primaryItemTitle: citrus.name, itemCount: 1,
+  subtotal: money(12000), discountTotal: money(0),
   items: [{ id: "order-item-demo", variantId: "variant-citrus", sku: "DEMO-CITRUS-50", title: citrus.name,
     quantity: 1, unitPrice: money(12000), customisation: noCustomisation }],
   deliveryAddress: addressSnapshot, billingAddress: addressSnapshot, deliveryMethod,
@@ -109,7 +106,11 @@ export const pendingOrder: OrderDetail = {
 };
 export function orderSummary(order: OrderDetail): OrderSummary {
   const { id, orderNumber, placedAt, status, paymentStatus, total } = order;
-  return { id, orderNumber, placedAt, status, paymentStatus, total };
+  return {
+    id, orderNumber, placedAt, status, paymentStatus, total,
+    primaryItemTitle: order.items[0]?.title ?? null,
+    itemCount: order.items.reduce((count, item) => count + item.quantity, 0),
+  };
 }
 export const invoice: Invoice = {
   id: "invoice-demo", invoiceNumber: "DEMO-INV-001", issuedAt: FIXTURE_TIME,

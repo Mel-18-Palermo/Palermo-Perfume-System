@@ -2,11 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
-import { EmptyState } from "@/components/ui/empty-state";
 import { api } from "@/lib/api";
 import type { CartDto, CartItemDto, CartValidationMessage } from "@/contracts/cart";
 import type { MoneyValue } from "@/contracts/common";
@@ -152,8 +150,8 @@ export function CartView({
 
   if (initialLoading) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-16 text-center text-sm text-text-muted" role="status">
-        Loading shopping bag...
+      <div className="mx-auto max-w-[var(--container-wide)] px-4 py-16 sm:px-6 lg:px-8" role="status">
+        <div className="border-y border-border py-8 text-sm text-text-muted">Loading your selection...</div>
       </div>
     );
   }
@@ -161,8 +159,8 @@ export function CartView({
   // Explicitly surface initial request failures instead of masking them with an empty cart
   if (serverError && (!cart || cart.items.length === 0)) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-12">
-        <Alert variant="danger" role="alert">
+      <div className="mx-auto max-w-[var(--container-wide)] px-4 py-12 sm:px-6 lg:px-8">
+        <Alert variant="danger" className="rounded-none border-x-0 px-0" role="alert">
           <p className="font-semibold">Cart Error</p>
           <p className="text-sm">{serverError}</p>
         </Alert>
@@ -177,52 +175,58 @@ export function CartView({
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-16">
-        <EmptyState
-          title="Your Shopping Bag is Empty"
-          description="Explore our haute parfumerie collection to select your signature fragrance."
-          action={
-            <Link
-              href="/"
-              className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              Explore Fragrance Catalogue
-            </Link>
-          }
-        />
-      </div>
+      <main className="mx-auto max-w-[var(--container-wide)] px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <section className="max-w-xl border-t border-border pt-10 sm:pt-12" aria-labelledby="empty-cart-title">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Your selection</p>
+          <h1 id="empty-cart-title" className="mt-4 text-4xl font-normal tracking-[-0.055em] text-text sm:text-5xl sm:leading-[1.05]">
+            Your cart is empty.
+          </h1>
+          <p className="mt-5 max-w-sm text-sm leading-6 text-text-muted">Explore the collection to find a fragrance that feels like yours.</p>
+          <Link
+            href="/catalogue"
+            className="mt-8 inline-flex min-h-[48px] items-center justify-center bg-primary px-6 py-3 text-sm font-medium !text-[#fff] transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transform-none"
+          >
+            Explore the collection <span className="ml-3" aria-hidden="true">→</span>
+          </Link>
+        </section>
+      </main>
     );
   }
 
   const totalItemCount = cart.items.reduce((acc, i) => acc + i.quantity, 0);
+  const authenticationMessage = cart.validationMessages?.find((message) => message.code === "AUTHENTICATION_REQUIRED");
+  const otherValidationMessages = cart.validationMessages?.filter((message) => message.code !== "AUTHENTICATION_REQUIRED") ?? [];
 
   return (
-    <div
-      className="container mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8"
+    <main
+      className="mx-auto max-w-[var(--container-wide)] px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16"
       aria-busy={isMutating}
     >
       <div className="sr-only" role="status" aria-live="polite">
         {isMutating ? "Updating shopping bag items..." : isStaleRecovering ? "Refreshing cart data..." : ""}
       </div>
 
-      <div className="border-b border-border pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-text">Shopping Bag</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {totalItemCount} {totalItemCount === 1 ? "item" : "items"} registered to your session
-        </p>
-      </div>
+      <header className="border-b border-border pb-7 sm:pb-8">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Your selection</p>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+          <h1 className="text-4xl font-normal tracking-[-0.055em] text-text sm:text-5xl sm:leading-[1.05]">Cart</h1>
+          <p className="pb-1 text-sm text-text-muted">
+            {totalItemCount} {totalItemCount === 1 ? "fragrance" : "fragrances"}
+          </p>
+        </div>
+      </header>
 
       {serverError && (
-        <Alert variant="danger" className="mt-6" role="alert">
+        <Alert variant="danger" className="mt-6 rounded-none border-x-0 px-0" role="alert">
           <p className="font-semibold">Cart Notice</p>
           <p className="text-sm">{serverError}</p>
         </Alert>
       )}
 
-      {cart.validationMessages && cart.validationMessages.length > 0 && (
+      {otherValidationMessages.length > 0 && (
         <div className="mt-4 space-y-2" aria-label="Cart validation messages">
-          {cart.validationMessages.map((msg: CartValidationMessage, index: number) => (
-            <Alert key={`${msg.code}-${msg.itemId ?? index}`} variant="warning" role="alert">
+          {otherValidationMessages.map((msg: CartValidationMessage, index: number) => (
+            <Alert key={`${msg.code}-${msg.itemId ?? index}`} variant="warning" className="rounded-none border-x-0 px-0" role="alert">
               <p className="font-semibold text-xs uppercase tracking-wider">{msg.code.replace(/_/g, " ")}</p>
               <p className="text-sm">{msg.message}</p>
             </Alert>
@@ -230,149 +234,152 @@ export function CartView({
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-4">
+      <div className="mt-8 grid grid-cols-1 gap-y-12 lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
+        <section className="lg:col-span-8" aria-label="Cart items">
           {cart.items.map((item: CartItemDto) => {
             const isItemPending = pendingItemId === item.id;
 
             return (
-              <Card
+              <article
                 key={item.id}
-                className={`relative transition-opacity ${isItemPending ? "opacity-60 pointer-events-none" : ""}`}
+                className={`grid grid-cols-[minmax(7.25rem,34%)_1fr] gap-x-5 border-b border-border py-6 first:pt-0 sm:grid-cols-[12.5rem_1fr] sm:gap-x-8 sm:py-8 md:grid-cols-[14rem_1fr] ${isItemPending ? "pointer-events-none opacity-60" : ""}`}
               >
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-semibold text-text">{item.title}</h2>
-                        {item.concentration && (
-                          <Badge variant="neutral" className="text-xs">
-                            {item.concentration}
-                          </Badge>
-                        )}
-                      </div>
-                      {item.bottleSize && (
-                        <p className="text-sm text-text-muted">{item.bottleSize}</p>
-                      )}
+                <div className="relative aspect-[4/5] overflow-hidden bg-surface-muted">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.imageAlt}
+                      fill
+                      sizes="(min-width: 1024px) 224px, (min-width: 640px) 200px, 34vw"
+                      className="object-contain p-3 transition-transform duration-[var(--duration-slow)] ease-out hover:scale-[1.025] motion-reduce:transition-none motion-reduce:hover:scale-100"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center px-4 text-center text-xs uppercase tracking-[0.16em] text-text-muted">Palermo<br />Parfums</div>
+                  )}
+                </div>
 
-                      {item.customisation && (
-                        <div className="mt-3 rounded-md bg-surface-muted p-2.5 text-xs text-text-muted space-y-1">
+                <div className="flex min-w-0 flex-col">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h2 className="text-2xl font-normal leading-[1.1] tracking-[-0.04em] text-text sm:text-3xl">{item.title}</h2>
+                      <p className="mt-2 text-xs uppercase tracking-[0.13em] text-text-muted">
+                        {[item.concentration, item.bottleSize].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-sm font-medium tabular-nums text-text sm:text-base">{formatMoney(item.itemTotal)}</p>
+                  </div>
+
+                  {item.customisation && (item.customisation.personalisedLabel || item.customisation.engravingName || item.customisation.giftMessage || item.customisation.giftPackagingId != null) && (
+                    <div className="mt-5 border-l border-border-strong pl-3 text-xs leading-5 text-text-muted">
                           {item.customisation.personalisedLabel && (
                             <p>
-                              <span className="font-semibold text-text">Label: </span>
+                              <span className="font-medium text-text">Label: </span>
                               &ldquo;{item.customisation.personalisedLabel}&rdquo;
                             </p>
                           )}
                           {item.customisation.engravingName && (
                             <p>
-                              <span className="font-semibold text-text">Engraving: </span>
+                              <span className="font-medium text-text">Engraving: </span>
                               &ldquo;{item.customisation.engravingName}&rdquo;
                             </p>
                           )}
                           {item.customisation.giftMessage && (
                             <p>
-                              <span className="font-semibold text-text">Gift Message: </span>
+                              <span className="font-medium text-text">Gift message: </span>
                               &ldquo;{item.customisation.giftMessage}&rdquo;
                             </p>
                           )}
                         {item.customisation.giftPackagingId != null && (
                           <p>
-                            <span className="font-semibold text-text">Gift packaging: </span>
+                            <span className="font-medium text-text">Gift packaging: </span>
                             Selected
                           </p>
                         )}
-                        </div>
-                      )}
                     </div>
+                  )}
 
-                    <div className="text-right sm:self-start">
-                      <span className="text-lg font-bold text-text">
-                        {formatMoney(item.itemTotal)}
-                      </span>
-                      <p className="text-xs text-text-muted">{formatMoney(item.unitPrice)} each</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-muted mr-2 font-medium">Quantity</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-11 w-11 min-h-[44px] min-w-[44px] p-0 text-base"
+                  <div className="mt-auto flex flex-wrap items-end justify-between gap-x-5 gap-y-3 pt-6 sm:pt-8">
+                    <div>
+                      <span className="block text-xs font-medium uppercase tracking-[0.13em] text-text-muted">Quantity</span>
+                      <div className="mt-2 flex items-center border-y border-border">
+                        <button
+                          type="button"
+                          className="flex h-11 w-11 items-center justify-center text-lg transition-colors hover:bg-surface-muted active:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:opacity-40"
                         onClick={() => void handleUpdateQuantity(item.id, item.quantity, -1)}
                         disabled={isMutating || isStaleRecovering}
                         aria-label={`Decrease quantity of ${item.title}`}
                       >
-                        -
-                      </Button>
-                      <span className="w-8 text-center text-sm font-semibold text-text" aria-live="polite">
+                        −
+                      </button>
+                      <span className="w-9 text-center text-sm font-medium tabular-nums text-text" aria-live="polite">
                         {item.quantity}
                       </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-11 w-11 min-h-[44px] min-w-[44px] p-0 text-base"
+                      <button
+                        type="button"
+                        className="flex h-11 w-11 items-center justify-center text-lg transition-colors hover:bg-surface-muted active:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset disabled:opacity-40"
                         onClick={() => void handleUpdateQuantity(item.id, item.quantity, 1)}
                         disabled={isMutating || isStaleRecovering}
                         aria-label={`Increase quantity of ${item.title}`}
                       >
                         +
-                      </Button>
+                      </button>
                     </div>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="min-h-[44px] text-xs text-danger hover:bg-danger/10 hover:text-danger"
+                    <button
+                      type="button"
+                      className="min-h-11 border-b border-transparent pb-px text-xs text-text-muted transition-colors hover:border-danger hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
                       onClick={() => void handleRemoveItem(item.id)}
                       disabled={isMutating || isStaleRecovering}
                       aria-label={`Remove ${item.title} from cart`}
                     >
                       Remove
-                    </Button>
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
+                  </div>
+                  <p className="mt-3 text-xs tabular-nums text-text-muted">{formatMoney(item.unitPrice)} each</p>
+                </div>
+              </article>
             );
           })}
-        </div>
+        </section>
 
-        <div className="lg:col-span-4">
-          <Card className="sticky top-24">
-            <CardHeader className="border-b border-border pb-4">
-              <CardTitle className="text-lg">Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-6 text-sm">
+        <aside className="lg:col-span-4 lg:pt-0" aria-labelledby="order-summary-title">
+          <div className="border-y border-border py-6 lg:sticky lg:top-24">
+            <h2 id="order-summary-title" className="text-2xl font-normal tracking-[-0.04em] text-text">Order summary</h2>
+            <div className="mt-6 space-y-4 text-sm">
               <div className="flex justify-between text-text-muted">
                 <span>Subtotal</span>
-                <span className="font-medium text-text">{formatMoney(cart.pricing.subtotal)}</span>
+                <span className="font-medium tabular-nums text-text">{formatMoney(cart.pricing.subtotal)}</span>
               </div>
               {cart.pricing.discountTotal && cart.pricing.discountTotal.amountMinor > 0 && (
                 <div className="flex justify-between text-primary">
                   <span>Savings</span>
-                  <span className="font-medium">-{formatMoney(cart.pricing.discountTotal)}</span>
+                  <span className="font-medium tabular-nums">-{formatMoney(cart.pricing.discountTotal)}</span>
                 </div>
               )}
-              <div className="border-t border-border pt-3 flex justify-between text-base font-bold text-text">
+              <div className="flex justify-between border-t border-border pt-5 text-lg font-medium tabular-nums text-text">
                 <span>Total</span>
                 <span>{formatMoney(cart.pricing.total)}</span>
               </div>
-              <p className="text-xs text-text-muted">
-                Delivery options and calculated shipping costs are quoted separately at checkout.
-              </p>
-            </CardContent>
-            <CardFooter className="pt-2">
+            </div>
+            <p className="mt-5 text-xs leading-5 text-text-muted">Delivery options and calculated shipping costs are quoted separately at checkout.</p>
+            {authenticationMessage && (
+              <div className="mt-5 text-xs leading-5 text-text-muted" role="status">
+                <span className="font-medium uppercase tracking-[0.13em] text-text">Checkout</span>
+                <p className="mt-1">{authenticationMessage.message}</p>
+              </div>
+            )}
+            <div className="mt-7">
               {cart.checkoutEligible ? (
                 <Link
                   href="/checkout"
-                  className="inline-flex min-h-[48px] w-full items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-surface transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="inline-flex min-h-[52px] w-full items-center justify-between bg-primary px-5 py-3 text-sm font-medium text-primary-text transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transform-none"
                 >
-                  Proceed to Checkout
+                  Proceed to checkout <span aria-hidden="true">→</span>
                 </Link>
               ) : (
                 <Button
-                  className="min-h-[44px] w-full"
+                  className="min-h-[52px] w-full rounded-none"
                   size="lg"
                   disabled
                   aria-disabled="true"
@@ -380,10 +387,10 @@ export function CartView({
                   Cart Ineligible for Checkout
                 </Button>
               )}
-            </CardFooter>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </aside>
       </div>
-    </div>
+    </main>
   );
 }

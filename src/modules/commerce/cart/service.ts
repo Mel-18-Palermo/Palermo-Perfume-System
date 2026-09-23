@@ -7,7 +7,7 @@ import { isVariantSellable } from "../availability";
 export type CartActor = Readonly<{ kind: "VISITOR"; visitorSessionKey: string } | { kind: "CUSTOMER"; customerId: string }>;
 const MAX_QUANTITY = 99;
 const MAX_CUSTOMISATION_LENGTH = 100;
-const include = { items: { include: { variant: { include: { perfume: { include: { primaryFamily: true } }, inventory: true } } } }, promotion: true } as const;
+const include = { items: { include: { variant: { include: { perfume: { include: { primaryFamily: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } } }, inventory: true } } } }, promotion: true } as const;
 type LoadedCart = Prisma.CartGetPayload<{ include: typeof include }>;
 
 class RevisionConflict extends Error {}
@@ -45,7 +45,8 @@ export class CartService {
     const items = cart.items.map(item => {
       const variant = item.variant;
       const customisation: CartCustomisation = { personalisedLabel: item.personalisedLabel, engravingName: item.engravingName, giftMessage: item.giftMessage, giftPackagingId: item.giftPackagingId };
-      return { id: item.id, perfumeId: variant.perfumeId, variantId: variant.id, title: variant.perfume.name, bottleSize: variant.bottleSize, concentration: variant.concentration, quantity: item.quantity, unitPrice: { amountMinor: variant.priceMinor, currency: variant.currency }, itemTotal: { amountMinor: variant.priceMinor * item.quantity, currency: variant.currency }, customisation };
+      const image = variant.perfume.images[0];
+      return { id: item.id, perfumeId: variant.perfumeId, variantId: variant.id, title: variant.perfume.name, imageUrl: image?.url ?? null, imageAlt: image?.alt || variant.perfume.name, bottleSize: variant.bottleSize, concentration: variant.concentration, quantity: item.quantity, unitPrice: { amountMinor: variant.priceMinor, currency: variant.currency }, itemTotal: { amountMinor: variant.priceMinor * item.quantity, currency: variant.currency }, customisation };
     });
     const currency = items[0]?.unitPrice.currency ?? "AUD";
     const subtotal = items.reduce((sum, item) => sum + item.itemTotal.amountMinor, 0);
