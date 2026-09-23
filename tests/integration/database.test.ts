@@ -104,6 +104,8 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
     await rejectsConstraint('INSERT INTO "Cart" (id,"customerId","updatedAt") VALUES ($1,$2,now())', [seedId(901), ids.customer], "23505");
   });
   it("rejects missing variants and non-positive cart quantities", async () => {
+    await seedCore(db);
+    expect(await db.cartItem.findUnique({ where: { id: ids.cartItem }, select: { id: true } })).toEqual({ id: ids.cartItem });
     await rejectsConstraint('UPDATE "CartItem" SET "variantId"=$1 WHERE id=$2', [seedId(999), ids.cartItem], "23503");
     await rejectsConstraint('UPDATE "CartItem" SET quantity=0 WHERE id=$1', [ids.cartItem], "23514");
   });
