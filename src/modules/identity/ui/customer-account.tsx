@@ -1,192 +1,39 @@
 "use client";
-
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 import type { CatalogueFilters } from "@/contracts/catalogue";
 import type { AddressInput, CustomerProfile } from "@/contracts/profile";
 import { api } from "@/lib/api";
 
-type AddressFields = Record<keyof AddressInput, string>;
+type Fields = Record<keyof AddressInput, string>;
+const blank = (): Fields => ({ recipientName: "", line1: "", line2: "", suburb: "", state: "", postcode: "", country: "AU" });
+const clean = (value: string, fallback: string) => /\b(demo|demonstration|synthetic|fixture|test|implementation|deterministic|university)\b/i.test(value) ? fallback : value;
+const fields = (address: AddressInput | null): Fields => address ? { ...address, recipientName: clean(address.recipientName, "Customer"), line2: address.line2 ?? "" } : blank();
+const toAddress = (value: Fields, saved: AddressInput | null): AddressInput => ({ ...value, recipientName: saved && value.recipientName === clean(saved.recipientName, "Customer") ? saved.recipientName : value.recipientName, line2: value.line2.trim() || null, country: value.country.trim().toUpperCase() });
+const inputClass = "min-h-[44px] w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60";
+const customerFacingAccountStatus = (status: CustomerProfile["accountStatus"]): string => status === "ACTIVE" ? "Active" : status === "PENDING_VERIFICATION" ? "Verification pending" : "Deactivated";
 
-const emptyAddress = (): AddressFields => ({
-  recipientName: "", line1: "", line2: "", suburb: "", state: "", postcode: "", country: "AU",
-});
-
-function customerFacingFixtureText(value: string, fallback: string): string {
-  return /\b(demo|demonstration|synthetic|fixture|test|implementation|university)\b/i.test(value) ? fallback : value;
+function AddressForm({ id, value, setValue, disabled }: { id: string; value: Fields; setValue: (value: Fields) => void; disabled: boolean }) {
+  const specs: [keyof Fields, string, string][] = [["recipientName", "Recipient name", "name"], ["line1", "Address line 1", "address-line1"], ["line2", "Address line 2 (optional)", "address-line2"], ["suburb", "Suburb", "address-level2"], ["state", "State", "address-level1"], ["postcode", "Postcode", "postal-code"], ["country", "Country/region", "country"]];
+  return <div className="grid gap-4 sm:grid-cols-2">{specs.map(([key, label, autoComplete]) => <label key={key} className={key === "line1" || key === "line2" ? "sm:col-span-2" : ""}><span className="mb-1 block text-label text-text">{label}</span><input id={`${id}-${key}`} required={key !== "line2"} autoComplete={autoComplete} disabled={disabled} value={value[key]} onChange={event => setValue({ ...value, [key]: event.target.value })} className={inputClass} /></label>)}</div>;
 }
-
-function addressFields(address: AddressInput | null): AddressFields {
-  return address ? { ...address, recipientName: customerFacingFixtureText(address.recipientName, "Customer"), line2: address.line2 ?? "" } : emptyAddress();
-}
-
-function addressInput(fields: AddressFields, savedAddress: AddressInput | null): AddressInput {
-  const savedRecipientName = savedAddress?.recipientName;
-  const recipientName = savedRecipientName && fields.recipientName === customerFacingFixtureText(savedRecipientName, "Customer")
-    ? savedRecipientName
-    : fields.recipientName;
-  return { ...fields, recipientName, line2: fields.line2.trim() || null, country: fields.country.trim().toUpperCase() };
-}
-
-function customerFacingIdentityExplanation(explanation: string): string {
-  return /\b(demo|demonstration|synthetic|fixture|deterministic|implementation|university)\b/i.test(explanation)
-    ? "Based on your saved preferences."
-    : explanation;
-}
-
-function AddressForm({ prefix, value, onChange, disabled }: Readonly<{
-  prefix: string;
-  value: AddressFields;
-  onChange: (next: AddressFields) => void;
-  disabled: boolean;
-}>) {
-  const fields: readonly { readonly key: keyof AddressFields; readonly label: string; readonly autoComplete: string }[] = [
-    { key: "recipientName", label: "Recipient name", autoComplete: "name" },
-    { key: "line1", label: "Address line 1", autoComplete: "address-line1" },
-    { key: "line2", label: "Address line 2 (optional)", autoComplete: "address-line2" },
-    { key: "suburb", label: "Suburb", autoComplete: "address-level2" },
-    { key: "state", label: "State", autoComplete: "address-level1" },
-    { key: "postcode", label: "Postcode", autoComplete: "postal-code" },
-    { key: "country", label: "Country/region", autoComplete: "country" },
-  ];
-  return <div className="grid gap-4 sm:grid-cols-2">
-    {fields.map(field => <label key={field.key} className={field.key === "line1" || field.key === "line2" ? "sm:col-span-2" : ""}>
-      <span className="mb-1 block text-label text-text">{field.label}</span>
-      <input id={`${prefix}-${field.key}`} name={field.key} required={field.key !== "line2"} autoComplete={field.autoComplete} disabled={disabled}
-        value={value[field.key]} onChange={event => onChange({ ...value, [field.key]: event.target.value })}
-        maxLength={field.key === "recipientName" || field.key === "suburb" || field.key === "state" ? 100 : field.key === "line1" || field.key === "line2" ? 200 : field.key === "postcode" ? 16 : 2}
-        minLength={field.key === "country" ? 2 : undefined} pattern={field.key === "postcode" ? "[A-Za-z0-9 -]{3,16}" : field.key === "country" ? "[A-Za-z]{2}" : undefined}
-        inputMode={field.key === "postcode" ? "text" : undefined} autoCapitalize={field.key === "country" ? "characters" : undefined}
-        className="min-h-[44px] w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60" />
-    </label>)}
-  </div>;
-}
+function AddressView({ address }: { address: AddressInput }) { return <address className="not-italic text-sm leading-relaxed text-text-muted"><b className="block font-medium text-text">{clean(address.recipientName, "Customer")}</b><span className="block">{address.line1}</span>{address.line2 && <span className="block">{address.line2}</span>}<span className="block">{address.suburb}, {address.state} {address.postcode}</span><span className="block">{address.country}</span></address>; }
 
 export function CustomerAccount() {
-  const router = useRouter();
-  const [profile, setProfile] = React.useState<CustomerProfile | null>(null);
-  const [session, setSession] = React.useState<Session | null>(null);
-  const [cart, setCart] = React.useState<CartDto | null>(null);
-  const [filters, setFilters] = React.useState<CatalogueFilters | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [busy, setBusy] = React.useState<string | null>(null);
-  const [message, setMessage] = React.useState<{ variant: "success" | "danger" | "warning"; text: string } | null>(null);
-  const [name, setName] = React.useState("");
-  const [noteIds, setNoteIds] = React.useState<readonly string[]>([]);
-  const [intensityId, setIntensityId] = React.useState("");
-  const [avoidance, setAvoidance] = React.useState("");
-  const [delivery, setDelivery] = React.useState<AddressFields>(emptyAddress);
-  const [billing, setBilling] = React.useState<AddressFields>(emptyAddress);
-  const [sameAsDelivery, setSameAsDelivery] = React.useState(true);
-  const [notesExpanded, setNotesExpanded] = React.useState(false);
-
-  const sync = React.useCallback((next: CustomerProfile) => {
-    setProfile(next); setName(customerFacingFixtureText(next.name, "Customer")); setNoteIds(next.preferences.favouriteNoteIds);
-    setIntensityId(next.preferences.preferredIntensityId ?? ""); setAvoidance(next.preferences.sensitivityAvoidance ?? "");
-    setDelivery(addressFields(next.deliveryAddress)); setBilling(addressFields(next.billingAddress)); setSameAsDelivery(next.billingSameAsDelivery);
-  }, []);
-
-  const reload = React.useCallback(async (conflict = false) => {
-    const result = await api.profile.get();
-    if (result.ok) { sync(result.data); if (conflict) setMessage({ variant: "warning", text: "Your account changed elsewhere. The latest saved details have been reloaded." }); return true; }
-    if (result.error.code === "UNAUTHENTICATED") { router.replace("/login?next=/account"); return false; }
-    setMessage({ variant: "danger", text: result.error.message }); return false;
-  }, [router, sync]);
-
-  React.useEffect(() => {
-    let active = true;
-    async function initialise() {
-      const [sessionResult, profileResult, cartResult, filtersResult] = await Promise.all([api.auth.getSession(), api.profile.get(), api.cart.get(), api.catalogue.getFilters()]);
-      if (!active) return;
-      if (!sessionResult.ok || sessionResult.data.user?.role !== "CUSTOMER" || !profileResult.ok) {
-        router.replace("/login?next=/account");
-        return;
-      }
-      setSession(sessionResult.data); sync(profileResult.data);
-      if (cartResult.ok) setCart(cartResult.data);
-      if (filtersResult.ok) setFilters(filtersResult.data);
-      else setMessage({ variant: "warning", text: "Preference choices are temporarily unavailable; your saved choices remain unchanged." });
-      setLoading(false);
-    }
-    void initialise();
-    return () => { active = false; };
-  }, [router, sync]);
-
-  async function mutate(label: string, successText: string, action: (current: CustomerProfile) => ReturnType<typeof api.profile.update>): Promise<void> {
-    if (!profile || busy) return;
-    setBusy(label); setMessage(null);
-    try {
-      const result = await action(profile);
-      if (result.ok) { sync(result.data); setMessage({ variant: "success", text: successText }); }
-      else if (result.error.code === "CONFLICT") await reload(true);
-      else if (result.error.code === "UNAUTHENTICATED") router.replace("/login?next=/account");
-      else setMessage({ variant: "danger", text: result.error.message });
-    } finally { setBusy(null); }
-  }
-
-  function saveProfile(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    void mutate("profile", "Your profile and fragrance preferences have been saved.", current => api.profile.update({ expectedRevision: current.revision, name: name === customerFacingFixtureText(current.name, "Customer") ? current.name : name, preferences: { favouriteNoteIds: noteIds, preferredIntensityId: intensityId || null, sensitivityAvoidance: avoidance.trim() || null } }));
-  }
-  function saveDelivery(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    void mutate("delivery", "Your delivery address has been saved.", current => api.profile.setDeliveryAddress({ expectedRevision: current.revision, address: addressInput(delivery, current.deliveryAddress) }));
-  }
-  function saveBilling(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    void mutate("billing", "Your billing address has been saved.", current => api.profile.setBillingAddress({ expectedRevision: current.revision, billing: sameAsDelivery ? { kind: "USE_DELIVERY" } : { kind: "SEPARATE", address: addressInput(billing, current.billingAddress) } }));
-  }
-  function generateIdentity() { void mutate("identity", "Your fragrance identity has been generated.", current => api.profile.generateIdentity({ expectedRevision: current.revision })); }
-  async function deactivate() {
-    if (!profile || busy || !window.confirm("Deactivate your Palermo account? You will be signed out.")) return;
-    setBusy("deactivate"); setMessage(null);
-    try {
-      const result = await api.profile.deactivate({ expectedRevision: profile.revision });
-      if (result.ok) { router.replace("/login"); router.refresh(); }
-      else if (result.error.code === "CONFLICT") await reload(true);
-      else if (result.error.code === "UNAUTHENTICATED") router.replace("/login?next=/account");
-      else setMessage({ variant: "danger", text: result.error.message });
-    } finally { setBusy(null); }
-  }
-
-  const disabled = loading || busy !== null;
-  const selectedNotes = filters?.note.filter(note => noteIds.includes(note.id)) ?? [];
-  return <CustomerShell cart={cart} session={session} isLoading={loading}>
-    <div className="mx-auto max-w-[1100px] space-y-8">
-      <div><h1 className="text-h1 text-text">Account</h1><p className="mt-1 text-sm text-text-muted">Manage your profile, fragrance preferences and saved addresses.</p></div>
-      {message && <Alert variant={message.variant}>{message.text}</Alert>}
-      {loading && <Card aria-busy="true" aria-label="Loading account details"><CardContent className="space-y-4"><div className="h-6 w-48 animate-pulse rounded bg-surface-muted" /><div className="h-11 w-full animate-pulse rounded bg-surface-muted" /><div className="h-11 w-3/4 animate-pulse rounded bg-surface-muted" /></CardContent></Card>}
-      {!loading && profile && <>
-        <div className="grid gap-6 lg:grid-cols-12">
-        <Card className="lg:col-span-8"><CardHeader><CardTitle>Profile and preferences</CardTitle></CardHeader><CardContent>
-          <form className="space-y-5" onSubmit={saveProfile}>
-            <label><span className="mb-1 block text-label text-text">Name</span><input required maxLength={100} autoComplete="name" disabled={disabled} value={name} onChange={event => setName(event.target.value)} className="min-h-[44px] w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60" /></label>
-            <p className="text-sm text-text-muted">Email: {profile.email}</p>
-            <fieldset disabled={disabled}><legend className="text-label text-text">Favourite notes</legend><p className="mt-1 text-sm text-text-muted">Choose any notes you enjoy.</p><div className="mt-3 md:hidden">{selectedNotes.length > 0 && <div className="flex flex-wrap gap-2" aria-label="Selected favourite notes">{selectedNotes.map(note => <span key={note.id} className="inline-flex min-h-11 items-center rounded-full border border-primary bg-primary px-4 py-2 text-sm text-primary-text">{note.label}</span>)}</div>}<button type="button" onClick={() => setNotesExpanded(expanded => !expanded)} aria-expanded={notesExpanded} aria-controls="favourite-note-options" className="mt-3 min-h-11 rounded-full border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2">{notesExpanded ? "Hide notes" : "Choose notes"}</button></div><div id="favourite-note-options" className={`mt-3 flex flex-wrap gap-2 ${notesExpanded ? "" : "hidden"} md:flex`}>{filters?.note.map(note => {
-              const selected = noteIds.includes(note.id);
-              return <label key={note.id} className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-4 py-2 text-sm transition-colors focus-within:ring-2 focus-within:ring-info focus-within:ring-offset-2 ${selected ? "border-primary bg-primary text-primary-text" : "border-border-strong bg-surface text-text hover:bg-surface-muted"}`}><input type="checkbox" checked={selected} onChange={() => setNoteIds(current => current.includes(note.id) ? current.filter(id => id !== note.id) : [...current, note.id])} className="sr-only" />{note.label}</label>;
-            })}</div></fieldset>
-            <label><span className="mb-1 block text-label text-text">Preferred intensity</span><select disabled={disabled || !filters} value={intensityId} onChange={event => setIntensityId(event.target.value)} className="min-h-[44px] w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60"><option value="">No preference</option>{filters?.intensity.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
-            <label><span className="mb-1 block text-label text-text">Fragrance avoidance (optional)</span><textarea disabled={disabled} maxLength={500} value={avoidance} onChange={event => setAvoidance(event.target.value)} className="min-h-24 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus-visible:border-info focus-visible:ring-2 focus-visible:ring-info focus-visible:ring-offset-2 disabled:opacity-60" /><span className="mt-1 block text-xs text-text-muted">Share scent preferences only; do not include medical information.</span></label>
-            <Button type="submit" isLoading={busy === "profile"}>Save profile</Button>
-          </form>
-        </CardContent></Card>
-        <div className="space-y-6 lg:col-span-4">
-          <Card><CardHeader><CardTitle>Fragrance identity</CardTitle></CardHeader><CardContent className="space-y-4">{profile.fragranceIdentity ? <div><p className="font-medium text-text">{profile.fragranceIdentity.primaryFamily.label}</p><p className="mt-1 text-sm text-text-muted">{customerFacingIdentityExplanation(profile.fragranceIdentity.explanation)}</p><p className="mt-2 text-xs text-text-muted">Status: {profile.fragranceIdentity.status}</p></div> : <p className="text-sm text-text-muted">Save at least one favourite note or a preferred intensity to generate your fragrance identity.</p>}<Button type="button" variant="outline" onClick={generateIdentity} disabled={!profile.preferences.favouriteNoteIds.length && !profile.preferences.preferredIntensityId} isLoading={busy === "identity"}>Generate fragrance identity</Button></CardContent></Card>
-          <Card className="border-danger/40"><CardHeader><CardTitle>Account status</CardTitle></CardHeader><CardContent className="space-y-4"><p className="text-sm text-text-muted">Status: {profile.accountStatus}</p><div className="border-t border-danger/20 pt-4"><p className="mb-3 text-sm text-text-muted">Deactivation signs you out and cannot be undone here.</p><Button type="button" variant="danger" onClick={() => void deactivate()} isLoading={busy === "deactivate"}>Deactivate account</Button></div></CardContent></Card>
-        </div>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card><CardHeader><CardTitle>Delivery address</CardTitle></CardHeader><CardContent><form className="space-y-5" onSubmit={saveDelivery}><AddressForm prefix="delivery" value={delivery} onChange={setDelivery} disabled={disabled} /><Button type="submit" isLoading={busy === "delivery"}>Save delivery address</Button></form></CardContent></Card>
-          <Card><CardHeader><CardTitle>Billing address</CardTitle></CardHeader><CardContent><form className="space-y-5" onSubmit={saveBilling}><label className="flex min-h-11 items-center gap-2 text-sm text-text"><input type="checkbox" checked={sameAsDelivery} disabled={disabled} onChange={event => setSameAsDelivery(event.target.checked)} />Same as delivery address</label>{sameAsDelivery && !profile.deliveryAddress && <p className="text-sm text-text-muted">Save a delivery address before using it for billing.</p>}{!sameAsDelivery && <AddressForm prefix="billing" value={billing} onChange={setBilling} disabled={disabled} />}<Button type="submit" disabled={sameAsDelivery && !profile.deliveryAddress} isLoading={busy === "billing"}>Save billing address</Button></form></CardContent></Card>
-        </div>
-      </>}
-    </div>
-  </CustomerShell>;
+  const router = useRouter(); const [profile, setProfile] = React.useState<CustomerProfile | null>(null); const [session, setSession] = React.useState<Session | null>(null); const [cart, setCart] = React.useState<CartDto | null>(null); const [filters, setFilters] = React.useState<CatalogueFilters | null>(null); const [loading, setLoading] = React.useState(true); const [busy, setBusy] = React.useState<string | null>(null); const [message, setMessage] = React.useState<{ variant: "success" | "danger" | "warning"; text: string } | null>(null); const [name, setName] = React.useState(""); const [notes, setNotes] = React.useState<readonly string[]>([]); const [intensity, setIntensity] = React.useState(""); const [avoidance, setAvoidance] = React.useState(""); const [delivery, setDelivery] = React.useState<Fields>(blank); const [billing, setBilling] = React.useState<Fields>(blank); const [same, setSame] = React.useState(true); const [notesOpen, setNotesOpen] = React.useState(false); const [deliveryEdit, setDeliveryEdit] = React.useState(false); const [billingEdit, setBillingEdit] = React.useState(false);
+  const sync = React.useCallback((next: CustomerProfile) => { setProfile(next); setName(clean(next.name, "Customer")); setNotes(next.preferences.favouriteNoteIds); setIntensity(next.preferences.preferredIntensityId ?? ""); setAvoidance(next.preferences.sensitivityAvoidance ?? ""); setDelivery(fields(next.deliveryAddress)); setBilling(fields(next.billingAddress)); setSame(next.billingSameAsDelivery); }, []);
+  const reload = React.useCallback(async (conflict = false) => { const result = await api.profile.get(); if (result.ok) { sync(result.data); if (conflict) setMessage({ variant: "warning", text: "Your account changed elsewhere. The latest saved details have been reloaded." }); return; } if (result.error.code === "UNAUTHENTICATED") router.replace("/login?next=/account"); else setMessage({ variant: "danger", text: result.error.message }); }, [router, sync]);
+  React.useEffect(() => { let active = true; void Promise.all([api.auth.getSession(), api.profile.get(), api.cart.get(), api.catalogue.getFilters()]).then(([s, p, c, f]) => { if (!active) return; if (!s.ok || s.data.user?.role !== "CUSTOMER" || !p.ok) return router.replace("/login?next=/account"); setSession(s.data); sync(p.data); if (c.ok) setCart(c.data); if (f.ok) setFilters(f.data); else setMessage({ variant: "warning", text: "Preference choices are temporarily unavailable; your saved choices remain unchanged." }); setLoading(false); }); return () => { active = false; }; }, [router, sync]);
+  async function mutate(label: string, text: string, action: (current: CustomerProfile) => ReturnType<typeof api.profile.update>) { if (!profile || busy) return; setBusy(label); setMessage(null); try { const result = await action(profile); if (result.ok) { sync(result.data); setMessage({ variant: "success", text }); } else if (result.error.code === "CONFLICT") await reload(true); else if (result.error.code === "UNAUTHENTICATED") router.replace("/login?next=/account"); else setMessage({ variant: "danger", text: result.error.message }); } finally { setBusy(null); } }
+  const disabled = loading || busy !== null; const selected = filters?.note.filter(note => notes.includes(note.id)) ?? [];
+  const saveProfile = (event: React.FormEvent) => { event.preventDefault(); void mutate("profile", "Your profile and fragrance preferences have been saved.", current => api.profile.update({ expectedRevision: current.revision, name: name === clean(current.name, "Customer") ? current.name : name, preferences: { favouriteNoteIds: notes, preferredIntensityId: intensity || null, sensitivityAvoidance: avoidance.trim() || null } })); };
+  const saveDelivery = (event: React.FormEvent) => { event.preventDefault(); void mutate("delivery", "Your delivery address has been saved.", current => api.profile.setDeliveryAddress({ expectedRevision: current.revision, address: toAddress(delivery, current.deliveryAddress) })); };
+  const saveBilling = (event: React.FormEvent) => { event.preventDefault(); void mutate("billing", "Your billing address has been saved.", current => api.profile.setBillingAddress({ expectedRevision: current.revision, billing: same ? { kind: "USE_DELIVERY" } : { kind: "SEPARATE", address: toAddress(billing, current.billingAddress) } })); };
+  const deactivate = async () => { if (!profile || busy || !window.confirm("Deactivate your Palermo account? You will be signed out.")) return; setBusy("deactivate"); try { const result = await api.profile.deactivate({ expectedRevision: profile.revision }); if (result.ok) { router.replace("/login"); router.refresh(); } else if (result.error.code === "CONFLICT") await reload(true); else if (result.error.code === "UNAUTHENTICATED") router.replace("/login?next=/account"); else setMessage({ variant: "danger", text: result.error.message }); } finally { setBusy(null); } };
+  return <CustomerShell cart={cart} session={session} isLoading={loading}><div className="mx-auto max-w-[1180px]"><header className="max-w-[38rem] border-b border-border pb-8"><p className="text-xs font-medium uppercase tracking-[.16em] text-text-muted">Your Palermo</p><h1 className="mt-3 text-h1 font-normal tracking-tight">Fragrance profile</h1><p className="mt-3 text-sm leading-relaxed text-text-muted">Your details, preferences and delivery information in one place.</p></header>{message && <Alert className="mt-6" variant={message.variant}>{message.text}</Alert>}{loading && <div aria-busy="true" className="mt-10 space-y-4"><div className="h-5 w-40 animate-pulse bg-surface-muted" /><div className="h-11 animate-pulse bg-surface-muted" /></div>}{!loading && profile && <><div className="mt-10 grid gap-x-16 gap-y-12 lg:grid-cols-[minmax(0,1fr)_20rem]"><form className="space-y-12" onSubmit={saveProfile}><section className="border-t border-border pt-5"><h2 className="text-h3 font-normal">Personal details</h2><p className="mt-1 text-sm text-text-muted">{profile.email}</p><label className="mt-6 block max-w-xl"><span className="mb-2 block text-label">Name</span><input required disabled={disabled} value={name} onChange={e => setName(e.target.value)} className={inputClass} /></label></section><section className="border-t border-border pt-5"><p className="text-xs font-medium uppercase tracking-[.14em] text-text-muted">Your preferences</p><h2 className="mt-2 text-h3 font-normal">The notes you return to</h2><p className="mt-2 text-sm text-text-muted">Select the notes and intensity that feel most like you.</p><fieldset disabled={disabled} className="mt-6"><legend className="sr-only">Favourite notes</legend>{selected.length ? <div className="flex flex-wrap gap-2">{selected.map(note => <span key={note.id} className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-sm text-primary-text">{note.label}</span>)}</div> : <p className="text-sm text-text-muted">No favourite notes selected yet.</p>}<Button className="mt-4" variant="outline" type="button" onClick={() => setNotesOpen(!notesOpen)} aria-expanded={notesOpen}>{notesOpen ? "Done choosing notes" : "Choose favourite notes"}</Button>{notesOpen && <div className="mt-5 border-t border-border pt-5">{filters?.note.map(note => <label key={note.id} className={`mr-2 mb-2 inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${notes.includes(note.id) ? "border-primary bg-primary text-primary-text" : "border-border-strong"}`}><input className="sr-only" type="checkbox" checked={notes.includes(note.id)} onChange={() => setNotes(current => current.includes(note.id) ? current.filter(id => id !== note.id) : [...current, note.id])} />{note.label}</label>)}</div>}</fieldset><div className="mt-6 grid gap-5 sm:grid-cols-2"><label><span className="mb-2 block text-label">Preferred intensity</span><select disabled={disabled || !filters} value={intensity} onChange={e => setIntensity(e.target.value)} className={inputClass}><option value="">No preference</option>{filters?.intensity.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label><label><span className="mb-2 block text-label">Notes to avoid (optional)</span><textarea disabled={disabled} value={avoidance} onChange={e => setAvoidance(e.target.value)} className={inputClass} /></label></div><Button className="mt-6" type="submit" isLoading={busy === "profile"}>Save preferences</Button></section></form><section className="border-t border-border pt-5 lg:sticky lg:top-24 lg:self-start"><p className="text-xs font-medium uppercase tracking-[.14em] text-text-muted">Your profile</p><h2 className="mt-2 text-h3 font-normal">Fragrance direction</h2>{profile.fragranceIdentity ? <><p className="mt-5 text-xl">{profile.fragranceIdentity.primaryFamily.label}</p><p className="mt-2 text-sm text-text-muted">{clean(profile.fragranceIdentity.explanation, "Based on your saved preferences.")}</p><p className="mt-4 text-sm text-text-muted">{profile.fragranceIdentity.status === "CURRENT" ? "Your fragrance profile is up to date." : "Refresh this profile after changing your preferences."}</p></> : <p className="mt-5 text-sm text-text-muted">Choose a favourite note or preferred intensity to create your fragrance profile.</p>}<Button className="mt-6" variant="outline" type="button" disabled={!notes.length} isLoading={busy === "identity"} onClick={() => void mutate("identity", "Your fragrance identity has been generated.", current => api.profile.generateIdentity({ expectedRevision: current.revision }))}>{profile.fragranceIdentity ? "Refresh fragrance profile" : "Create fragrance profile"}</Button></section></div><section className="mt-16 border-t border-border pt-5"><p className="text-xs font-medium uppercase tracking-[.14em] text-text-muted">Delivery details</p><h2 className="mt-2 text-h3 font-normal">Saved addresses</h2><div className="mt-8 grid gap-x-16 gap-y-10 md:grid-cols-2"><section className="border-t border-border pt-5"><div className="flex justify-between"><h3>Delivery address</h3>{profile.deliveryAddress && !deliveryEdit && <Button variant="link" type="button" onClick={() => setDeliveryEdit(true)}>Edit</Button>}</div>{profile.deliveryAddress && !deliveryEdit ? <div className="mt-4"><AddressView address={profile.deliveryAddress} /></div> : <form className="mt-5 space-y-5" onSubmit={saveDelivery}><AddressForm id="delivery" value={delivery} setValue={setDelivery} disabled={disabled} /><Button type="submit" isLoading={busy === "delivery"}>Save delivery address</Button></form>}</section><section className="border-t border-border pt-5"><div className="flex justify-between"><h3>Billing address</h3>{!billingEdit && <Button variant="link" type="button" onClick={() => setBillingEdit(true)}>{same ? "Change" : "Edit"}</Button>}</div>{!billingEdit ? <div className="mt-4">{same ? <p className="text-sm text-text-muted">Uses your delivery address.</p> : profile.billingAddress ? <AddressView address={profile.billingAddress} /> : <p className="text-sm text-text-muted">No billing address saved.</p>}</div> : <form className="mt-5 space-y-5" onSubmit={saveBilling}><label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" checked={same} onChange={e => setSame(e.target.checked)} />Use my delivery address</label>{!same && <AddressForm id="billing" value={billing} setValue={setBilling} disabled={disabled} />}<Button type="submit" disabled={same && !profile.deliveryAddress} isLoading={busy === "billing"}>Save billing address</Button></form>}</section></div></section><section className="mt-16 max-w-xl border-t border-danger/30 pt-5"><p className="text-xs font-medium uppercase tracking-[.14em] text-text-muted">Account controls</p><h2 className="mt-2 text-h3 font-normal">Deactivate your account</h2><p className="mt-3 text-sm text-text-muted">Your account is {customerFacingAccountStatus(profile.accountStatus).toLowerCase()}. Deactivation signs you out and cannot be undone here.</p><Button className="mt-5" variant="danger" type="button" isLoading={busy === "deactivate"} onClick={() => void deactivate()}>Deactivate account</Button></section></>}</div></CustomerShell>;
 }

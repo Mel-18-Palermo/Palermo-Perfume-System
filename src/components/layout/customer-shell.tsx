@@ -85,7 +85,7 @@ export function CustomerShell({
       >
         {children}
       </main>
-      <StoreFooter />
+      <StoreFooter session={currentSession} />
     </div>
   );
 }

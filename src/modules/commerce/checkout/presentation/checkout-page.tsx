@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { Stripe, StripeElements, StripePaymentElement } from "@stripe/stripe-js";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
@@ -9,9 +10,7 @@ import type { CheckoutRequest, CheckoutResult, DeliveryMethod } from "@/contract
 import type { OrderDetail } from "@/contracts/orders";
 import type { CustomerProfile } from "@/contracts/profile";
 import { CustomerShell } from "@/components/layout/customer-shell";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { getStripeClient } from "@/lib/payment/stripe-elements";
@@ -44,6 +43,7 @@ export function CheckoutPage() {
   const [confirmedOrder, setConfirmedOrder] = React.useState<OrderDetail | null>(null);
   const [idempotency, setIdempotency] = React.useState<{ fingerprint: string; key: string } | null>(null);
   const [promotionBusy, setPromotionBusy] = React.useState(false);
+  const [promotionError, setPromotionError] = React.useState<string | null>(null);
   const stripeContainerRef = React.useRef<HTMLDivElement>(null);
   const stripeRef = React.useRef<Stripe | null>(null);
   const elementsRef = React.useRef<StripeElements | null>(null);
@@ -88,6 +88,7 @@ export function CheckoutPage() {
       ? current
       : methodResult.data[0]?.id ?? "");
     setPromotionInput(cartResult.data.promotionCode ?? "");
+    setPromotionError(null);
     setMessage("");
     setStage("CHECKOUT_READY");
     return true;
@@ -159,7 +160,7 @@ export function CheckoutPage() {
       const stripe = await getStripeClient();
       const container = stripeContainerRef.current;
       if (!active) return;
-      if (!stripe || !container) { setMessage("Stripe payment is unavailable."); setStage("PAYMENT_FAILED"); return; }
+      if (!stripe || !container) { setMessage("Secure payment is temporarily unavailable. Please try again."); setStage("PAYMENT_FAILED"); return; }
       const elements = stripe.elements({ clientSecret: secret });
       const paymentElement = elements.create("payment");
       paymentElement.mount(container);
@@ -181,7 +182,7 @@ export function CheckoutPage() {
   async function refreshCart(nextStage: Stage = "CHECKOUT_READY") {
     const result = await api.cart.get();
     if (!result.ok) { setMessage(result.error.message); setStage("ERROR"); return; }
-    setCart(result.data); setPromotionInput(result.data.promotionCode ?? ""); setMessage(""); setStage(nextStage);
+    setCart(result.data); setPromotionInput(result.data.promotionCode ?? ""); setPromotionError(null); setMessage(""); setStage(nextStage);
   }
 
   function handleCheckoutResult(result: CheckoutResult) {
@@ -212,7 +213,7 @@ export function CheckoutPage() {
     paymentInFlightRef.current = true; setClientSecret(null); setStage("PAYMENT_INITIALISING"); setMessage("");
     try {
       const result = await api.payment.initiate({ orderId });
-      if (!result.ok) { setMessage(result.error.message); setStage("PAYMENT_FAILED"); return; }
+      if (!result.ok) { setMessage("Secure payment is temporarily unavailable. Please try again."); setStage("PAYMENT_FAILED"); return; }
       if (result.data.clientSecret === null) { await verifyOrder(orderId); return; }
       setClientSecret(result.data.clientSecret);
     } finally { paymentInFlightRef.current = false; }
@@ -227,7 +228,7 @@ export function CheckoutPage() {
       const returnUrl = new URL("/checkout", window.location.origin);
       returnUrl.searchParams.set("orderId", orderId);
       const result = await stripe.confirmPayment({ elements, confirmParams: { return_url: returnUrl.toString() }, redirect: "if_required" });
-      if (result.error) { setMessage(result.error.message ?? "Payment failed."); setStage("PAYMENT_FAILED"); return; }
+      if (result.error) { setMessage("Your payment could not be completed. Check your details and try again."); setStage("PAYMENT_FAILED"); return; }
       await verifyOrder(orderId);
     } finally { paymentInFlightRef.current = false; }
   }
@@ -236,10 +237,11 @@ export function CheckoutPage() {
     if (!cart || controlsFrozen || checkoutInFlightRef.current || promotionInFlightRef.current) return false;
     promotionInFlightRef.current = true;
     setPromotionBusy(true);
+    setPromotionError(null);
     try {
       const result = await api.cart.applyPromotion({ cartId: cart.id, expectedRevision: cart.revision, code });
-      if (!result.ok) { setMessage(result.error.message); return false; }
-      setCart(result.data); setPromotionInput(result.data.promotionCode ?? ""); setMessage("");
+      if (!result.ok) { setPromotionError(result.error.message); return false; }
+      setCart(result.data); setPromotionInput(result.data.promotionCode ?? ""); setPromotionError(null); setMessage("");
       return true;
     } finally {
       promotionInFlightRef.current = false;
@@ -252,45 +254,107 @@ export function CheckoutPage() {
   }
 
   const busy = stage === "INITIALISING" || stage === "CHECKOUT_SUBMITTING" || stage === "PAYMENT_INITIALISING" || stage === "PAYMENT_PROCESSING" || stage === "VERIFYING_ORDER";
+  const recoveryStage = stage === "REQUIRES_CART_REVIEW" || stage === "OUT_OF_STOCK" || stage === "INVALID_PROMOTION" || stage === "CHECKOUT_CONFLICT" || stage === "PAYMENT_FAILED" || stage === "PAYMENT_EXPIRED" || stage === "PAYMENT_PENDING" || stage === "ERROR";
+  const showGenericMessage = Boolean(message) && !recoveryStage;
+
   return <CustomerShell cart={cart} session={session} isLoading={stage === "INITIALISING"}>
-    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]" aria-busy={busy}>
-      <section className="space-y-4">
-        <h1 className="text-h1">Checkout</h1>
-        {busy && <Alert title="Please wait">{stage === "VERIFYING_ORDER" ? "Verifying your order with Palermo." : "Processing your request."}</Alert>}
-        {stage === "AUTH_REQUIRED" && <Alert variant="warning" title="Sign in required">Sign in as a customer to continue. <Link className="font-semibold underline" href="/login?next=/checkout">Sign in</Link></Alert>}
-        {message && <Alert variant="warning">{message}</Alert>}
-        {profile && <Card><CardHeader><CardTitle>Addresses and delivery</CardTitle></CardHeader><CardContent className="space-y-3">
-          <p>Delivery: {profile.deliveryAddress ? [profile.deliveryAddress.recipientName, profile.deliveryAddress.line1, profile.deliveryAddress.suburb].join(", ") : "No saved delivery address."}</p>
-          <p>Billing: {profile.billingSameAsDelivery ? "Same as delivery" : profile.billingAddress?.line1 ?? "No saved billing address."}</p>
-          {!addressReady && <Alert variant="warning">Add the required delivery and billing addresses in your profile before checkout.</Alert>}
-          {methods.length === 0 ? <Alert variant="warning">No delivery methods are currently available.</Alert> : <label className="block">Delivery method<select disabled={controlsFrozen} className="mt-1 min-h-11 w-full rounded-md border border-border bg-surface px-3" value={deliveryMethodId} onChange={(event) => { if (!checkoutInFlightRef.current) setDeliveryMethodId(event.target.value); }}>{methods.map((item) => <option key={item.id} value={item.id}>{item.name} — {money(item.charge)}</option>)}</select></label>}
-          {selectedDeliveryMethod && selectedDeliveryMethod.displayInformation !== null && <p>{selectedDeliveryMethod.displayInformation}</p>}
-        </CardContent></Card>}
-        {paymentUiActive && <Card><CardHeader><CardTitle>Secure payment</CardTitle></CardHeader><CardContent><div ref={stripeContainerRef}/>{stage === "PAYMENT_READY" && <Button className="mt-4" onClick={() => { void confirmPayment(); }}>Confirm payment</Button>}</CardContent></Card>}
-        {stage === "SUCCESS" && confirmedOrder && <Alert variant="success" title="Order confirmed">Order {confirmedOrder.orderNumber} is confirmed. Authoritative total: {money(confirmedOrder.total)}.</Alert>}
-        {stage === "PAYMENT_PENDING" && orderId && <Alert title="Payment pending">Palermo still reports this payment as pending. <Button variant="link" onClick={() => { void verifyOrder(orderId); }}>Check status</Button></Alert>}
-        {stage === "PAYMENT_EXPIRED" && <Alert variant="warning" title="Payment expired">Start a new canonical payment attempt to continue.</Alert>}
-        {stage === "PAYMENT_FAILED" && <Alert variant="danger" title="Payment failed">The payment was not completed. You may retry through Palermo.</Alert>}
-      </section>
-      <aside className="space-y-4">
-        <Card><CardHeader><CardTitle>Order summary</CardTitle></CardHeader><CardContent>
-          {cart?.items.length ? cart.items.map((item) => <p key={item.id}>{item.title} × {item.quantity} — {money(item.itemTotal)}</p>) : <p>Your cart is empty.</p>}
-          {cart?.validationMessages.map((item) => <Alert className="mt-2" variant="warning" key={`${item.code}-${item.itemId ?? "cart"}`}>{item.message}</Alert>)}
-          <p className="mt-3 font-semibold">Cart total: {cart ? money(cart.pricing.total) : ""}</p>
-          {selectedDeliveryMethod && <p>Delivery ({selectedDeliveryMethod.name}): {money(selectedDeliveryMethod.charge)} quoted separately</p>}
-          <div className="mt-3 flex gap-2"><Input disabled={controlsFrozen || promotionBusy} aria-label="Promotion code" value={promotionInput} onChange={(event) => { if (!checkoutInFlightRef.current) setPromotionInput(event.target.value); }}/><Button disabled={controlsFrozen || promotionBusy} variant="outline" onClick={() => { void applyPromotion(promotionInput.trim() || null); }}>Apply</Button></div>
-          {cart?.promotionCode && !controlsFrozen && <Button disabled={promotionBusy} variant="link" onClick={() => { void applyPromotion(null); }}>Remove {cart.promotionCode}</Button>}
-        </CardContent></Card>
-        {stage === "CHECKOUT_READY" && <Button className="w-full" disabled={!cart?.checkoutEligible || !checkoutReady} onClick={() => { void submitCheckout(); }}>Place order</Button>}
-        {stage === "READY_FOR_PAYMENT" && <Button className="w-full" onClick={() => { void initiatePayment(); }}>Continue to payment</Button>}
-        {stage === "REQUIRES_CART_REVIEW" && <Button className="w-full" onClick={() => setStage("CHECKOUT_READY")}>Review updated cart</Button>}
-        {stage === "OUT_OF_STOCK" && <Button className="w-full" onClick={() => { void refreshCart(); }}>Refresh cart</Button>}
-        {stage === "INVALID_PROMOTION" && <Button className="w-full" disabled={promotionBusy} onClick={() => { void removeInvalidPromotion(); }}>Remove promotion</Button>}
-        {stage === "CHECKOUT_CONFLICT" && <Button className="w-full" onClick={() => { void refreshCheckout(); }}>Reload checkout</Button>}
-        {(stage === "PAYMENT_FAILED" || stage === "PAYMENT_EXPIRED") && orderId && <Button className="w-full" onClick={() => { void initiatePayment(); }}>Retry payment</Button>}
-        {stage === "ERROR" && orderId && <Button className="w-full" onClick={() => { void verifyOrder(orderId); }}>Retry order verification</Button>}
-        {stage === "ERROR" && !orderId && <Button className="w-full" onClick={() => { window.location.reload(); }}>Retry checkout</Button>}
-      </aside>
+    <div className="mx-auto max-w-[var(--container-page)]" aria-busy={busy}>
+      <header className="border-b border-border pb-7 sm:pb-8">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">Complete your selection</p>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+          <h1 className="text-4xl font-normal tracking-[-0.055em] text-text sm:text-5xl sm:leading-[1.05]">Checkout</h1>
+          {stage !== "AUTH_REQUIRED" && <ol className="flex flex-wrap gap-x-4 gap-y-2 text-xs uppercase tracking-[0.13em] text-text-muted" aria-label="Checkout steps">
+            {[["01", "Details & delivery"], ["02", "Payment"]].map(([number, label]) => <li key={number} className="flex items-center gap-2"><span className="text-text">{number}</span>{label}</li>)}
+          </ol>}
+        </div>
+      </header>
+
+      {stage === "AUTH_REQUIRED" ? <section className="max-w-[var(--container-reading)] border-b border-warning py-10 sm:py-12" aria-labelledby="auth-recovery-heading">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-text-muted">Checkout</p>
+        <h2 id="auth-recovery-heading" className="mt-3 text-3xl font-normal tracking-[-0.045em] text-text">Sign in to continue</h2>
+        <p className="mt-4 max-w-md text-sm leading-6 text-text-muted">You need to sign in with a customer account before continuing to checkout.</p>
+        <Link href="/login?next=/checkout" className="mt-7 inline-flex min-h-[48px] items-center bg-primary px-5 py-3 text-sm font-medium !text-[#fff] transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transform-none">Sign in <span className="ml-3" aria-hidden="true">→</span></Link>
+      </section> : <div className="mt-8 grid grid-cols-1 gap-y-12 lg:mt-10 lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
+        <section className="lg:col-span-7" aria-label="Checkout details">
+          {busy && <div className="border-y border-border py-4 text-sm text-text-muted" role="status">{stage === "VERIFYING_ORDER" ? "Verifying your order with Palermo." : "Processing your request."}</div>}
+          {showGenericMessage && <div className="border-y border-warning py-4 text-sm" role="alert">{message}</div>}
+
+          {profile && <>
+            <section className="border-b border-border py-8 sm:py-10" aria-labelledby="details-heading">
+              <div className="flex items-baseline gap-4"><span className="text-xs font-medium uppercase tracking-[0.16em] text-text-muted">01</span><h2 id="details-heading" className="text-2xl font-normal tracking-[-0.04em] text-text">Your details</h2></div>
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 sm:gap-8">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.13em] text-text-muted">Delivery address</p>
+                  <address className="mt-3 not-italic text-sm leading-6 text-text">
+                    {profile.deliveryAddress ? <>{profile.deliveryAddress.recipientName}<br />{profile.deliveryAddress.line1}{profile.deliveryAddress.line2 && <><br />{profile.deliveryAddress.line2}</>}<br />{profile.deliveryAddress.suburb}, {profile.deliveryAddress.state} {profile.deliveryAddress.postcode}<br />{profile.deliveryAddress.country}</> : "No saved delivery address."}
+                  </address>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.13em] text-text-muted">Billing address</p>
+                  <p className="mt-3 text-sm leading-6 text-text">{profile.billingSameAsDelivery ? "Same as delivery address" : profile.billingAddress ? <>{profile.billingAddress.recipientName}<br />{profile.billingAddress.line1}{profile.billingAddress.line2 && <><br />{profile.billingAddress.line2}</>}<br />{profile.billingAddress.suburb}, {profile.billingAddress.state} {profile.billingAddress.postcode}<br />{profile.billingAddress.country}</> : "No saved billing address."}</p>
+                </div>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"><Link href="/account" className="border-b border-text pb-1 transition-colors hover:border-text-muted hover:text-text-muted">Manage addresses</Link><span className="text-text-muted">{profile.email}</span></div>
+              {!addressReady && <div className="mt-6 border-l-2 border-warning pl-4 text-sm leading-6 text-text" role="alert">Add the required delivery and billing addresses in your profile before checkout.</div>}
+            </section>
+
+            <section className="border-b border-border py-8 sm:py-10" aria-labelledby="delivery-heading">
+              <div className="flex items-baseline gap-4"><span className="text-xs font-medium uppercase tracking-[0.16em] text-text-muted">02</span><h2 id="delivery-heading" className="text-2xl font-normal tracking-[-0.04em] text-text">Delivery</h2></div>
+              <p className="mt-3 text-sm leading-6 text-text-muted">Choose from the delivery options available for your order.</p>
+              {methods.length === 0 ? <div className="mt-6 border-l-2 border-warning pl-4 text-sm leading-6 text-text" role="alert">No delivery methods are currently available.</div> : <fieldset className="mt-6 border-y border-border"><legend className="sr-only">Delivery method</legend>{methods.map((item) => {
+                const selected = item.id === deliveryMethodId;
+                return <label key={item.id} className={`relative flex min-h-[72px] cursor-pointer items-center justify-between gap-4 border-b border-border px-4 py-4 last:border-b-0 transition-colors hover:bg-surface-muted ${selected ? "bg-surface-muted" : "bg-transparent"}`}>
+                  <input type="radio" name="delivery-method" className="sr-only" disabled={controlsFrozen} value={item.id} checked={selected} onChange={() => { if (!checkoutInFlightRef.current) setDeliveryMethodId(item.id); }} />
+                  <span className="min-w-0"><span className="block text-sm font-medium text-text">{item.name}</span>{item.displayInformation !== null && <span className="mt-1 block text-xs leading-5 text-text-muted">{item.displayInformation}</span>}</span>
+                  <span className="flex shrink-0 items-center gap-3 text-right"><span className="text-sm font-medium tabular-nums text-text">{money(item.charge)}</span><span className={`flex h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-primary bg-primary text-primary-text" : "border-border-strong"}`} aria-hidden="true">{selected && "✓"}</span><span className="sr-only">{selected ? ", selected" : ""}</span></span>
+                </label>;
+              })}</fieldset>}
+            </section>
+          </>}
+
+          {paymentUiActive && <section className="border-b border-border py-8 sm:py-10" aria-labelledby="payment-heading"><div className="flex items-baseline gap-4"><span className="text-xs font-medium uppercase tracking-[0.16em] text-text-muted">03</span><h2 id="payment-heading" className="text-2xl font-normal tracking-[-0.04em] text-text">Payment</h2></div><div className="mt-6 border border-border bg-surface p-4 sm:p-6"><p className="mb-5 text-sm text-text-muted">Enter your payment details below to complete your order.</p><div ref={stripeContainerRef} />{stage === "PAYMENT_READY" && <Button className="mt-6 w-full rounded-none transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 active:translate-y-0 motion-reduce:transform-none" onClick={() => { void confirmPayment(); }}>Confirm payment</Button>}</div></section>}
+
+          {stage === "SUCCESS" && confirmedOrder && <section className="border-b border-success py-8 sm:py-10" aria-labelledby="confirmation-heading"><p className="text-xs font-medium uppercase tracking-[0.16em] text-success">Order confirmed</p><h2 id="confirmation-heading" className="mt-3 text-3xl font-normal tracking-[-0.045em] text-text">Thank you for choosing Palermo.</h2><p className="mt-4 text-sm leading-6 text-text-muted">Order {confirmedOrder.orderNumber} is confirmed. Total: {money(confirmedOrder.total)}.</p></section>}
+
+          {stage === "PAYMENT_PENDING" && <div className="border-b border-warning py-6 text-sm leading-6" role="status"><p className="font-medium">Payment is still being confirmed.</p><p className="mt-1 text-text-muted">Your order status has not changed yet.</p>{orderId && <Button variant="link" className="mt-3" onClick={() => { void verifyOrder(orderId); }}>Check status</Button>}</div>}
+          {stage === "PAYMENT_EXPIRED" && <div className="border-b border-warning py-6 text-sm leading-6" role="alert"><p className="font-medium">Your payment session has expired.</p><p className="mt-1 text-text-muted">Start a new payment attempt to continue.</p></div>}
+          {stage === "PAYMENT_FAILED" && <div className="border-b border-danger py-6 text-sm leading-6" role="alert"><p className="font-medium">Payment was not completed.</p><p className="mt-1 text-text-muted">{message || "Try again when you are ready."}</p></div>}
+          {stage === "REQUIRES_CART_REVIEW" && <div className="border-b border-warning py-6 text-sm leading-6" role="alert"><p className="font-medium">Your cart has changed.</p><p className="mt-1 text-text-muted">{message}</p></div>}
+          {stage === "OUT_OF_STOCK" && <div className="border-b border-warning py-6 text-sm leading-6" role="alert"><p className="font-medium">One or more items are no longer available.</p><p className="mt-1 text-text-muted">Refresh your cart to see the current selection.</p></div>}
+          {stage === "INVALID_PROMOTION" && <div className="border-b border-warning py-6 text-sm leading-6" role="alert"><p className="font-medium">Your promotion needs attention.</p><p className="mt-1 text-text-muted">{message}</p></div>}
+          {stage === "CHECKOUT_CONFLICT" && <div className="border-b border-warning py-6 text-sm leading-6" role="alert"><p className="font-medium">Checkout needs to be refreshed.</p><p className="mt-1 text-text-muted">{message}</p></div>}
+          {stage === "ERROR" && <div className="border-b border-danger py-6 text-sm leading-6" role="alert"><p className="font-medium">We could not complete checkout.</p><p className="mt-1 text-text-muted">{message || "Please try again."}</p></div>}
+        </section>
+
+        <aside className="lg:col-span-5 lg:pt-0" aria-labelledby="order-summary-title">
+          <div className="border-y border-border py-6 lg:sticky lg:top-24">
+            <div className="flex items-baseline justify-between gap-4"><h2 id="order-summary-title" className="text-2xl font-normal tracking-[-0.04em] text-text">Your order</h2>{cart?.items.length ? <span className="text-xs uppercase tracking-[0.13em] text-text-muted">{cart.items.reduce((total, item) => total + item.quantity, 0)} item{cart.items.reduce((total, item) => total + item.quantity, 0) === 1 ? "" : "s"}</span> : null}</div>
+            <div className="mt-6 divide-y divide-border">
+              {cart?.items.length ? cart.items.map((item) => <article key={item.id} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-4 py-4 first:pt-0"><div className="relative aspect-[4/5] overflow-hidden bg-surface-muted">{item.imageUrl ? <Image src={item.imageUrl} alt={item.imageAlt} fill sizes="(min-width: 1024px) 160px, 72px" className="object-contain p-1" /> : <div className="flex h-full items-center justify-center px-2 text-center text-[9px] uppercase tracking-[0.13em] text-text-muted">Palermo</div>}</div><div className="min-w-0"><div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-medium leading-5 text-text">{item.title}</h3><p className="mt-1 text-xs uppercase tracking-[0.11em] text-text-muted">{[item.concentration, item.bottleSize].filter(Boolean).join(" · ")}</p></div><p className="shrink-0 text-sm font-medium tabular-nums text-text">{money(item.itemTotal)}</p></div><p className="mt-3 text-xs text-text-muted">Quantity {item.quantity}</p></div></article>) : <p className="py-4 text-sm text-text-muted">Your cart is empty.</p>}
+            </div>
+            {cart?.validationMessages.map((item) => <div className="border-l-2 border-warning py-3 pl-3 text-xs leading-5 text-text-muted" role="alert" key={`${item.code}-${item.itemId ?? "cart"}`}>{item.message}</div>)}
+            <div className="mt-5 space-y-3 border-t border-border pt-5 text-sm">
+              <div className="flex justify-between gap-4 text-text-muted"><span>Subtotal</span><span className="font-medium tabular-nums text-text">{cart ? money(cart.pricing.subtotal) : "—"}</span></div>
+              {cart?.pricing.discountTotal && cart.pricing.discountTotal.amountMinor > 0 && <div className="flex justify-between gap-4 text-success"><span>Promotion</span><span className="font-medium tabular-nums">−{money(cart.pricing.discountTotal)}</span></div>}
+              <div className="flex justify-between gap-4 text-text-muted"><span>Delivery{selectedDeliveryMethod ? ` · ${selectedDeliveryMethod.name}` : ""}</span><span className="font-medium tabular-nums text-text">{selectedDeliveryMethod ? money(selectedDeliveryMethod.charge) : "Select a method"}</span></div>
+              <div className="flex justify-between gap-4 border-t border-border pt-5 text-lg font-medium tabular-nums text-text"><span>Cart total</span><span>{cart ? money(cart.pricing.total) : "—"}</span></div>
+              <p className="text-xs leading-5 text-text-muted">Delivery is shown separately and is confirmed with your order.</p>
+            </div>
+            <div className="mt-6 border-t border-border pt-5"><label htmlFor="promotion-code" className="text-xs font-medium uppercase tracking-[0.13em] text-text-muted">Promotion code</label><div className="mt-3 flex gap-2"><Input id="promotion-code" disabled={controlsFrozen || promotionBusy} aria-label="Promotion code" error={promotionError ?? undefined} className="rounded-none" value={promotionInput} onChange={(event) => { if (!checkoutInFlightRef.current) { setPromotionInput(event.target.value); setPromotionError(null); } }} /><Button disabled={controlsFrozen || promotionBusy} variant="outline" className="rounded-none" onClick={() => { void applyPromotion(promotionInput.trim() || null); }}>Apply</Button></div>{cart?.promotionCode && !controlsFrozen && <Button disabled={promotionBusy} variant="link" className="mt-3 text-xs" onClick={() => { void applyPromotion(null); }}>Remove {cart.promotionCode}</Button>}</div>
+            <div className="mt-7">
+              {stage === "CHECKOUT_READY" && <Button className="w-full rounded-none transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 active:translate-y-0 motion-reduce:transform-none" size="lg" disabled={!cart?.checkoutEligible || !checkoutReady} onClick={() => { void submitCheckout(); }}>Place order <span className="ml-auto" aria-hidden="true">→</span></Button>}
+              {stage === "READY_FOR_PAYMENT" && <Button className="w-full rounded-none transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 active:translate-y-0 motion-reduce:transform-none" size="lg" onClick={() => { void initiatePayment(); }}>Continue to payment <span className="ml-auto" aria-hidden="true">→</span></Button>}
+              {stage === "REQUIRES_CART_REVIEW" && <Button className="w-full rounded-none" size="lg" onClick={() => setStage("CHECKOUT_READY")}>Review updated cart</Button>}
+              {stage === "OUT_OF_STOCK" && <Button className="w-full rounded-none" size="lg" onClick={() => { void refreshCart(); }}>Refresh cart</Button>}
+              {stage === "INVALID_PROMOTION" && <Button className="w-full rounded-none" size="lg" disabled={promotionBusy} onClick={() => { void removeInvalidPromotion(); }}>Remove promotion</Button>}
+              {stage === "CHECKOUT_CONFLICT" && <Button className="w-full rounded-none" size="lg" onClick={() => { void refreshCheckout(); }}>Reload checkout</Button>}
+              {(stage === "PAYMENT_FAILED" || stage === "PAYMENT_EXPIRED") && orderId && <Button className="w-full rounded-none" size="lg" onClick={() => { void initiatePayment(); }}>Try payment again</Button>}
+              {stage === "ERROR" && orderId && <Button className="w-full rounded-none" size="lg" onClick={() => { void verifyOrder(orderId); }}>Check order status</Button>}
+              {stage === "ERROR" && !orderId && <Button className="w-full rounded-none" size="lg" onClick={() => { window.location.reload(); }}>Retry checkout</Button>}
+            </div>
+          </div>
+        </aside>
+      </div>}
     </div>
   </CustomerShell>;
 }
