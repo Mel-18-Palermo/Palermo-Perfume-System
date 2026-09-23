@@ -41,5 +41,6 @@ export default defineConfig([
     "coverage/**",
     "next-env.d.ts",
     "src/lib/db/generated/**",
+    ".reference/**",
   ]),
 ]);
