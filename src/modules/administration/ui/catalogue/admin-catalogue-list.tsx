@@ -90,11 +90,9 @@ export function AdminCatalogueList({ onCreate, onEdit, onArchived }: AdminCatalo
   };
 
   return (
-    <section aria-labelledby="admin-catalogue-heading" className="space-y-4">
+    <section aria-labelledby="admin-catalogue-heading" className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h2 id="admin-catalogue-heading" className="text-h2 font-semibold">
-          Catalogue
-        </h2>
+        <div><h2 id="admin-catalogue-heading" className="text-h2 font-semibold">Catalogue</h2><p className="mt-1 text-sm text-text-muted">Manage fragrance records, variants, and customer visibility.</p></div>
         <AdminButton onClick={onCreate} disabled={state.status !== "ready"}>
           Add perfume
         </AdminButton>
@@ -122,7 +120,7 @@ export function AdminCatalogueList({ onCreate, onEdit, onArchived }: AdminCatalo
       ) : null}
 
       {state.status === "ready" && state.items.length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div role="region" aria-label="Catalogue records, scroll horizontally on small screens" tabIndex={0} className="overflow-x-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info">
           <table className="w-full min-w-[640px] border-collapse text-left">
             <thead>
               <tr className="border-b border-border bg-surface-muted text-label text-text-muted">

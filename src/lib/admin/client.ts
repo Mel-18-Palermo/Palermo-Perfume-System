@@ -109,7 +109,7 @@ export function createAdminHttpClient(
       catalogue<AdminCatalogueReferences>("references"),
 
     listCatalogue: input =>
-      catalogue<Page<AdminPerfume>>("list", input),
+      catalogue<Page<AdminPerfume>>(`list${pageQuery(input)}`),
 
     getPerfume: input =>
       catalogue<AdminPerfume>(

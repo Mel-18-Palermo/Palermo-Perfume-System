@@ -67,6 +67,24 @@ describe("administrator HTTP client routing", () => {
     expect(calls[1]?.init?.body).toBeUndefined();
   });
 
+  it("uses GET query parameters for catalogue listing", async () => {
+    const calls: RecordedCall[] = [];
+    const fetcher = async (
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      calls.push({ url: String(input), init });
+      return successResponse({ items: [], page: 2, pageSize: 5, hasMore: false });
+    };
+
+    await createAdminHttpClient(fetcher as typeof fetch).listCatalogue({ page: 2, pageSize: 5 });
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.url).toBe("/api/admin/catalogue/list?page=2&pageSize=5");
+    expect(calls[0]?.init?.method).toBe("GET");
+    expect(calls[0]?.init?.body).toBeUndefined();
+  });
+
   it("routes batch mutations to the inventory boundary", async () => {
     const calls: RecordedCall[] = [];
 

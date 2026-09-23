@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import type { Dashboard, ReportingPeriod } from "@/contracts/admin";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAdminMilestoneApi } from "./admin-milestone-api";
@@ -163,8 +162,8 @@ export function AdminDashboard() {
 
       {state.status === "ready" && (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="min-w-0 p-5">
+          <div className="grid divide-y divide-border border-y border-border md:grid-cols-3 md:divide-x md:divide-y-0">
+            <div className="min-w-0 p-5">
               <h3 className="text-sm text-text-muted">
                 Paid-order sales
               </h3>
@@ -175,9 +174,9 @@ export function AdminDashboard() {
                   currency: state.data.totalSales.currency,
                 }).format(state.data.totalSales.amountMinor / 100)}
               </p>
-            </Card>
+            </div>
 
-            <Card className="min-w-0 p-5">
+            <div className="min-w-0 p-5">
               <h3 className="text-sm text-text-muted">
                 Total orders
               </h3>
@@ -185,9 +184,9 @@ export function AdminDashboard() {
               <p className="mt-2 text-h3 font-semibold">
                 {state.data.totalOrders}
               </p>
-            </Card>
+            </div>
 
-            <Card className="min-w-0 p-5">
+            <div className="min-w-0 p-5">
               <h3 className="text-sm text-text-muted">
                 Low-stock variants
               </h3>
@@ -195,11 +194,11 @@ export function AdminDashboard() {
               <p className="mt-2 text-h3 font-semibold">
                 {state.data.lowStockVariantCount}
               </p>
-            </Card>
+            </div>
           </div>
 
-          <Card className="p-5">
-            <h3 className="text-h3 font-semibold">
+          <section className="border-b border-border pb-5" aria-labelledby="best-selling-heading">
+            <h3 id="best-selling-heading" className="text-h3 font-semibold">
               Best-selling perfumes
             </h3>
 
@@ -223,7 +222,7 @@ export function AdminDashboard() {
                 ))}
               </ul>
             )}
-          </Card>
+          </section>
         </>
       )}
     </section>
