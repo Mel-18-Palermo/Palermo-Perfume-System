@@ -48,7 +48,7 @@ async function getLandingCatalogue(): Promise<{
   try {
     const service = getCatalogueService();
     const [catalogueResult, filtersResult] = await Promise.all([
-      service.list({ page: 1, pageSize: 6 }),
+      service.list({ page: 1, pageSize: 24 }),
       service.getFilters(),
     ]);
 
@@ -112,6 +112,7 @@ export default async function Home({ searchParams }: HomeProps) {
         products={products}
         filters={filters}
         availabilityByProductId={availabilityByProductId}
+        recommendationHref="/quiz"
       />
     </CustomerShell>
   );
