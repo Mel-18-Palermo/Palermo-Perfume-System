@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "../../../lib/db/generated/client";
+import { Prisma, type PrismaClient } from "../../../lib/db/generated/client";
 import type { CartApi, CartCustomisation, CartDto, CartMutation } from "../../../contracts/cart";
 import type { ApiResult, Revision } from "../../../contracts/common";
 import { failure, success } from "../../../lib/api/result";
@@ -22,6 +22,7 @@ function customisation(value: CartCustomisation): boolean {
     && (value.giftPackagingId === null || validId(value.giftPackagingId));
 }
 function readOptions(value: Prisma.JsonValue): readonly string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []; }
+function isUniqueConflict(error: unknown): error is Prisma.PrismaClientKnownRequestError { return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"; }
 
 export class CartService {
   constructor(private readonly db: PrismaClient, private readonly now: () => Date = () => new Date()) {}
@@ -30,7 +31,14 @@ export class CartService {
   private async load(actor: CartActor): Promise<LoadedCart | null> { return this.db.cart.findFirst({ where: this.where(actor), include }); }
   private async ensure(actor: CartActor): Promise<LoadedCart> {
     const existing = await this.load(actor); if (existing) return existing;
-    return this.db.cart.create({ data: actor.kind === "CUSTOMER" ? { customerId: actor.customerId } : { visitorSessionKey: actor.visitorSessionKey }, include });
+    try {
+      return await this.db.cart.create({ data: actor.kind === "CUSTOMER" ? { customerId: actor.customerId } : { visitorSessionKey: actor.visitorSessionKey }, include });
+    } catch (error) {
+      if (!isUniqueConflict(error)) throw error;
+      const winner = await this.load(actor);
+      if (winner) return winner;
+      throw error;
+    }
   }
   private messages(cart: LoadedCart): CartDto["validationMessages"] {
     const messages: CartDto["validationMessages"][number][] = [];

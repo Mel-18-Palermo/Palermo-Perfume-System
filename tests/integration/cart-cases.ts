@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { PrismaClient } from "../../src/lib/db/generated/client";
 import { ids } from "../../prisma/seed-data";
 import { CartService, type CartActor } from "../../src/modules/commerce/cart/service";
@@ -19,6 +19,29 @@ export function cartCases(db: PrismaClient): void {
       expect(guest.ok && guest.data.kind).toBe("VISITOR");
       expect(account.ok && account.data.kind).toBe("CUSTOMER");
       if (guest.ok && account.ok) { expect(guest.data.id).not.toBe(account.data.id); expect(guest.data.checkoutEligible).toBe(false); expect(guest.data.validationMessages[0]?.code).toBe("AUTHENTICATION_REQUIRED"); }
+    });
+    it("returns the winning cart when concurrent customer reads create the first cart", async () => {
+      await cleanup();
+      const originalFindFirst = db.cart.findFirst.bind(db.cart);
+      let initialLoads = 0;
+      let releaseInitialLoads: () => void = () => undefined;
+      const initialLoadsReady = new Promise<void>(resolve => { releaseInitialLoads = resolve; });
+      const findFirst = vi.spyOn(db.cart, "findFirst").mockImplementation((async (...args: Parameters<typeof db.cart.findFirst>) => {
+        const cart = await originalFindFirst(...args);
+        if (initialLoads < 2) {
+          initialLoads += 1;
+          if (initialLoads === 2) releaseInitialLoads();
+          await initialLoadsReady;
+        }
+        return cart;
+      }) as never);
+      try {
+        const results = await Promise.all([service.get(customer), service.get(customer)]);
+        expect(results.every(result => result.ok)).toBe(true);
+        if (!results[0]?.ok || !results[1]?.ok) throw new Error("concurrent cart setup failed");
+        expect(results[0].data.id).toBe(results[1].data.id);
+        expect(await db.cart.count({ where: { customerId: customer.customerId, status: "ACTIVE" } })).toBe(1);
+      } finally { findFirst.mockRestore(); }
     });
     it("adds an item using current server price and does not reserve stock", async () => {
       await cleanup(); const empty = await service.get(visitor); if (!empty.ok) throw new Error("cart setup failed");
