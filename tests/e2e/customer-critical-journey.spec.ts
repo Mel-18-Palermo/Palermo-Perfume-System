@@ -2,6 +2,8 @@ import { expect, test, type Page } from "playwright/test";
 
 const customer = { email: "e2e.customer@example.test", password: "e2e-customer-password-393" };
 const e2eCitrusProductPath = "/product/39300000-0000-4000-8000-000000000108";
+const e2eOrderId = "39300000-0000-4000-8000-000000000112";
+const e2eShipmentId = "39300000-0000-4000-8000-000000000113";
 
 async function customerLogin(page: Page, next: string): Promise<void> {
   await page.goto(`/login?next=${encodeURIComponent(next)}`);
@@ -36,7 +38,30 @@ test("catalogue, cart, checkout boundary, and owned tracking work through the br
 
   await page.goto("/orders");
   await expect(page.getByText("E2E-393")).toBeVisible();
+  const orderResponse = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname === "/api/orders/detail"
+      && url.searchParams.get("id") === e2eOrderId;
+  });
+  const trackingResponse = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname === "/api/tracking" && url.searchParams.get("orderId") === e2eOrderId;
+  });
   await page.getByRole("button", { name: /E2E Citrus.*reference E2E-393/ }).click();
+  const orderJson: unknown = await (await orderResponse).json();
+  expect(orderJson).toMatchObject({ ok: true, data: { id: e2eOrderId, shipmentId: e2eShipmentId } });
+  const tracking = await trackingResponse;
+  expect(tracking.status()).toBe(200);
+  const trackingJson: unknown = await tracking.json();
+  expect(trackingJson).toMatchObject({
+    ok: true,
+    data: {
+      shipmentId: e2eShipmentId,
+      orderId: e2eOrderId,
+      trackingReference: "E2E-TRACK-393",
+      events: [{ description: "E2E deterministic transit event." }],
+    },
+  });
   await expect(page.getByText("Tracking reference E2E-TRACK-393")).toBeVisible();
   await expect(page.getByText("E2E deterministic transit event.")).toBeVisible();
 });
