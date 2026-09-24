@@ -12,7 +12,7 @@ export const ids = {
   cart: seedId(30), cartItem: seedId(31), visitorCart: seedId(32), delivery: seedId(40),
   paidOrder: seedId(41), pendingOrder: seedId(42), payment: seedId(43), pendingPayment: seedId(44),
   invoice: seedId(45), shipment: seedId(46), reservation: seedId(47), batch: seedId(48),
-  role: seedId(50), admin: seedId(51), permission: seedId(52), inventoryPermission: seedId(53), reportingPermission: seedId(54), reviewsPermission: seedId(55),
+  role: seedId(50), admin: seedId(51), permission: seedId(52), inventoryPermission: seedId(53), reportingPermission: seedId(54), reviewsPermission: seedId(55), promotionsPermission: seedId(56),
   quiz: seedId(60), question: seedId(61), option: seedId(62), attempt: seedId(63), recommendation: seedId(64),
   citrusOpeningMovement: seedId(70), woodyOpeningMovement: seedId(71), paidOrderMovement: seedId(72),
   trackingEvent: seedId(73), paidOrderItem: seedId(80), pendingOrderItem: seedId(81),
@@ -48,6 +48,9 @@ export async function seedCanonicalRecords(tx: Prisma.TransactionClient): Promis
   await tx.permission.upsert({ where: { id: ids.reviewsPermission }, update: {}, create: {
     id: ids.reviewsPermission, code: "reviews:moderate", description: "Moderate verified customer reviews",
   } });
+  await tx.permission.upsert({ where: { id: ids.promotionsPermission }, update: {}, create: {
+    id: ids.promotionsPermission, code: "promotions:manage", description: "Manage promotions and promotional content",
+  } });
   await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.permission } }, update: {},
     create: { roleId: ids.role, permissionId: ids.permission } });
   await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.inventoryPermission } }, update: {},
@@ -56,6 +59,8 @@ export async function seedCanonicalRecords(tx: Prisma.TransactionClient): Promis
     create: { roleId: ids.role, permissionId: ids.reportingPermission } });
   await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.reviewsPermission } }, update: {},
     create: { roleId: ids.role, permissionId: ids.reviewsPermission } });
+  await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.promotionsPermission } }, update: {},
+    create: { roleId: ids.role, permissionId: ids.promotionsPermission } });
   await tx.adminAccount.upsert({ where: { id: ids.admin }, update: {}, create: {
     id: ids.admin, email: "admin@example.test", name: "Demo Administrator", roleId: ids.role, createdAt: seedTime,
   } });

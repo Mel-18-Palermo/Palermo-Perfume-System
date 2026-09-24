@@ -16,7 +16,7 @@ import {
 import { ids, seedCanonicalRecords } from "./seed-data";
 
 const applicationTables = [
-  "LoyaltyLedgerEntry", "Referral", "ReferralCode", "LoyaltyAccount", "Subscription", "Review",
+  "PromotionalContent", "LoyaltyLedgerEntry", "Referral", "ReferralCode", "LoyaltyAccount", "Subscription", "Review",
   "RecommendationItem", "RecommendationRun", "QuizResponse", "QuizAttempt", "QuizOption", "QuizQuestion", "Quiz",
   "TrackingEvent", "Shipment", "Invoice", "Payment", "InventoryReservation", "OrderItem", "Order",
   "InventoryMovement", "ProductionBatch", "InventoryBalance", "CartItem", "Cart", "Promotion", "DeliveryMethod",
