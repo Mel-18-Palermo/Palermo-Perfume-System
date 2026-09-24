@@ -12,10 +12,13 @@ export const ids = {
   cart: seedId(30), cartItem: seedId(31), visitorCart: seedId(32), delivery: seedId(40),
   paidOrder: seedId(41), pendingOrder: seedId(42), payment: seedId(43), pendingPayment: seedId(44),
   invoice: seedId(45), shipment: seedId(46), reservation: seedId(47), batch: seedId(48),
-  role: seedId(50), admin: seedId(51), permission: seedId(52), inventoryPermission: seedId(53), reportingPermission: seedId(54),
+  role: seedId(50), admin: seedId(51), permission: seedId(52), inventoryPermission: seedId(53), reportingPermission: seedId(54), reviewsPermission: seedId(55), promotionsPermission: seedId(56),
   quiz: seedId(60), question: seedId(61), option: seedId(62), attempt: seedId(63), recommendation: seedId(64),
   citrusOpeningMovement: seedId(70), woodyOpeningMovement: seedId(71), paidOrderMovement: seedId(72),
   trackingEvent: seedId(73), paidOrderItem: seedId(80), pendingOrderItem: seedId(81),
+  approvedReview: seedId(90), pendingReview: seedId(91), loyaltyAccount: seedId(92), loyaltyEntry: seedId(93),
+  subscription: seedId(94), referralCode: seedId(95), referral: seedId(96), promotionalContent: seedId(97),
+  supportConversation: seedId(98), supportMessage: seedId(99), supportFeedback: seedId(100),
 } as const;
 
 const addressSnapshot = {
@@ -45,12 +48,16 @@ export async function seedCanonicalRecords(tx: Prisma.TransactionClient): Promis
   await tx.permission.upsert({ where: { id: ids.reportingPermission }, update: {}, create: {
     id: ids.reportingPermission, code: "reporting:read", description: "Read administrator reporting aggregates",
   } });
+  await tx.permission.upsert({ where: { id: ids.reviewsPermission }, update: {}, create: { id: ids.reviewsPermission, code: "reviews:moderate", description: "Moderate verified customer reviews" } });
+  await tx.permission.upsert({ where: { id: ids.promotionsPermission }, update: {}, create: { id: ids.promotionsPermission, code: "promotions:manage", description: "Manage promotions and promotional content" } });
   await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.permission } }, update: {},
     create: { roleId: ids.role, permissionId: ids.permission } });
   await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.inventoryPermission } }, update: {},
     create: { roleId: ids.role, permissionId: ids.inventoryPermission } });
   await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.reportingPermission } }, update: {},
     create: { roleId: ids.role, permissionId: ids.reportingPermission } });
+  await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.reviewsPermission } }, update: {}, create: { roleId: ids.role, permissionId: ids.reviewsPermission } });
+  await tx.rolePermission.upsert({ where: { roleId_permissionId: { roleId: ids.role, permissionId: ids.promotionsPermission } }, update: {}, create: { roleId: ids.role, permissionId: ids.promotionsPermission } });
   await tx.adminAccount.upsert({ where: { id: ids.admin }, update: {}, create: {
     id: ids.admin, email: "admin@example.test", name: "Demo Administrator", roleId: ids.role, createdAt: seedTime,
   } });
@@ -158,6 +165,21 @@ export async function seedCanonicalRecords(tx: Prisma.TransactionClient): Promis
   await tx.recommendationItem.upsert({ where: { runId_perfumeId: { runId: ids.recommendation, perfumeId: ids.perfume } }, update: {}, create: {
     runId: ids.recommendation, perfumeId: ids.perfume, rank: 1, explanation: "Synthetic deterministic example; no provider was called.",
   } });
+  await tx.review.upsert({ where: { customerId_perfumeId: { customerId: ids.customer, perfumeId: ids.perfume } }, update: {}, create: {
+    id: ids.approvedReview, customerId: ids.customer, perfumeId: ids.perfume, rating: 5, text: "Synthetic approved purchase review.", status: "APPROVED", moderatedById: ids.admin, moderatedAt: seedTime, createdAt: seedTime, updatedAt: seedTime,
+  } });
+  await tx.review.upsert({ where: { customerId_perfumeId: { customerId: ids.otherCustomer, perfumeId: ids.woodyPerfume } }, update: {}, create: {
+    id: ids.pendingReview, customerId: ids.otherCustomer, perfumeId: ids.woodyPerfume, rating: 4, text: "Synthetic pending moderation review.", status: "PENDING", createdAt: seedTime, updatedAt: seedTime,
+  } });
+  await tx.loyaltyAccount.upsert({ where: { customerId: ids.customer }, update: {}, create: { id: ids.loyaltyAccount, customerId: ids.customer, points: 100, createdAt: seedTime, updatedAt: seedTime } });
+  await tx.loyaltyLedgerEntry.upsert({ where: { identity: "seed:order-reward" }, update: {}, create: { id: ids.loyaltyEntry, accountId: ids.loyaltyAccount, type: "ORDER_REWARD", points: 100, identity: "seed:order-reward", orderId: ids.paidOrder, createdAt: seedTime } });
+  await tx.subscription.upsert({ where: { customerId: ids.customer }, update: {}, create: { id: ids.subscription, customerId: ids.customer, optedIn: true, optedInAt: seedTime, updatedAt: seedTime } });
+  await tx.referralCode.upsert({ where: { customerId: ids.customer }, update: {}, create: { id: ids.referralCode, customerId: ids.customer, code: "DEMOREF01", createdAt: seedTime } });
+  await tx.referral.upsert({ where: { referredCustomerId: ids.otherCustomer }, update: {}, create: { id: ids.referral, referrerCustomerId: ids.customer, referredCustomerId: ids.otherCustomer, createdAt: seedTime } });
+  await tx.promotionalContent.upsert({ where: { id: ids.promotionalContent }, update: {}, create: { id: ids.promotionalContent, title: "Synthetic launch preview", brief: "Approved synthetic assets only.", status: "APPROVED", provider: "AI_VIDEO", providerJobId: "seed-job", previewUrl: "https://example.test/synthetic-preview", reviewedById: ids.admin, reviewedAt: seedTime, createdAt: seedTime, updatedAt: seedTime } });
+  await tx.supportConversation.upsert({ where: { id: ids.supportConversation }, update: {}, create: { id: ids.supportConversation, customerId: ids.customer, expiresAt: new Date("2026-10-01T00:00:00.000Z"), createdAt: seedTime } });
+  await tx.supportMessage.upsert({ where: { id: ids.supportMessage }, update: {}, create: { id: ids.supportMessage, conversationId: ids.supportConversation, actor: "CUSTOMER", intent: "PRODUCT", content: "Synthetic fragrance question.", createdAt: seedTime } });
+  await tx.supportFeedback.upsert({ where: { id: ids.supportFeedback }, update: {}, create: { id: ids.supportFeedback, conversationId: ids.supportConversation, customerId: ids.customer, rating: 5, comment: "Synthetic feedback.", submittedAt: seedTime } });
 }
 
 /** Insert missing demo rows only. Existing business/history rows are never reset by re-seeding. */
