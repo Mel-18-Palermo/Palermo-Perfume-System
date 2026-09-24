@@ -174,6 +174,8 @@ export function paymentCases(db: PrismaClient): void {
         currency: "AUD",
         paymentReferenceSnapshot: initiated.providerReference,
       });
+      expect(await db.loyaltyLedgerEntry.count({ where: { identity: `order:${record.orderId}` } })).toBe(1);
+      expect(await db.loyaltyAccount.findUniqueOrThrow({ where: { customerId: ids.otherCustomer } })).toMatchObject({ points: 100 });
     });
 
     it("rejects forged signatures and mismatched provider references without state changes", async () => {
