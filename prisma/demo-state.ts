@@ -16,7 +16,7 @@ const expectedCounts = {
   perfumeVariant: 2, permission: 4, productionBatch: 1, profileFavouriteNote: 1, promotion: 0,
   quiz: 1, quizAttempt: 1, quizOption: 1, quizQuestion: 1, quizResponse: 1, recommendationItem: 1,
   recommendationRun: 1, rolePermission: 4, shipment: 1, suitabilityTag: 0, trackingEvent: 1,
-  wishlistItem: 0, review: 0,
+  wishlistItem: 0, review: 0, loyaltyAccount: 0, loyaltyLedgerEntry: 0, subscription: 0, referralCode: 0, referral: 0,
 };
 type DemoCounts = Readonly<Record<keyof typeof expectedCounts, number>>;
 
@@ -42,7 +42,8 @@ async function applicationCounts(db: PrismaClient): Promise<DemoCounts> {
     quizResponse: db.quizResponse, recommendationItem: db.recommendationItem,
     recommendationRun: db.recommendationRun, rolePermission: db.rolePermission, shipment: db.shipment,
     suitabilityTag: db.suitabilityTag, trackingEvent: db.trackingEvent, wishlistItem: db.wishlistItem,
-    review: db.review,
+    review: db.review, loyaltyAccount: db.loyaltyAccount, loyaltyLedgerEntry: db.loyaltyLedgerEntry,
+    subscription: db.subscription, referralCode: db.referralCode, referral: db.referral,
   } as unknown as Record<keyof typeof expectedCounts, { count(): Promise<number> }>;
   const entries = await Promise.all(Object.entries(delegates).map(async ([name, delegate]) =>
     [name, await delegate.count()] as const));
