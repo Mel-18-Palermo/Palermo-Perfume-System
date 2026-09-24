@@ -128,6 +128,15 @@ enum LoyaltyEntryType {
   REFERRAL_REWARD
 }
 
+enum PromotionalContentStatus {
+  DRAFT
+  GENERATED
+  PREVIEW
+  APPROVED
+  REJECTED
+  FAILED
+}
+
 model Customer {
   id                    String              @id @default(uuid()) @db.Uuid
   authUserId            String?             @unique @db.Uuid
@@ -249,6 +258,7 @@ model AdminAccount {
   batchesRecorded ProductionBatch[] @relation("BatchRecordedBy")
   batchesReleased ProductionBatch[] @relation("BatchReleasedBy")
   moderatedReviews Review[] @relation("ReviewModeratedBy")
+  reviewedPromotionalContent PromotionalContent[] @relation("PromotionalContentReviewedBy")
 
   @@index([roleId])
 }
@@ -480,6 +490,28 @@ model Promotion {
   activeUntil   DateTime?    @db.Timestamptz(3)
   carts         Cart[]
   orders        Order[]
+  content       PromotionalContent[]
+}
+
+model PromotionalContent {
+  id            String                   @id @default(uuid()) @db.Uuid
+  promotionId   String?                  @db.Uuid
+  title         String
+  brief         String
+  status        PromotionalContentStatus @default(DRAFT)
+  provider      String?
+  providerJobId String?
+  previewUrl    String?
+  failureCode   String?
+  reviewedById  String?                  @db.Uuid
+  reviewedAt    DateTime?                @db.Timestamptz(3)
+  createdAt     DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime                 @updatedAt @db.Timestamptz(3)
+  promotion     Promotion?               @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  reviewedBy    AdminAccount?            @relation("PromotionalContentReviewedBy", fields: [reviewedById], references: [id], onDelete: Restrict)
+
+  @@index([promotionId, status])
+  @@index([reviewedById])
 }
 
 model Review {
