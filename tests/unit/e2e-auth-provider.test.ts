@@ -20,8 +20,34 @@ describe("E2E identity provider guard", () => {
     expect(e2eIdentityProviderEnabled(safeEnvironment)).toBe(true);
   });
 
-  it("fails closed when the requested environment is unsafe", () => {
+  it("rejects production without the explicit production E2E server flag", () => {
     expect(() => e2eIdentityProviderEnabled({ ...safeEnvironment, NODE_ENV: "production" })).toThrow("safe local test");
+  });
+
+  it("allows an explicitly marked production E2E server with the safe database", () => {
+    expect(e2eIdentityProviderEnabled({
+      ...safeEnvironment,
+      NODE_ENV: "production",
+      PALERMO_E2E_PRODUCTION_SERVER: "1",
+    })).toBe(true);
+  });
+
+  it("rejects unsafe databases regardless of the production E2E server flag", () => {
+    expect(() => e2eIdentityProviderEnabled({
+      ...safeEnvironment,
+      NODE_ENV: "production",
+      PALERMO_E2E_PRODUCTION_SERVER: "1",
+      DATABASE_URL: "postgresql://db.example.com:5432/palermo?schema=palermo_test",
+    })).toThrow("safe local test");
+    expect(() => e2eIdentityProviderEnabled({
+      ...safeEnvironment,
+      NODE_ENV: "production",
+      PALERMO_E2E_PRODUCTION_SERVER: "1",
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/palermo?schema=public",
+    })).toThrow("safe local test");
+  });
+
+  it("fails closed when the requested environment is unsafe", () => {
     expect(() => e2eIdentityProviderEnabled({ ...safeEnvironment, PALERMO_DATABASE_ENV: "production" })).toThrow("safe local test");
     expect(() => e2eIdentityProviderEnabled({ ...safeEnvironment, PALERMO_DATABASE_ENV: "preview" })).toThrow("safe local test");
     expect(() => e2eIdentityProviderEnabled({ ...safeEnvironment, DATABASE_URL: "postgresql://db.example.com:5432/palermo?schema=palermo_test" })).toThrow("safe local test");

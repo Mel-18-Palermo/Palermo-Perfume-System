@@ -12,7 +12,7 @@ export default defineConfig({
   workers: 1,
   use: { baseURL: "http://localhost:3100", browserName: "chromium", trace: "retain-on-failure" },
   webServer: {
-    command: "pnpm exec next dev --webpack --port 3100",
+    command: "pnpm exec next start --port 3100",
     url: "http://localhost:3100/api/health",
     reuseExistingServer: false,
     timeout: 120_000,
@@ -21,8 +21,9 @@ export default defineConfig({
       DIRECT_URL: databaseUrl,
       PALERMO_DATABASE_ENV: "development",
       PALERMO_E2E_AUTH: "1",
+      PALERMO_E2E_PRODUCTION_SERVER: "1",
       NEXT_TELEMETRY_DISABLED: "1",
-      NODE_ENV: "development",
+      NODE_ENV: "production",
     },
   },
 });

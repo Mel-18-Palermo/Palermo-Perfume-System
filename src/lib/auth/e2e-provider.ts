@@ -25,7 +25,9 @@ export function e2eIdentityProviderEnabled(environment: NodeJS.ProcessEnv = proc
     }
   }
 
-  const safe = environment["NODE_ENV"] !== "production"
+  const productionServerIsExplicitlyAllowed = environment["NODE_ENV"] !== "production"
+    || environment["PALERMO_E2E_PRODUCTION_SERVER"] === "1";
+  const safe = productionServerIsExplicitlyAllowed
     && environment["PALERMO_DATABASE_ENV"] === "development"
     && databaseIsSafe;
   if (!safe) throw new Error("E2E identity provider was requested outside its safe local test environment.");
