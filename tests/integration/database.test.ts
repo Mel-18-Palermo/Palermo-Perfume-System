@@ -21,6 +21,7 @@ import { reportingCases } from "./reporting-cases";
 import { deliveryCases } from "./delivery-cases";
 import { cataloguePopulationCases } from "./catalogue-population-cases";
 import { reviewCases } from "./review-cases";
+import { loyaltyCases } from "./loyalty-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -34,6 +35,7 @@ profileCases(db);
 wishlistCases(db);
 availabilityCases(db);
 reviewCases(db);
+loyaltyCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
@@ -171,6 +173,17 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
     await rejectsConstraint('INSERT INTO "Review" (id,"customerId","perfumeId",rating,text,"updatedAt") VALUES ($1,$2,$3,5,$4,now())', [seedId(909), ids.customer, ids.perfume, "Duplicate review"], "23505");
     await rejectsConstraint('UPDATE "Review" SET rating=0 WHERE id=$1', [reviewId], "23514");
     await rejectsConstraint('UPDATE "Review" SET status=$1, "moderatedById"=NULL, "moderatedAt"=NULL WHERE id=$2', ["APPROVED", reviewId], "23514");
+  });
+  it("requires subscription timestamps to match the opt-in state", async () => {
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","optedInAt","updatedAt") VALUES ($1,$2,true,NULL,now())', [seedId(921), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","optedInAt","optedOutAt","updatedAt") VALUES ($1,$2,true,now(),now(),now())', [seedId(922), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","updatedAt") VALUES ($1,$2,false,now())', [seedId(923), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","optedInAt","updatedAt") VALUES ($1,$2,false,now(),now())', [seedId(924), ids.customer], "23514");
+  });
+  it("requires referrals to have distinct customers and paired qualification metadata", async () => {
+    await rejectsConstraint('INSERT INTO "Referral" (id,"referrerCustomerId","referredCustomerId") VALUES ($1,$2,$2)', [seedId(925), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Referral" (id,"referrerCustomerId","referredCustomerId","qualifyingOrderId") VALUES ($1,$2,$3,$4)', [seedId(926), ids.otherCustomer, ids.customer, ids.paidOrder], "23514");
+    await rejectsConstraint('INSERT INTO "Referral" (id,"referrerCustomerId","referredCustomerId","qualifiedAt") VALUES ($1,$2,$3,now())', [seedId(927), ids.otherCustomer, ids.customer], "23514");
   });
 });
 

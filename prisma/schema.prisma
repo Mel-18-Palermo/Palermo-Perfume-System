@@ -123,6 +123,11 @@ enum ReviewStatus {
   REMOVED
 }
 
+enum LoyaltyEntryType {
+  ORDER_REWARD
+  REFERRAL_REWARD
+}
+
 model Customer {
   id                    String              @id @default(uuid()) @db.Uuid
   authUserId            String?             @unique @db.Uuid
@@ -144,6 +149,11 @@ model Customer {
   sessions              IdentitySession[]
   wishlistItems         WishlistItem[]
   reviews               Review[]
+  loyaltyAccount        LoyaltyAccount?
+  subscription          Subscription?
+  referralCode          ReferralCode?
+  referralsMade         Referral[]          @relation("ReferralReferrer")
+  referralReceived      Referral?           @relation("ReferralReferred")
 }
 
 model Address {
@@ -492,6 +502,67 @@ model Review {
   @@index([moderatedById])
 }
 
+model LoyaltyAccount {
+  id         String               @id @default(uuid()) @db.Uuid
+  customerId String               @unique @db.Uuid
+  points     Int                  @default(0)
+  createdAt  DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime             @updatedAt @db.Timestamptz(3)
+  customer   Customer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  entries    LoyaltyLedgerEntry[]
+}
+
+model LoyaltyLedgerEntry {
+  id         String           @id @default(uuid()) @db.Uuid
+  accountId  String           @db.Uuid
+  type       LoyaltyEntryType
+  points     Int
+  identity   String           @unique
+  orderId    String?          @db.Uuid
+  referralId String?          @db.Uuid
+  createdAt  DateTime         @default(now()) @db.Timestamptz(3)
+  account    LoyaltyAccount   @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  order      Order?           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  referral   Referral?        @relation(fields: [referralId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, createdAt])
+  @@index([orderId])
+  @@index([referralId])
+}
+
+model Subscription {
+  id         String    @id @default(uuid()) @db.Uuid
+  customerId String    @unique @db.Uuid
+  optedIn    Boolean
+  optedInAt  DateTime? @db.Timestamptz(3)
+  optedOutAt DateTime? @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+}
+
+model ReferralCode {
+  id         String   @id @default(uuid()) @db.Uuid
+  customerId String   @unique @db.Uuid
+  code       String   @unique
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+}
+
+model Referral {
+  id                 String               @id @default(uuid()) @db.Uuid
+  referrerCustomerId String               @db.Uuid
+  referredCustomerId String               @unique @db.Uuid
+  qualifyingOrderId  String?              @unique @db.Uuid
+  qualifiedAt        DateTime?            @db.Timestamptz(3)
+  createdAt          DateTime             @default(now()) @db.Timestamptz(3)
+  referrer           Customer             @relation("ReferralReferrer", fields: [referrerCustomerId], references: [id], onDelete: Restrict)
+  referred           Customer             @relation("ReferralReferred", fields: [referredCustomerId], references: [id], onDelete: Restrict)
+  qualifyingOrder    Order?               @relation(fields: [qualifyingOrderId], references: [id], onDelete: Restrict)
+  ledgerEntries      LoyaltyLedgerEntry[]
+
+  @@index([referrerCustomerId, createdAt])
+}
+
 model Cart {
   id                String     @id @default(uuid()) @db.Uuid
   customerId        String?    @db.Uuid
@@ -562,6 +633,8 @@ model Order {
   invoice                 Invoice?
   shipment                Shipment?
   reservations            InventoryReservation[]
+  loyaltyEntries          LoyaltyLedgerEntry[]
+  qualifyingReferral      Referral?
 
   @@unique([customerId, idempotencyKey])
   @@index([customerId, placedAt])
