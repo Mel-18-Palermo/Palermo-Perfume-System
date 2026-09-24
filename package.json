@@ -11,6 +11,13 @@
     "typecheck": "prisma generate && next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:db": "vitest run --config vitest.db.config.ts",
+    "e2e:reset": "tsx tests/e2e/reset-db.ts",
+    "e2e:migrate": "tsx tests/e2e/migrate.ts",
+    "e2e:seed": "tsx tests/e2e/seed.ts",
+    "e2e:clean": "node tests/e2e/clean-artifacts.mjs",
+    "e2e:customer": "pnpm e2e:clean && playwright test tests/e2e/customer-critical-journey.spec.ts",
+    "e2e:admin": "pnpm e2e:clean && playwright test tests/e2e/admin-critical-journey.spec.ts",
+    "test:e2e": "pnpm db:generate && pnpm e2e:reset && pnpm e2e:migrate && pnpm e2e:seed && pnpm e2e:customer && pnpm e2e:admin",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
@@ -52,6 +59,7 @@
     "tailwindcss": "4.3.3",
     "tsx": "4.23.13",
     "typescript": "6.0.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "playwright": "1.63.0"
   }
 }
