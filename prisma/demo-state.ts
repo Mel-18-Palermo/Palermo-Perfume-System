@@ -4,7 +4,7 @@ import { ids, seedTime } from "./seed-data";
 
 export const demoCustomerEmail = "customer@example.test";
 export const demoAdminEmail = "admin@example.test";
-export const demoPermissions = ["catalogue:manage", "inventory:manage", "reporting:read"] as const;
+export const demoPermissions = ["catalogue:manage", "inventory:manage", "promotions:manage", "reporting:read", "reviews:moderate"] as const;
 export type DemoAuthIds = Readonly<{ customer: string; admin: string }>;
 
 const expectedCounts = {
@@ -13,10 +13,12 @@ const expectedCounts = {
   fragranceIdentity: 1, fragranceNote: 2, fragranceProfile: 1, identitySession: 0, intensity: 1,
   inventoryBalance: 2, inventoryMovement: 3, inventoryReservation: 1, invoice: 1, order: 2,
   orderItem: 2, payment: 2, perfume: 2, perfumeImage: 2, perfumeNote: 2, perfumeSuitability: 0,
-  perfumeVariant: 2, permission: 3, productionBatch: 1, profileFavouriteNote: 1, promotion: 0,
+  perfumeVariant: 2, permission: 5, productionBatch: 1, profileFavouriteNote: 1, promotion: 0,
   quiz: 1, quizAttempt: 1, quizOption: 1, quizQuestion: 1, quizResponse: 1, recommendationItem: 1,
-  recommendationRun: 1, rolePermission: 3, shipment: 1, suitabilityTag: 0, trackingEvent: 1,
+  recommendationRun: 1, rolePermission: 5, shipment: 1, suitabilityTag: 0, trackingEvent: 1,
   wishlistItem: 0,
+  review: 2, loyaltyAccount: 1, loyaltyLedgerEntry: 1, subscription: 1, referralCode: 1, referral: 1,
+  promotionalContent: 1, supportConversation: 1, supportMessage: 1, supportFeedback: 1,
 };
 type DemoCounts = Readonly<Record<keyof typeof expectedCounts, number>>;
 
@@ -42,6 +44,10 @@ async function applicationCounts(db: PrismaClient): Promise<DemoCounts> {
     quizResponse: db.quizResponse, recommendationItem: db.recommendationItem,
     recommendationRun: db.recommendationRun, rolePermission: db.rolePermission, shipment: db.shipment,
     suitabilityTag: db.suitabilityTag, trackingEvent: db.trackingEvent, wishlistItem: db.wishlistItem,
+    review: db.review, loyaltyAccount: db.loyaltyAccount, loyaltyLedgerEntry: db.loyaltyLedgerEntry,
+    subscription: db.subscription, referralCode: db.referralCode, referral: db.referral,
+    promotionalContent: db.promotionalContent, supportConversation: db.supportConversation,
+    supportMessage: db.supportMessage, supportFeedback: db.supportFeedback,
   } as unknown as Record<keyof typeof expectedCounts, { count(): Promise<number> }>;
   const entries = await Promise.all(Object.entries(delegates).map(async ([name, delegate]) =>
     [name, await delegate.count()] as const));
