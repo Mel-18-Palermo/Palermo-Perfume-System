@@ -116,6 +116,13 @@ enum RecommendationStatus {
   FAILED
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  HIDDEN
+  REMOVED
+}
+
 model Customer {
   id                    String              @id @default(uuid()) @db.Uuid
   authUserId            String?             @unique @db.Uuid
@@ -136,6 +143,7 @@ model Customer {
   recommendations       RecommendationRun[]
   sessions              IdentitySession[]
   wishlistItems         WishlistItem[]
+  reviews               Review[]
 }
 
 model Address {
@@ -230,6 +238,7 @@ model AdminAccount {
   webAuthnChallenges WebAuthnChallenge[]
   batchesRecorded ProductionBatch[] @relation("BatchRecordedBy")
   batchesReleased ProductionBatch[] @relation("BatchReleasedBy")
+  moderatedReviews Review[] @relation("ReviewModeratedBy")
 
   @@index([roleId])
 }
@@ -334,6 +343,7 @@ model Perfume {
   collections     CollectionPerfume[]
   recommendations RecommendationItem[]
   wishlistItems  WishlistItem[]
+  reviews        Review[]
 
   @@index([primaryFamilyId, status])
   @@index([intensityId])
@@ -460,6 +470,26 @@ model Promotion {
   activeUntil   DateTime?    @db.Timestamptz(3)
   carts         Cart[]
   orders        Order[]
+}
+
+model Review {
+  id            String        @id @default(uuid()) @db.Uuid
+  customerId    String        @db.Uuid
+  perfumeId     String        @db.Uuid
+  rating        Int
+  text          String
+  status        ReviewStatus  @default(PENDING)
+  moderatedById String?       @db.Uuid
+  moderatedAt   DateTime?     @db.Timestamptz(3)
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime      @updatedAt @db.Timestamptz(3)
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  perfume       Perfume       @relation(fields: [perfumeId], references: [id], onDelete: Restrict)
+  moderatedBy   AdminAccount? @relation("ReviewModeratedBy", fields: [moderatedById], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, perfumeId])
+  @@index([perfumeId, status, createdAt])
+  @@index([moderatedById])
 }
 
 model Cart {

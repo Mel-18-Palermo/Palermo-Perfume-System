@@ -20,6 +20,7 @@ import { availabilityCases } from "./availability-cases";
 import { reportingCases } from "./reporting-cases";
 import { deliveryCases } from "./delivery-cases";
 import { cataloguePopulationCases } from "./catalogue-population-cases";
+import { reviewCases } from "./review-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -32,6 +33,7 @@ cartCases(db);
 profileCases(db);
 wishlistCases(db);
 availabilityCases(db);
+reviewCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
@@ -58,6 +60,7 @@ async function rejectsConstraint(sql: string, values: readonly unknown[], code: 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await client.query("SET LOCAL search_path = palermo_test");
     await expect(client.query(sql, [...values])).rejects.toMatchObject({ code });
   } finally { await client.query("ROLLBACK"); client.release(); }
 }
@@ -152,6 +155,22 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
   it("keeps quiz responses linked to the correct question and quiz", async () => {
     await rejectsConstraint('UPDATE "QuizResponse" SET "questionId"=$1 WHERE "attemptId"=$2', [seedId(999), ids.attempt], "23503");
     await rejectsConstraint('UPDATE "RecommendationItem" SET rank=0 WHERE "runId"=$1', [ids.recommendation], "23514");
+  });
+  it("enforces review uniqueness, ratings, and moderation metadata", async () => {
+    const reviewId = seedId(920);
+    await db.review.create({
+      data: {
+        id: reviewId,
+        customerId: ids.customer,
+        perfumeId: ids.perfume,
+        rating: 5,
+        text: "Synthetic constraint-test review",
+      },
+    });
+    await seedCore(db);
+    await rejectsConstraint('INSERT INTO "Review" (id,"customerId","perfumeId",rating,text,"updatedAt") VALUES ($1,$2,$3,5,$4,now())', [seedId(909), ids.customer, ids.perfume, "Duplicate review"], "23505");
+    await rejectsConstraint('UPDATE "Review" SET rating=0 WHERE id=$1', [reviewId], "23514");
+    await rejectsConstraint('UPDATE "Review" SET status=$1, "moderatedById"=NULL, "moderatedAt"=NULL WHERE id=$2', ["APPROVED", reviewId], "23514");
   });
 });
 
