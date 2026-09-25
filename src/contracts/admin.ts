@@ -1,5 +1,7 @@
 import type { Endpoint, EntityId, MoneyValue, Option, Page, PageRequest, Revision, Timestamp } from "./common";
 import type { FragranceNoteSummary, NoteAssignment, PerfumeDetail, PerfumeVariantSummary, SuitabilitySummary } from "./catalogue";
+import type { PromotionsAdminApi } from "./promotions";
+import type { ReviewModeration } from "./reviews";
 
 export type ReportingPeriod = Readonly<{ from: Timestamp; to: Timestamp }>;
 export type Dashboard = Readonly<{
@@ -49,4 +51,5 @@ export type AdminApi = Readonly<{
     readonly productionDate: Timestamp; readonly idempotencyKey: string;
   }, ProductionBatch>;
   releaseBatch: Endpoint<{ readonly id: EntityId; readonly idempotencyKey: string }, ProductionBatch>;
-}>;
+  moderateReview: Endpoint<ReviewModeration, null>;
+}> & PromotionsAdminApi;
