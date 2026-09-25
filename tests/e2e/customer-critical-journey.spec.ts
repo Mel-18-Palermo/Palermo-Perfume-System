@@ -70,7 +70,7 @@ test("support uses the real public and customer support boundaries", async ({ pa
   await page.goto("/support");
   await expect(page.getByRole("heading", { name: "Ask the fragrance concierge", exact: true })).toBeVisible();
   await expect(page.getByText(/cannot issue refunds, take payments, change orders/)).toBeVisible();
-  await expect(page.getByText("Public support")).toBeVisible();
+  await expect(page.getByText("Public support", { exact: true })).toBeVisible();
   await page.getByLabel("Your message").fill("Please explain fragrance concentration.");
   await page.getByRole("button", { name: "Ask the concierge" }).click();
   await expect(page.getByRole("heading", { name: "The concierge could not respond", exact: true })).toBeVisible();
