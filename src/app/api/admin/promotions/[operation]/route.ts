@@ -6,12 +6,23 @@ import { getIdentityService } from "@/lib/auth/runtime";
 import { failure } from "@/lib/api/result";
 import { getPromotionalContentService } from "@/modules/promotions/content/runtime";
 import type { PromotionInput } from "@/modules/promotions/content/service";
+import type { PromotionActor } from "@/modules/promotions/content/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const statuses: Readonly<Record<string, number>> = { VALIDATION_ERROR: 400, UNAUTHENTICATED: 401, FORBIDDEN: 403, NOT_FOUND: 404, CONFLICT: 409, TEMPORARILY_UNAVAILABLE: 503, INTEGRATION_ERROR: 502 };
 const response = (result: { readonly ok: boolean; readonly error?: { readonly code: string } }): Response => NextResponse.json(result, { status: result.ok ? 200 : (statuses[result.error?.code ?? ""] ?? 500), headers: { "cache-control": "no-store" } });
+
+async function manager(request: Request): Promise<{ readonly ok: true; readonly actor: PromotionActor } | { readonly ok: false; readonly response: Response }> {
+  try {
+    const principal = await getIdentityService().requirePermission(readSessionCookie(request), "promotions:manage");
+    return { ok: true, actor: { adminId: principal.user.id, permissions: principal.permissions } };
+  } catch (error) {
+    const fault = error instanceof AuthFault ? error : new AuthFault("TEMPORARILY_UNAVAILABLE", "The account service is temporarily unavailable.");
+    return { ok: false, response: response(failure(fault.code)) };
+  }
+}
 
 function promotion(value: Record<string, unknown>): PromotionInput | null {
   if (typeof value["code"] !== "string" || (value["discountType"] !== "FIXED" && value["discountType"] !== "PERCENTAGE") || typeof value["discountValue"] !== "number" || typeof value["active"] !== "boolean") return null;
@@ -37,16 +48,30 @@ function promotion(value: Record<string, unknown>): PromotionInput | null {
   };
 }
 
+export async function GET(request: Request, context: { params: Promise<{ operation: string }> }): Promise<Response> {
+  const authorization = await manager(request);
+  if (!authorization.ok) return authorization.response;
+  const operation = (await context.params).operation;
+  const query = new URL(request.url).searchParams;
+  const page = {
+    ...(query.has("page") ? { page: Number(query.get("page")) } : {}),
+    ...(query.has("pageSize") ? { pageSize: Number(query.get("pageSize")) } : {}),
+  };
+  const service = getPromotionalContentService();
+  if (operation === "list-promotions") return response(await service.listPromotions(authorization.actor, page));
+  if (operation === "list-content") return response(await service.listContent(authorization.actor, page));
+  return response(failure("NOT_FOUND"));
+}
+
 export async function POST(request: Request, context: { params: Promise<{ operation: string }> }): Promise<Response> {
   if (request.headers.get("origin") !== new URL(request.url).origin) return response(failure("FORBIDDEN"));
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return response(failure("VALIDATION_ERROR"));
-  let principal;
-  try { principal = await getIdentityService().requirePermission(readSessionCookie(request), "promotions:manage"); }
-  catch (error) { const fault = error instanceof AuthFault ? error : new AuthFault("TEMPORARILY_UNAVAILABLE", "The account service is temporarily unavailable."); return response(failure(fault.code)); }
+  const authorization = await manager(request);
+  if (!authorization.ok) return authorization.response;
   let input: unknown;
   try { input = await request.json(); } catch { return response(failure("VALIDATION_ERROR")); }
   const value = typeof input === "object" && input !== null && !Array.isArray(input) ? input as Record<string, unknown> : {};
-  const actor = { adminId: principal.user.id, permissions: principal.permissions };
+  const actor = authorization.actor;
   const operation = (await context.params).operation;
   const service = getPromotionalContentService();
   if (operation === "create-promotion" || operation === "update-promotion") {

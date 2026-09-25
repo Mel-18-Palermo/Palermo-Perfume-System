@@ -35,6 +35,19 @@ export function promotionalContentCases(db: PrismaClient): void {
       expect(await db.promotionalContent.findUniqueOrThrow({ where: { id: created.data.id } })).toMatchObject({ status: "APPROVED", reviewedById: ids.admin, reviewedAt: new Date("2026-09-24T12:00:00Z") });
     });
 
+    it("returns authorised paginated promotion and content read models", async () => {
+      const service = new PromotionalContentService(db, workingProvider);
+      const promotion = await service.createPromotion(manager, { ...promotionInput("READ-401"), activeFrom: new Date("2026-10-01T00:00:00Z"), eligibility: { channel: "WEB" } });
+      if (!promotion.ok) throw new Error("promotion creation failed");
+      const content = await service.create(manager, { title: "Read model", brief: "Visible persisted state.", promotionId: promotion.data.id });
+      if (!content.ok) throw new Error("promotional content creation failed");
+      expect(await service.generate(manager, content.data.id)).toMatchObject({ ok: true });
+      expect(await service.listPromotions(unprivileged, {})).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+      expect(await service.listContent(manager, { pageSize: 101 })).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } });
+      expect(await service.listPromotions(manager, { page: 1, pageSize: 10 })).toMatchObject({ ok: true, data: { page: 1, pageSize: 10, hasMore: false, items: [{ id: promotion.data.id, code: "READ-401", activeFrom: "2026-10-01T00:00:00.000Z", eligibility: { channel: "WEB" } }] } });
+      expect(await service.listContent(manager, { page: 1, pageSize: 10 })).toMatchObject({ ok: true, data: { page: 1, pageSize: 10, hasMore: false, items: [{ id: content.data.id, promotionId: promotion.data.id, status: "PREVIEW", previewUrl: "https://video.example.test/previews/1", failureCode: null, reviewedAt: null }] } });
+    });
+
     it("records rejection only after a preview and denies unauthorised content management", async () => {
       const service = new PromotionalContentService(db, workingProvider);
       expect(await service.create(unprivileged, { title: "Denied", brief: "Denied." })).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });

@@ -38,14 +38,17 @@ describe("final service HTTP clients", () => {
     expect(calls[0]?.init?.credentials).toBe("same-origin");
   });
 
-  it("keeps moderation and promotion mutations on administrator routes", async () => {
+  it("keeps moderation and promotion reads and mutations on administrator routes", async () => {
     const calls: RecordedCall[] = [];
     const admin = createAdminHttpClient(recordingFetcher(calls));
 
+    await admin.listReviews({ page: 1, pageSize: 10 });
     await admin.moderateReview({
       reviewId: "27500000-0000-4000-8000-000000000002",
       status: "APPROVED",
     });
+    await admin.listPromotions({ page: 1, pageSize: 10 });
+    await admin.listPromotionalContent({ page: 1, pageSize: 10 });
     await admin.createPromotion({
       code: "SPRING25",
       discountType: "PERCENTAGE",
@@ -65,13 +68,16 @@ describe("final service HTTP clients", () => {
     });
 
     expect(calls.map(call => call.url)).toEqual([
+      "/api/admin/reviews/list?page=1&pageSize=10",
       "/api/admin/reviews/moderate",
+      "/api/admin/promotions/list-promotions?page=1&pageSize=10",
+      "/api/admin/promotions/list-content?page=1&pageSize=10",
       "/api/admin/promotions/create-promotion",
       "/api/admin/promotions/create-content",
       "/api/admin/promotions/generate-content",
       "/api/admin/promotions/review-content",
     ]);
-    expect(calls.every(call => call.init?.method === "POST")).toBe(true);
+    expect(calls.map(call => call.init?.method)).toEqual(["GET", "POST", "GET", "GET", "POST", "POST", "POST", "POST"]);
   });
 
   it("returns safe failures for malformed or unavailable transports", async () => {

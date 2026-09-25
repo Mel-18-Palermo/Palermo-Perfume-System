@@ -13,6 +13,8 @@ import type {
   PageRequest,
 } from "../../contracts/common";
 import type { PerfumeVariantSummary } from "../../contracts/catalogue";
+import type { PromotionRecord, PromotionalContentRecord } from "../../contracts/promotions";
+import type { ReviewModerationRecord } from "../../contracts/reviews";
 
 function result<T>(value: unknown): value is ApiResult<T> {
   return typeof value === "object"
@@ -99,10 +101,10 @@ export function createAdminHttpClient(
       fetcher,
     );
 
-  const reviews = <T>(operation: string, input: unknown) =>
+  const reviews = <T>(operation: string, input?: unknown) =>
     call<T>(`/api/admin/reviews/${operation}`, input, fetcher);
 
-  const promotions = <T>(operation: string, input: unknown) =>
+  const promotions = <T>(operation: string, input?: unknown) =>
     call<T>(`/api/admin/promotions/${operation}`, input, fetcher);
 
   return {
@@ -165,8 +167,17 @@ export function createAdminHttpClient(
         input,
       ),
 
+    listReviews: input =>
+      reviews<Page<ReviewModerationRecord>>(`list${pageQuery(input)}`),
+
     moderateReview: input =>
       reviews<null>("moderate", input),
+
+    listPromotions: input =>
+      promotions<Page<PromotionRecord>>(`list-promotions${pageQuery(input)}`),
+
+    listPromotionalContent: input =>
+      promotions<Page<PromotionalContentRecord>>(`list-content${pageQuery(input)}`),
 
     createPromotion: input =>
       promotions<{ readonly id: string }>("create-promotion", input),
