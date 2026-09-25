@@ -1,4 +1,5 @@
-import type { ApiResult } from "../../../contracts/common";
+import type { ApiResult, Page, PageRequest } from "../../../contracts/common";
+import type { JsonValue, PromotionRecord, PromotionalContentRecord } from "../../../contracts/promotions";
 import { failure, success } from "../../../lib/api/result";
 import type { DiscountType, Prisma, PrismaClient, PromotionalContentStatus } from "../../../lib/db/generated/client";
 
@@ -39,8 +40,53 @@ function providerPreview(value: unknown): Readonly<{ jobId: string; previewUrl: 
     : null;
 }
 
+function pagination(request: PageRequest): Readonly<{ page: number; pageSize: number }> | null {
+  const page = request.page ?? 1;
+  const pageSize = request.pageSize ?? 20;
+  return Number.isSafeInteger(page) && page >= 1 && Number.isSafeInteger(pageSize) && pageSize >= 1 && pageSize <= 100
+    ? { page, pageSize }
+    : null;
+}
+
+function transportJson(value: Prisma.JsonValue | undefined): JsonValue {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  if (Array.isArray(value)) return value.map(transportJson);
+  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, transportJson(entry)]));
+}
+
 export class PromotionalContentService {
   constructor(private readonly db: PrismaClient, private readonly provider: PromotionalVideoProvider, private readonly now: () => Date = () => new Date()) {}
+
+  async listPromotions(actor: PromotionActor, request: PageRequest): Promise<ApiResult<Page<PromotionRecord>>> {
+    if (!canManage(actor)) return failure("FORBIDDEN");
+    const paging = pagination(request);
+    if (!paging) return failure("VALIDATION_ERROR");
+    const [promotions, total] = await Promise.all([
+      this.db.promotion.findMany({ orderBy: [{ code: "asc" }, { id: "asc" }], skip: (paging.page - 1) * paging.pageSize, take: paging.pageSize }),
+      this.db.promotion.count(),
+    ]);
+    return success({
+      items: promotions.map(promotion => ({ ...promotion, eligibility: transportJson(promotion.eligibility), activeFrom: promotion.activeFrom?.toISOString() ?? null, activeUntil: promotion.activeUntil?.toISOString() ?? null })),
+      ...paging,
+      hasMore: paging.page * paging.pageSize < total,
+    });
+  }
+
+  async listContent(actor: PromotionActor, request: PageRequest): Promise<ApiResult<Page<PromotionalContentRecord>>> {
+    if (!canManage(actor)) return failure("FORBIDDEN");
+    const paging = pagination(request);
+    if (!paging) return failure("VALIDATION_ERROR");
+    const [content, total] = await Promise.all([
+      this.db.promotionalContent.findMany({ orderBy: [{ createdAt: "desc" }, { id: "asc" }], skip: (paging.page - 1) * paging.pageSize, take: paging.pageSize }),
+      this.db.promotionalContent.count(),
+    ]);
+    return success({
+      items: content.map(item => ({ id: item.id, promotionId: item.promotionId, title: item.title, brief: item.brief, status: item.status, provider: item.provider, previewUrl: item.previewUrl, failureCode: item.failureCode, reviewedAt: item.reviewedAt?.toISOString() ?? null, createdAt: item.createdAt.toISOString(), updatedAt: item.updatedAt.toISOString() })),
+      ...paging,
+      hasMore: paging.page * paging.pageSize < total,
+    });
+  }
 
   async createPromotion(actor: PromotionActor, input: PromotionInput): Promise<ApiResult<{ id: string }>> {
     if (!canManage(actor)) return failure("FORBIDDEN");

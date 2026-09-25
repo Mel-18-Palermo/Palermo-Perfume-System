@@ -1,4 +1,5 @@
-import type { ApiResult } from "../../../contracts/common";
+import type { ApiResult, Page, PageRequest } from "../../../contracts/common";
+import type { ReviewModerationRecord } from "../../../contracts/reviews";
 import { failure, success } from "../../../lib/api/result";
 import type { PrismaClient, ReviewStatus } from "../../../lib/db/generated/client";
 
@@ -10,6 +11,7 @@ const id = /^[0-9a-f-]{10,64}$/i;
 const reviewText = /^.{1,1000}$/s;
 const moderatorStatuses: readonly ReviewStatus[] = ["APPROVED", "HIDDEN", "REMOVED"];
 const unique = (error: unknown) => typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+const canModerate = (actor: ReviewModerator) => id.test(actor.adminId) && actor.permissions.includes("reviews:moderate");
 
 function validInput(input: ReviewInput): boolean {
   return id.test(input.perfumeId) && Number.isInteger(input.rating) && input.rating >= 1 && input.rating <= 5
@@ -47,8 +49,30 @@ export class ReviewService {
     return success(reviews.map(review => ({ ...review, createdAt: review.createdAt.toISOString() })));
   }
 
+  async listForModeration(actor: ReviewModerator, request: PageRequest): Promise<ApiResult<Page<ReviewModerationRecord>>> {
+    if (!canModerate(actor)) return failure("FORBIDDEN");
+    const page = request.page ?? 1;
+    const pageSize = request.pageSize ?? 20;
+    if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100) return failure("VALIDATION_ERROR");
+    const [reviews, total] = await Promise.all([
+      this.db.review.findMany({
+        select: { id: true, rating: true, text: true, status: true, createdAt: true, updatedAt: true, moderatedAt: true, perfume: { select: { id: true, name: true } } },
+        orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.db.review.count(),
+    ]);
+    return success({
+      items: reviews.map(review => ({ ...review, createdAt: review.createdAt.toISOString(), updatedAt: review.updatedAt.toISOString(), moderatedAt: review.moderatedAt?.toISOString() ?? null })),
+      page,
+      pageSize,
+      hasMore: page * pageSize < total,
+    });
+  }
+
   async moderate(actor: ReviewModerator, reviewId: string, status: ReviewStatus): Promise<ApiResult<null>> {
-    if (!id.test(actor.adminId) || !actor.permissions.includes("reviews:moderate")) return failure("FORBIDDEN");
+    if (!canModerate(actor)) return failure("FORBIDDEN");
     if (!id.test(reviewId) || !moderatorStatuses.includes(status)) return failure("VALIDATION_ERROR");
     const changed = await this.db.review.updateMany({ where: { id: reviewId }, data: { status, moderatedById: actor.adminId, moderatedAt: this.now() } });
     return changed.count === 1 ? success(null) : failure("NOT_FOUND");

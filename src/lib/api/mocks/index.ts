@@ -358,7 +358,10 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         batchReleased = true;
         return success({ ...fixtures.batch, status: "RELEASED", releasedAt: fixtures.FIXTURE_TIME });
       }),
+      listReviews: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
       moderateReview: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      listPromotions: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      listPromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
       createPromotion: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
       updatePromotion: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
       createPromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),

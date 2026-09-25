@@ -1,4 +1,4 @@
-import type { Endpoint, EntityId, Timestamp } from "./common";
+import type { Endpoint, EntityId, Page, PageRequest, Timestamp } from "./common";
 
 export type JsonValue =
   | null
@@ -34,7 +34,35 @@ export type PromotionalContentReview = Readonly<{
   status: "APPROVED" | "REJECTED";
 }>;
 
+export type PromotionRecord = PromotionInput & Readonly<{
+  id: EntityId;
+}>;
+
+export type PromotionalContentStatus =
+  | "DRAFT"
+  | "GENERATED"
+  | "PREVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "FAILED";
+
+export type PromotionalContentRecord = Readonly<{
+  id: EntityId;
+  promotionId: EntityId | null;
+  title: string;
+  brief: string;
+  status: PromotionalContentStatus;
+  provider: string | null;
+  previewUrl: string | null;
+  failureCode: string | null;
+  reviewedAt: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}>;
+
 export type PromotionsAdminApi = Readonly<{
+  listPromotions: Endpoint<PageRequest, Page<PromotionRecord>>;
+  listPromotionalContent: Endpoint<PageRequest, Page<PromotionalContentRecord>>;
   createPromotion: Endpoint<PromotionInput, { readonly id: EntityId }>;
   updatePromotion: Endpoint<PromotionUpdate, null>;
   createPromotionalContent: Endpoint<PromotionalContentInput, { readonly id: EntityId }>;

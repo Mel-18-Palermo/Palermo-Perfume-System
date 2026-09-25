@@ -26,6 +26,17 @@ export type ReviewModeration = Readonly<{
   status: Extract<ReviewStatus, "APPROVED" | "HIDDEN" | "REMOVED">;
 }>;
 
+export type ReviewModerationRecord = Readonly<{
+  id: EntityId;
+  perfume: Readonly<{ id: EntityId; name: string }>;
+  rating: number;
+  text: string;
+  status: ReviewStatus;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  moderatedAt: Timestamp | null;
+}>;
+
 export type ReviewsApi = Readonly<{
   publicForPerfume: Endpoint<{ readonly perfumeId: EntityId }, readonly PublicReview[]>;
   create: Endpoint<ReviewSubmission, { readonly id: EntityId; readonly status: ReviewStatus }>;

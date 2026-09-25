@@ -31,5 +31,18 @@ export function reviewCases(db: PrismaClient): void {
       if (!hiddenPublic.ok) throw new Error("public review query failed");
       expect(hiddenPublic.data).toEqual([]);
     });
+
+    it("returns an authorised paginated moderation read model", async () => {
+      const created = await service.create({ customerId: ids.customer }, { perfumeId: ids.perfume, rating: 4, text: "Read model review" });
+      if (!created.ok) throw new Error("review creation failed");
+      expect(await service.listForModeration({ adminId: ids.admin, permissions: [] }, {})).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+      expect(await service.listForModeration({ adminId: ids.admin, permissions: ["reviews:moderate"] }, { page: 0 })).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } });
+      const listed = await service.listForModeration({ adminId: ids.admin, permissions: ["reviews:moderate"] }, { page: 1, pageSize: 10 });
+      expect(listed).toMatchObject({ ok: true, data: { page: 1, pageSize: 10, hasMore: false, items: [{ id: created.data.id, status: "PENDING", rating: 4, text: "Read model review", perfume: { id: ids.perfume, name: "Demo Citrus" }, moderatedAt: null }] } });
+      if (listed.ok) {
+        expect(listed.data.items[0]?.createdAt).toMatch(/^2026-/);
+        expect(listed.data.items[0]?.updatedAt).toMatch(/^2026-/);
+      }
+    });
   });
 }
