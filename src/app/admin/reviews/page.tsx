@@ -1,5 +1,5 @@
-import { AdminPlaceholder } from "@/modules/administration/ui/admin-placeholder";
+import { AdminReviews } from "@/modules/administration/ui/admin-reviews";
 
 export default function Page() {
-  return <AdminPlaceholder section="reviews" />;
+  return <AdminReviews />;
 }
