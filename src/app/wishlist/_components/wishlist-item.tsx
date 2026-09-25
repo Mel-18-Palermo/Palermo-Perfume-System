@@ -70,7 +70,7 @@ export function WishlistItemRow({
         {perfume ? (
           <Link
             href={`/product/${perfume.id}`}
-            className="inline-flex min-h-11 items-center justify-center border border-text px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-text transition-colors hover:bg-text hover:text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
+            className="inline-flex min-h-11 items-center justify-center border border-text px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-text transition-colors hover:bg-text hover:!text-primary-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
           >
             View fragrance
           </Link>

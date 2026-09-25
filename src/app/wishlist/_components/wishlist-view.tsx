@@ -148,7 +148,7 @@ export function WishlistView() {
               <Heart className="h-5 w-5 text-text-muted" aria-hidden="true" />
               <h2 className="mt-4 text-h2 tracking-tight text-text">Sign in to see your wishlist</h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-text-muted">Saved fragrances stay with your Palermo customer account across devices.</p>
-              <Link href="/login?next=/wishlist" className="mt-6 inline-flex min-h-11 items-center justify-center bg-text px-5 py-2 text-xs font-medium uppercase tracking-[0.12em] text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text">Sign in</Link>
+              <Link href="/login?next=/wishlist" className="mt-6 inline-flex min-h-11 items-center justify-center bg-text px-5 py-2 text-xs font-medium uppercase tracking-[0.12em] !text-primary-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text">Sign in</Link>
             </div>
           ) : null}
 
@@ -166,7 +166,7 @@ export function WishlistView() {
               <Heart className="h-5 w-5 text-text-muted" aria-hidden="true" />
               <h2 className="mt-4 text-h2 tracking-tight text-text">Nothing saved yet</h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-text-muted">Explore the collection and save the fragrances you want to consider again.</p>
-              <Link href="/catalogue" className="mt-6 inline-flex min-h-11 items-center justify-center border border-text px-5 py-2 text-xs font-medium uppercase tracking-[0.12em] text-text transition-colors hover:bg-text hover:text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text">Explore the collection</Link>
+              <Link href="/catalogue" className="mt-6 inline-flex min-h-11 items-center justify-center border border-text px-5 py-2 text-xs font-medium uppercase tracking-[0.12em] text-text transition-colors hover:bg-text hover:!text-primary-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text">Explore the collection</Link>
             </div>
           ) : null}
 
