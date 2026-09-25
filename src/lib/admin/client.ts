@@ -99,6 +99,12 @@ export function createAdminHttpClient(
       fetcher,
     );
 
+  const reviews = <T>(operation: string, input: unknown) =>
+    call<T>(`/api/admin/reviews/${operation}`, input, fetcher);
+
+  const promotions = <T>(operation: string, input: unknown) =>
+    call<T>(`/api/admin/promotions/${operation}`, input, fetcher);
+
   return {
     getDashboard: (period: ReportingPeriod) =>
       catalogue<Dashboard>(
@@ -158,5 +164,23 @@ export function createAdminHttpClient(
         "batch-release",
         input,
       ),
+
+    moderateReview: input =>
+      reviews<null>("moderate", input),
+
+    createPromotion: input =>
+      promotions<{ readonly id: string }>("create-promotion", input),
+
+    updatePromotion: input =>
+      promotions<null>("update-promotion", input),
+
+    createPromotionalContent: input =>
+      promotions<{ readonly id: string }>("create-content", input),
+
+    generatePromotionalContent: input =>
+      promotions<null>("generate-content", input),
+
+    reviewPromotionalContent: input =>
+      promotions<null>("review-content", input),
   };
 }

@@ -239,6 +239,20 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         return success({ items: wishlist });
       }),
     },
+    reviews: {
+      publicForPerfume: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      create: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      update: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+    },
+    participation: {
+      setSubscription: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      referralCode: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      applyReferral: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+    },
+    support: {
+      ask: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      feedback: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+    },
     checkout: {
       getDeliveryMethods: run("checkout.getDeliveryMethods", "CUSTOMER", () => success([fixtures.deliveryMethod])),
       submit: run("checkout.submit", "CUSTOMER", input => {
@@ -344,6 +358,12 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         batchReleased = true;
         return success({ ...fixtures.batch, status: "RELEASED", releasedAt: fixtures.FIXTURE_TIME });
       }),
+      moderateReview: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      createPromotion: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      updatePromotion: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      createPromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      generatePromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      reviewPromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
     },
   };
   return api;

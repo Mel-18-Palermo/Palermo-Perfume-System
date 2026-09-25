@@ -21,6 +21,9 @@ export function createUnavailableApi(): PalermoApi {
       removeItem: unavailable, applyPromotion: unavailable,
     },
     wishlist: { get: unavailable, add: unavailable, remove: unavailable },
+    reviews: { publicForPerfume: unavailable, create: unavailable, update: unavailable },
+    participation: { setSubscription: unavailable, referralCode: unavailable, applyReferral: unavailable },
+    support: { ask: unavailable, feedback: unavailable },
     checkout: { getDeliveryMethods: unavailable, submit: unavailable },
     orders: { list: unavailable, get: unavailable, getInvoice: unavailable, requestCancellation: unavailable },
     payment: { initiate: unavailable },
@@ -30,6 +33,9 @@ export function createUnavailableApi(): PalermoApi {
       createPerfume: unavailable, updatePerfume: unavailable, archivePerfume: unavailable,
       createVariant: unavailable, updateVariant: unavailable, listInventory: unavailable,
       listBatches: unavailable, createBatch: unavailable, releaseBatch: unavailable,
+      moderateReview: unavailable, createPromotion: unavailable, updatePromotion: unavailable,
+      createPromotionalContent: unavailable, generatePromotionalContent: unavailable,
+      reviewPromotionalContent: unavailable,
     },
   };
 }
