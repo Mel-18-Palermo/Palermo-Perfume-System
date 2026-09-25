@@ -9,6 +9,10 @@ export const e2e = {
   roleId: "39300000-0000-4000-8000-000000000103",
   cataloguePermissionId: "39300000-0000-4000-8000-000000000104",
   inventoryPermissionId: "39300000-0000-4000-8000-000000000105",
+  reportingPermissionId: "39300000-0000-4000-8000-000000000120",
+  reviewsPermissionId: "39300000-0000-4000-8000-000000000121",
+  promotionsPermissionId: "39300000-0000-4000-8000-000000000122",
+  reviewId: "39300000-0000-4000-8000-000000000123",
   familyId: "39300000-0000-4000-8000-000000000106",
   intensityId: "39300000-0000-4000-8000-000000000107",
   perfumeId: "39300000-0000-4000-8000-000000000108",
@@ -35,10 +39,16 @@ try {
     await tx.permission.createMany({ data: [
       { id: e2e.cataloguePermissionId, code: "catalogue:manage", description: "E2E catalogue access" },
       { id: e2e.inventoryPermissionId, code: "inventory:manage", description: "E2E inventory access" },
+      { id: e2e.reportingPermissionId, code: "reporting:read", description: "E2E reporting access" },
+      { id: e2e.reviewsPermissionId, code: "reviews:moderate", description: "E2E review moderation access" },
+      { id: e2e.promotionsPermissionId, code: "promotions:manage", description: "E2E promotion management access" },
     ] });
     await tx.rolePermission.createMany({ data: [
       { roleId: e2e.roleId, permissionId: e2e.cataloguePermissionId },
       { roleId: e2e.roleId, permissionId: e2e.inventoryPermissionId },
+      { roleId: e2e.roleId, permissionId: e2e.reportingPermissionId },
+      { roleId: e2e.roleId, permissionId: e2e.reviewsPermissionId },
+      { roleId: e2e.roleId, permissionId: e2e.promotionsPermissionId },
     ] });
     await tx.adminAccount.create({ data: { id: e2e.adminId, authUserId: e2e.adminAuthId, email: "e2e.admin@example.test", name: "E2E Administrator", roleId: e2e.roleId, createdAt: at } });
     await tx.customer.create({ data: { id: e2e.customerId, authUserId: e2e.customerAuthId, name: "E2E Customer", email: "e2e.customer@example.test", status: "ACTIVE", emailVerifiedAt: at, createdAt: at } });
@@ -54,6 +64,7 @@ try {
     await tx.order.create({ data: { id: e2e.orderId, customerId: e2e.customerId, orderNumber: "E2E-393", idempotencyKey: "e2e-order-393", requestFingerprint: "e2e-order-393", deliveryMethodId: e2e.deliveryId, status: "CONFIRMED", subtotalMinor: 12000, discountTotalMinor: 0, deliveryChargeMinor: 1000, totalMinor: 13000, currency: "AUD", deliveryAddressSnapshot: address, billingAddressSnapshot: address, deliveryMethodSnapshot: { id: e2e.deliveryId, name: "E2E delivery", chargeMinor: 1000, currency: "AUD" }, placedAt: at } });
     await tx.orderItem.create({ data: { orderId: e2e.orderId, variantId: e2e.variantId, skuSnapshot: "E2E-CITRUS-50", nameSnapshot: "E2E Citrus", unitPriceMinor: 12000, quantity: 1 } });
     await tx.payment.create({ data: { orderId: e2e.orderId, status: "SUCCEEDED", providerReference: "e2e-payment", updatedAt: at } });
+    await tx.review.create({ data: { id: e2e.reviewId, customerId: e2e.customerId, perfumeId: e2e.perfumeId, rating: 5, text: "Persisted E2E moderation review.", updatedAt: at } });
     await tx.shipment.create({ data: { id: e2e.shipmentId, orderId: e2e.orderId, trackingReference: "E2E-TRACK-393", updatedAt: at } });
     await tx.trackingEvent.create({ data: { shipmentId: e2e.shipmentId, status: "IN_TRANSIT", description: "E2E deterministic transit event.", occurredAt: at } });
   });
