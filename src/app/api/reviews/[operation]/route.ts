@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 const status = (result: { readonly ok: boolean; readonly error?: { readonly code: string } }): number => result.ok
   ? 200
-  : ({ UNAUTHENTICATED: 401, FORBIDDEN: 403, NOT_FOUND: 404, CONFLICT: 409, VALIDATION_ERROR: 400 }[result.error?.code ?? ""] ?? 500);
+  : ({ UNAUTHENTICATED: 401, FORBIDDEN: 403, NOT_FOUND: 404, CONFLICT: 409, VALIDATION_ERROR: 400, TEMPORARILY_UNAVAILABLE: 503, INTEGRATION_ERROR: 502 }[result.error?.code ?? ""] ?? 500);
 const response = (result: { readonly ok: boolean; readonly error?: { readonly code: string } }): Response => NextResponse.json(result, { status: status(result), headers: { "cache-control": "no-store" } });
 
 async function customer(request: Request): Promise<{ readonly customerId: string } | Response> {
