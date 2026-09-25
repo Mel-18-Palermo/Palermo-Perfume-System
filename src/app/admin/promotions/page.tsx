@@ -1,5 +1,5 @@
-import { AdminPlaceholder } from "@/modules/administration/ui/admin-placeholder";
+import { AdminPromotions } from "@/modules/administration/ui/admin-promotions";
 
 export default function Page() {
-  return <AdminPlaceholder section="promotions" />;
+  return <AdminPromotions />;
 }
