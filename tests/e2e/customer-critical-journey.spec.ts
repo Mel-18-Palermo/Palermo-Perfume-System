@@ -65,3 +65,22 @@ test("catalogue, cart, checkout boundary, and owned tracking work through the br
   await expect(page.getByText("Tracking reference E2E-TRACK-393")).toBeVisible();
   await expect(page.getByText("E2E deterministic transit event.")).toBeVisible();
 });
+
+test("support uses the real public and customer support boundaries", async ({ page }) => {
+  await page.goto("/support");
+  await expect(page.getByRole("heading", { name: "Ask the fragrance concierge", exact: true })).toBeVisible();
+  await expect(page.getByText(/cannot issue refunds, take payments, change orders/)).toBeVisible();
+  await expect(page.getByText("Public support")).toBeVisible();
+  await page.getByLabel("Your message").fill("Please explain fragrance concentration.");
+  await page.getByRole("button", { name: "Ask the concierge" }).click();
+  await expect(page.getByRole("heading", { name: "The concierge could not respond", exact: true })).toBeVisible();
+
+  await customerLogin(page, "/support");
+  await expect(page.getByText("Customer session")).toBeVisible();
+  await page.getByRole("radio", { name: /Delivery help/ }).check();
+  await expect(page.getByLabel("Related order (optional)")).toBeVisible();
+  await page.getByLabel("Related order (optional)").selectOption({ label: "E2E-393 · CONFIRMED" });
+  await page.getByLabel("Your message").fill("Where is my delivery?");
+  await page.getByRole("button", { name: "Ask the concierge" }).press("Enter");
+  await expect(page.getByRole("heading", { name: "The concierge could not respond", exact: true })).toBeVisible();
+});
