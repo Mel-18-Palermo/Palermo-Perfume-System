@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Menu } from "lucide-react";
+import { Heart, ShoppingBag, Menu } from "lucide-react";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 
@@ -110,6 +110,10 @@ export function StoreHeader({
               </Link>
             </>
           )}
+
+          <Link href="/wishlist" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-text transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text" aria-label="Wishlist" aria-current={pathname === "/wishlist" ? "page" : undefined}>
+            <Heart className="h-4 w-4" aria-hidden="true" />
+          </Link>
 
           <Link
             href="/cart"

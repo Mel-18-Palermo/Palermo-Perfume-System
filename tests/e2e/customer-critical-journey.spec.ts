@@ -84,3 +84,25 @@ test("support uses the real public and customer support boundaries", async ({ pa
   await page.getByRole("button", { name: "Ask the concierge" }).press("Enter");
   await expect(page.getByRole("heading", { name: "The concierge could not respond", exact: true })).toBeVisible();
 });
+
+test("wishlist saves from catalogue and product detail through the real customer boundary", async ({ page }) => {
+  await page.goto("/catalogue");
+  const signedOutSave = page.getByRole("link", { name: "Sign in to save E2E Citrus" });
+  await expect(signedOutSave).toBeVisible();
+  await expect(signedOutSave).toHaveAttribute("href", "/login?next=%2Fcatalogue");
+
+  await customerLogin(page, "/catalogue");
+  await page.getByRole("button", { name: "Save E2E Citrus to wishlist" }).click();
+  await expect(page.getByRole("button", { name: "Remove E2E Citrus from wishlist" })).toBeVisible();
+
+  await page.goto("/wishlist");
+  await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
+  await page.getByRole("button", { name: "Remove E2E Citrus from wishlist" }).click();
+  await expect(page.getByRole("heading", { name: "Nothing saved yet" })).toBeVisible();
+
+  await page.goto(e2eCitrusProductPath);
+  await page.getByRole("button", { name: "Save fragrance" }).click();
+  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
+  await page.goto("/wishlist");
+  await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
+});
