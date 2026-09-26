@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { ApiResult } from "../../../contracts/common";
+import type { ParticipationAccount } from "../../../contracts/participation";
 import { failure, success } from "../../../lib/api/result";
 import type { PrismaClient } from "../../../lib/db/generated/client";
 
@@ -18,6 +19,23 @@ export class ParticipationService {
     const now = new Date();
     const result = await this.db.subscription.upsert({ where: { customerId }, create: { customerId, optedIn, optedInAt: optedIn ? now : null, optedOutAt: optedIn ? null : now }, update: { optedIn, optedInAt: optedIn ? now : null, optedOutAt: optedIn ? null : now } });
     return success({ optedIn: result.optedIn });
+  }
+
+  async account(customerId: string): Promise<ApiResult<ParticipationAccount>> {
+    if (!id.test(customerId)) return failure("VALIDATION_ERROR");
+    const [customer, subscription, loyaltyAccount, referralCode, received] = await Promise.all([
+      this.db.customer.findUnique({ where: { id: customerId }, select: { id: true } }),
+      this.db.subscription.findUnique({ where: { customerId }, select: { optedIn: true } }),
+      this.db.loyaltyAccount.findUnique({ where: { customerId }, select: { points: true, entries: { select: { id: true, type: true, points: true, createdAt: true }, orderBy: [{ createdAt: "desc" }, { id: "asc" }] } } }),
+      this.db.referralCode.findUnique({ where: { customerId }, select: { code: true } }),
+      this.db.referral.findUnique({ where: { referredCustomerId: customerId }, select: { createdAt: true, qualifiedAt: true } }),
+    ]);
+    if (!customer) return failure("NOT_FOUND");
+    return success({
+      subscription: { optedIn: subscription?.optedIn ?? false },
+      loyalty: { points: loyaltyAccount?.points ?? 0, entries: (loyaltyAccount?.entries ?? []).map(entry => ({ ...entry, createdAt: entry.createdAt.toISOString() })) },
+      referral: { code: referralCode?.code ?? null, received: received ? { status: received.qualifiedAt ? "QUALIFIED" : "ATTRIBUTED", createdAt: received.createdAt.toISOString(), qualifiedAt: received.qualifiedAt?.toISOString() ?? null } : null },
+    });
   }
 
   async referralCode(customerId: string): Promise<ApiResult<{ code: string }>> {

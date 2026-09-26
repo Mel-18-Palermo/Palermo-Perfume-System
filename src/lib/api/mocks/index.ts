@@ -245,6 +245,7 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
       update: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
     },
     participation: {
+      account: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
       setSubscription: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
       referralCode: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
       applyReferral: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
