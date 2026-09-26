@@ -24,7 +24,7 @@ function supportsOrderContext(intent: SupportIntent): boolean {
   return intent === "ORDER" || intent === "DELIVERY";
 }
 
-export function SupportAssistance({ session, sessionLoading = false }: Readonly<{ session: Session | null; sessionLoading?: boolean }>) {
+export function SupportAssistance({ session, sessionLoading = false, compact = false }: Readonly<{ session: Session | null; sessionLoading?: boolean; compact?: boolean }>) {
   const customer = session?.user?.role === "CUSTOMER" ? session.user : null;
   const [intent, setIntent] = useState<SupportIntent>("PRODUCT");
   const [message, setMessage] = useState("");
@@ -85,10 +85,10 @@ export function SupportAssistance({ session, sessionLoading = false }: Readonly<
   }
 
   return (
-    <section aria-labelledby="support-heading" className="mx-auto max-w-[var(--container-page)] space-y-6">
+    <section aria-labelledby="support-heading" className={compact ? "space-y-5" : "mx-auto max-w-[var(--container-page)] space-y-6"}>
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">Palermo support</p>
-        <h1 id="support-heading" className="mt-3 text-h1 tracking-tight text-text">Ask the fragrance concierge</h1>
+        {compact ? <h2 id="support-heading" className="mt-2 text-h2 tracking-tight text-text">Ask the concierge</h2> : <h1 id="support-heading" className="mt-3 text-h1 tracking-tight text-text">Ask the fragrance concierge</h1>}
         <p className="mt-3 text-sm leading-6 text-text-muted">Get product, policy, order, delivery or service guidance from Palermo’s AI-assisted support experience.</p>
       </header>
 
@@ -97,7 +97,7 @@ export function SupportAssistance({ session, sessionLoading = false }: Readonly<
         <p className="mt-2 text-sm leading-6 text-text-muted">The concierge can provide information only. It cannot issue refunds, take payments, change orders, or make delivery changes. Order and delivery context is available only to signed-in customers and is checked on the server.</p>
       </aside>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className={compact ? "grid gap-5" : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]"}>
         <Card className="min-w-0 p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -157,7 +157,7 @@ export function SupportAssistance({ session, sessionLoading = false }: Readonly<
           </section>}
         </Card>
 
-        <aside className="space-y-4">
+        {!compact && <aside className="space-y-4">
           <Card className="p-5">
             <h2 className="text-h3 font-semibold">Supported topics</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-text-muted">
@@ -168,7 +168,7 @@ export function SupportAssistance({ session, sessionLoading = false }: Readonly<
             </ul>
           </Card>
           {!customer && <Card className="p-5"><h2 className="text-h3 font-semibold">Need order help?</h2><p className="mt-2 text-sm leading-6 text-text-muted">Sign in to let support use your own order or delivery context. We never ask public visitors for an order identifier here.</p></Card>}
-        </aside>
+        </aside>}
       </div>
     </section>
   );
