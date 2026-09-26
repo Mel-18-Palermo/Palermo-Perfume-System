@@ -22,7 +22,7 @@ export function createUnavailableApi(): PalermoApi {
     },
     wishlist: { get: unavailable, add: unavailable, remove: unavailable },
     reviews: { publicForPerfume: unavailable, create: unavailable, update: unavailable },
-    participation: { setSubscription: unavailable, referralCode: unavailable, applyReferral: unavailable },
+    participation: { account: unavailable, setSubscription: unavailable, referralCode: unavailable, applyReferral: unavailable },
     support: { ask: unavailable, feedback: unavailable },
     checkout: { getDeliveryMethods: unavailable, submit: unavailable },
     orders: { list: unavailable, get: unavailable, getInvoice: unavailable, requestCancellation: unavailable },

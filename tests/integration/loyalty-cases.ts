@@ -25,6 +25,24 @@ export function loyaltyCases(db: PrismaClient): void {
       expect(optedOut.optedOutAt).toBeInstanceOf(Date);
     });
 
+    it("reads only the customer's persisted participation account state", async () => {
+      const service = new ParticipationService(db, () => "READCODE1");
+      await service.setSubscription(ids.customer, true);
+      await service.referralCode(ids.customer);
+      await service.rewardCompletedOrder(ids.customer, ids.paidOrder, 100);
+      await new ParticipationService(db, () => "OTHERREAD").referralCode(ids.otherCustomer);
+      await service.applyReferral(ids.otherCustomer, "READCODE1");
+
+      expect(await service.account(ids.customer)).toMatchObject({
+        ok: true,
+        data: { subscription: { optedIn: true }, loyalty: { points: 100, entries: [{ type: "ORDER_REWARD", points: 100 }] }, referral: { code: "READCODE1", received: null } },
+      });
+      expect(await service.account(ids.otherCustomer)).toMatchObject({
+        ok: true,
+        data: { subscription: { optedIn: false }, loyalty: { points: 0, entries: [] }, referral: { code: "OTHERREAD", received: { status: "ATTRIBUTED" } } },
+      });
+    });
+
     it("keeps one referral code per customer and rejects self-referral and duplicate attribution", async () => {
       const service = new ParticipationService(db, () => "REFCODE01");
       expect(await service.referralCode(ids.customer)).toMatchObject({ ok: true, data: { code: "REFCODE01" } });

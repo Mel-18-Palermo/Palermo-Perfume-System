@@ -1,5 +1,5 @@
 import type { ApiResult } from "../../contracts/common";
-import type { ParticipationApi } from "../../contracts/participation";
+import type { ParticipationAccount, ParticipationApi } from "../../contracts/participation";
 
 function validResult<T>(value: unknown): value is ApiResult<T> {
   return typeof value === "object" && value !== null && "ok" in value
@@ -22,8 +22,19 @@ async function call<T>(operation: string, input: unknown, fetcher: typeof fetch)
   }
 }
 
+async function read<T>(operation: string, fetcher: typeof fetch): Promise<ApiResult<T>> {
+  try {
+    const response = await fetcher(`/api/participation/${operation}`, { method: "GET", credentials: "same-origin", cache: "no-store" });
+    const value: unknown = await response.json();
+    return validResult<T>(value) ? value : { ok: false, error: { code: "INTEGRATION_ERROR", message: "The participation response was invalid." } };
+  } catch {
+    return { ok: false, error: { code: "TEMPORARILY_UNAVAILABLE", message: "The participation service is temporarily unavailable." } };
+  }
+}
+
 export function createParticipationHttpClient(fetcher: typeof fetch = fetch): ParticipationApi {
   return {
+    account: () => read<ParticipationAccount>("account", fetcher),
     setSubscription: input => call("subscription", input, fetcher),
     referralCode: () => call("referral-code", {}, fetcher),
     applyReferral: input => call("apply-referral", input, fetcher),

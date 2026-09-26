@@ -17,11 +17,21 @@ async function body(request: Request): Promise<Record<string, unknown> | null> {
   catch { return null; }
 }
 
+async function customer(request: Request): Promise<string | Response> {
+  try { return (await getIdentityService().requireCustomer(readSessionCookie(request))).user.id; }
+  catch (error) { const fault = error instanceof AuthFault ? error : new AuthFault("TEMPORARILY_UNAVAILABLE", "The account service is temporarily unavailable."); return response(failure(fault.code)); }
+}
+
+export async function GET(request: Request, context: { params: Promise<{ operation: string }> }): Promise<Response> {
+  if ((await context.params).operation !== "account") return response(failure("NOT_FOUND"));
+  const customerId = await customer(request);
+  return customerId instanceof Response ? customerId : response(await getParticipationService().account(customerId));
+}
+
 export async function POST(request: Request, context: { params: Promise<{ operation: string }> }): Promise<Response> {
   if (request.headers.get("origin") !== new URL(request.url).origin) return response(failure("FORBIDDEN"));
-  let customerId: string;
-  try { customerId = (await getIdentityService().requireCustomer(readSessionCookie(request))).user.id; }
-  catch (error) { const fault = error instanceof AuthFault ? error : new AuthFault("TEMPORARILY_UNAVAILABLE", "The account service is temporarily unavailable."); return response(failure(fault.code)); }
+  const customerId = await customer(request);
+  if (customerId instanceof Response) return customerId;
   const operation = (await context.params).operation;
   const service = getParticipationService();
   if (operation === "referral-code") return response(await service.referralCode(customerId));

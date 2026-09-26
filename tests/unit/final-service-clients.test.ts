@@ -28,11 +28,13 @@ describe("final service HTTP clients", () => {
     await createReviewsHttpClient(fetcher).publicForPerfume({
       perfumeId: "27500000-0000-4000-8000-000000000001",
     });
+    await createParticipationHttpClient(fetcher).account();
     await createParticipationHttpClient(fetcher).referralCode();
 
     expect(calls.map(call => [call.url, call.init?.method])).toEqual([
       ["/api/support/ask", "POST"],
       ["/api/reviews/public?perfumeId=27500000-0000-4000-8000-000000000001", "GET"],
+      ["/api/participation/account", "GET"],
       ["/api/participation/referral-code", "POST"],
     ]);
     expect(calls[0]?.init?.credentials).toBe("same-origin");
