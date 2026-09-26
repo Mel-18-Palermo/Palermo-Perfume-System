@@ -68,6 +68,7 @@ test("catalogue, cart, checkout boundary, and owned tracking work through the br
 
 test("support uses the real public and customer support boundaries", async ({ page }) => {
   await page.goto("/support");
+  await expect(page.getByRole("button", { name: "Open Palermo concierge" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Ask the fragrance concierge", exact: true })).toBeVisible();
   await expect(page.getByText(/cannot issue refunds, take payments, change orders/)).toBeVisible();
   await expect(page.getByText("Public support", { exact: true })).toBeVisible();
@@ -83,6 +84,28 @@ test("support uses the real public and customer support boundaries", async ({ pa
   await page.getByLabel("Your message").fill("Where is my delivery?");
   await page.getByRole("button", { name: "Ask the concierge" }).press("Enter");
   await expect(page.getByRole("heading", { name: "The concierge could not respond", exact: true })).toBeVisible();
+});
+
+test("account hub, rewards compatibility route, and floating concierge are discoverable", async ({ page }) => {
+  await page.goto("/catalogue");
+  const launcher = page.getByRole("button", { name: "Open Palermo concierge" });
+  await launcher.click();
+  await expect(page.getByRole("dialog", { name: "Palermo concierge" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ask the concierge" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(launcher).toBeFocused();
+
+  await customerLogin(page, "/account");
+  const hub = page.getByRole("navigation", { name: "Your Palermo" });
+  await expect(hub.getByRole("link", { name: "Profile" })).toBeVisible();
+  await expect(hub.getByRole("link", { name: "Purchases" })).toHaveAttribute("href", "/orders");
+  await expect(hub.getByRole("link", { name: "Saved fragrances" })).toHaveAttribute("href", "/wishlist");
+  await expect(hub.getByRole("link", { name: "Rewards & referrals" })).toHaveAttribute("href", "/account/rewards");
+
+  await page.goto("/participation");
+  await expect(page).toHaveURL(/\/account\/rewards$/);
+  await expect(page.getByRole("heading", { name: "Rewards & referrals" })).toBeVisible();
+  await expect(page.getByText(/points/)).toBeVisible();
 });
 
 test("wishlist saves from catalogue and product detail through the real customer boundary", async ({ page }) => {

@@ -84,6 +84,9 @@ export function MobileNav({
               >
                 Orders
               </Link>
+              <Link href="/account/rewards" onClick={onClose} className={navigationClassName("/account/rewards")} aria-current={pathname === "/account/rewards" ? "page" : undefined}>
+                Rewards &amp; referrals
+              </Link>
               <button
                 type="button"
                 onClick={() => void onLogout()}

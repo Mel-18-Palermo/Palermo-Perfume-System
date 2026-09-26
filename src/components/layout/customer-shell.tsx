@@ -7,7 +7,9 @@ import { MobileNav } from "./mobile-nav";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 import { api } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { FloatingConcierge } from "@/modules/support/ui/floating-concierge";
+import { AccountHub } from "./account-hub";
 
 export interface CustomerShellProps {
   children: React.ReactNode;
@@ -25,6 +27,7 @@ export function CustomerShell({
   contentLayout = "contained",
 }: CustomerShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [hasLoggedOut, setHasLoggedOut] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
@@ -83,8 +86,10 @@ export function CustomerShell({
             : "mx-auto w-full max-w-[var(--container-wide)] flex-1 px-4 py-8 sm:px-6 lg:px-8"
         }
       >
+        {pathname === "/account" && <AccountHub />}
         {children}
       </main>
+      {pathname !== "/support" && <FloatingConcierge session={currentSession} sessionLoading={isLoading} />}
       <StoreFooter session={currentSession} />
     </div>
   );
