@@ -57,6 +57,9 @@ export function MobileNav({
         >
           Cart
         </Link>
+        <Link href="/wishlist" onClick={onClose} className={navigationClassName("/wishlist")} aria-current={pathname === "/wishlist" ? "page" : undefined}>
+          Wishlist
+        </Link>
         <div className="pt-4 border-t border-border">
           {isLoading ? (
             <span className="text-xs text-text-muted">Loading account...</span>
