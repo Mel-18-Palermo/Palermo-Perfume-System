@@ -122,10 +122,33 @@ test("account hub, rewards compatibility route, and floating concierge are disco
   await launcher.click();
   await expect(page.getByRole("dialog", { name: "Palermo concierge" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ask the concierge" })).toBeVisible();
+  await expect(page.getByLabel("Support topic")).toBeVisible();
+  await expect(page.getByLabel("Message")).toBeVisible();
+  await page.getByLabel("Message").fill("Can you help with a product?");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText("You", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
+  await page.getByLabel("Support topic").selectOption("ORDER");
+  await expect(page.getByText(/Sign in to include your own order/)).toBeVisible();
+  await page.getByRole("button", { name: "Close palermo concierge" }).click();
+  await launcher.click();
+  await expect(page.getByText("Can you help with a product?")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(launcher).toBeFocused();
 
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await launcher.click();
+    await expect(page.getByRole("dialog", { name: "Palermo concierge" })).toBeVisible();
+    await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true);
+    await page.keyboard.press("Escape");
+  }
+
   await customerLogin(page, "/account");
+  await page.getByRole("button", { name: "Open Palermo concierge" }).click();
+  await page.getByLabel("Support topic").selectOption("DELIVERY");
+  await expect(page.getByLabel("Related order (optional)")).toBeVisible();
+  await page.keyboard.press("Escape");
   const hub = page.getByRole("navigation", { name: "Your Palermo" });
   await expect(hub.getByRole("link", { name: "Profile" })).toBeVisible();
   await expect(hub.getByRole("link", { name: "Purchases" })).toHaveAttribute("href", "/orders");

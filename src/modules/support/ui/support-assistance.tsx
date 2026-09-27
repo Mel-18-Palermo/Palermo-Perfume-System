@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Session } from "@/contracts/auth";
 import type { OrderSummary } from "@/contracts/orders";
 import type { SupportIntent } from "@/contracts/support";
@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
+import { appendPendingTurn, completeTurn, failTurn, markRetryPending, type CompactChatMessage } from "./compact-chat-state";
 
 const intents: readonly Readonly<{ value: SupportIntent; label: string; hint: string }>[] = [
   { value: "PRODUCT", label: "Product guidance", hint: "Notes, concentration and suitability" },
@@ -19,12 +20,120 @@ const intents: readonly Readonly<{ value: SupportIntent; label: string; hint: st
 ];
 
 type Reply = Readonly<{ conversationId: string; question: string; reply: string }>;
-
 function supportsOrderContext(intent: SupportIntent): boolean {
   return intent === "ORDER" || intent === "DELIVERY";
 }
 
-export function SupportAssistance({ session, sessionLoading = false, compact = false }: Readonly<{ session: Session | null; sessionLoading?: boolean; compact?: boolean }>) {
+function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ session: Session | null; sessionLoading: boolean }>) {
+  const customer = session?.user?.role === "CUSTOMER" ? session.user : null;
+  const [intent, setIntent] = useState<SupportIntent>("PRODUCT");
+  const [message, setMessage] = useState("");
+  const [orderId, setOrderId] = useState("");
+  const [orders, setOrders] = useState<readonly OrderSummary[] | null>(null);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<readonly CompactChatMessage[]>([]);
+  const [pending, setPending] = useState(false);
+  const nextMessageId = useRef(0);
+  const canUseOrderContext = customer !== null && supportsOrderContext(intent);
+
+  useEffect(() => {
+    let active = true;
+    if (!canUseOrderContext) return () => { active = false; };
+    void api.orders.list({ page: 1, pageSize: 20 }).then(result => {
+      if (!active) return;
+      if (result.ok) setOrders(result.data.items);
+      else setOrdersError(result.error.message);
+    });
+    return () => { active = false; };
+  }, [canUseOrderContext]);
+
+  function changeIntent(nextIntent: SupportIntent): void {
+    setIntent(nextIntent);
+    setOrderId("");
+    setOrders(null);
+    setOrdersError(null);
+  }
+
+  async function ask(retry?: CompactChatMessage): Promise<void> {
+    const question = retry?.content ?? message.trim();
+    if (pending || !question) return;
+    const requestId = retry?.id ?? `support-${nextMessageId.current++}`;
+    const requestIntent = retry?.intent ?? intent;
+    const requestOrderId = retry?.orderId ?? (canUseOrderContext && orderId ? orderId : undefined);
+    setPending(true);
+    if (retry) {
+      setTranscript(items => markRetryPending(items, requestId));
+    } else {
+      setTranscript(items => appendPendingTurn(items, { requestId, question, intent: requestIntent, ...(requestOrderId ? { orderId: requestOrderId } : {}) }));
+      setMessage("");
+    }
+
+    const result = await api.support.ask({
+      intent: requestIntent,
+      message: question,
+      ...(requestOrderId ? { orderId: requestOrderId } : {}),
+    });
+    setPending(false);
+    setTranscript(items => result.ok
+      ? completeTurn(items, requestId, result.data.conversationId, result.data.reply)
+      : failTurn(items, requestId, result.error.message));
+  }
+
+  async function sendFeedback(chat: CompactChatMessage, rating: number): Promise<void> {
+    if (!chat.conversationId || chat.feedback === "sending" || chat.feedback === "sent") return;
+    setTranscript(items => items.map(item => item.id === chat.id ? { ...item, feedback: "sending" } : item));
+    const result = await api.support.feedback({ conversationId: chat.conversationId, rating });
+    setTranscript(items => items.map(item => item.id === chat.id ? { ...item, feedback: result.ok ? "sent" : "error" } : item));
+  }
+
+  return (
+    <section aria-labelledby="compact-support-heading" className="flex min-h-0 flex-1 flex-col">
+      <header className="shrink-0 border-b border-border pb-4">
+        <h2 id="compact-support-heading" className="text-h3 font-semibold tracking-tight text-text">Ask the concierge</h2>
+        <p className="mt-1 text-xs leading-5 text-text-muted">AI-assisted information only. It cannot take payments, issue refunds, or change orders or delivery.</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <label htmlFor="compact-support-intent" className="sr-only">Support topic</label>
+          <select id="compact-support-intent" value={intent} onChange={event => changeIntent(event.target.value as SupportIntent)} className="min-h-11 rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            {intents.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <span className="text-xs text-text-muted">{sessionLoading ? "Checking your account" : customer ? "Your customer session" : "Public support"}</span>
+        </div>
+        {supportsOrderContext(intent) && !customer && <p role="status" className="mt-3 rounded-md bg-surface-muted px-3 py-2 text-xs leading-5 text-text-muted">Sign in to include your own order or delivery context. Public support cannot access orders.</p>}
+        {canUseOrderContext && <div className="mt-3">
+          <label htmlFor="compact-support-order" className="block text-xs font-medium text-text">Related order (optional)</label>
+          {orders === null && !ordersError && <div role="status" aria-label="Loading your orders" className="mt-2"><Skeleton className="h-11" /></div>}
+          {ordersError && <p role="alert" className="mt-2 text-xs text-danger">Your orders are unavailable: {ordersError}</p>}
+          {orders && <select id="compact-support-order" value={orderId} onChange={event => setOrderId(event.target.value)} className="mt-2 min-h-11 w-full rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><option value="">No order context</option>{orders.map(order => <option key={order.id} value={order.id}>{order.orderNumber} · {order.status}</option>)}</select>}
+        </div>}
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto py-4" aria-live="polite" aria-label="Current conversation">
+        {transcript.length === 0 ? <p className="rounded-md bg-surface-muted p-4 text-sm leading-6 text-text-muted">Tell us what you need help with. Each reply is based only on the message and authorised context you send now.</p> : <ol className="space-y-3">
+          {transcript.map(chat => <li key={chat.id} className={chat.actor === "CUSTOMER" ? "ml-8 rounded-lg bg-primary px-4 py-3 text-sm leading-6 text-primary-text" : "mr-4 rounded-lg border border-border bg-surface-muted px-4 py-3 text-sm leading-6 text-text"}>
+            <p className={`text-xs font-medium ${chat.actor === "CUSTOMER" ? "text-primary-text/80" : "text-text-muted"}`}>{chat.actor === "CUSTOMER" ? "You" : "Palermo concierge"}</p>
+            {chat.state === "pending" ? <div role="status" aria-busy="true" className="mt-2 flex items-center gap-2 text-text-muted"><Skeleton className="h-3 w-3 rounded-full" /><span>Thinking…</span></div> : <p className="mt-1 whitespace-pre-wrap break-words">{chat.content}</p>}
+            {chat.state === "error" && <Button type="button" size="sm" variant="outline" className="mt-3" onClick={() => { void ask(chat); }}>Retry</Button>}
+            {chat.actor === "ASSISTANT" && !chat.state && chat.conversationId && <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3" aria-label="Rate this response">
+              <span className="text-xs text-text-muted">Helpful?</span>
+              <Button type="button" size="sm" variant="outline" disabled={chat.feedback === "sending" || chat.feedback === "sent"} onClick={() => { void sendFeedback(chat, 5); }}>Yes</Button>
+              <Button type="button" size="sm" variant="outline" disabled={chat.feedback === "sending" || chat.feedback === "sent"} onClick={() => { void sendFeedback(chat, 1); }}>No</Button>
+              {chat.feedback === "sent" && <span role="status" className="text-xs text-text-muted">Thank you.</span>}
+              {chat.feedback === "error" && <span role="alert" className="text-xs text-danger">Feedback could not be saved.</span>}
+            </div>}
+          </li>)}
+        </ol>}
+      </div>
+
+      <form className="shrink-0 border-t border-border pt-4" onSubmit={event => { event.preventDefault(); void ask(); }}>
+        <label htmlFor="compact-support-message" className="sr-only">Message</label>
+        <textarea id="compact-support-message" value={message} maxLength={1000} rows={2} placeholder="Write your question" onChange={event => setMessage(event.target.value)} onKeyDown={event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") { event.preventDefault(); void ask(); } }} className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" />
+        <div className="mt-2 flex items-center justify-between gap-3"><p className="text-xs text-text-muted">{message.length}/1000 · Ctrl/⌘ + Enter sends</p><Button type="submit" size="sm" isLoading={pending} disabled={!message.trim() || pending}>Send</Button></div>
+      </form>
+    </section>
+  );
+}
+
+function DetailedSupportAssistance({ session, sessionLoading = false }: Readonly<{ session: Session | null; sessionLoading?: boolean }>) {
   const customer = session?.user?.role === "CUSTOMER" ? session.user : null;
   const [intent, setIntent] = useState<SupportIntent>("PRODUCT");
   const [message, setMessage] = useState("");
@@ -85,10 +194,10 @@ export function SupportAssistance({ session, sessionLoading = false, compact = f
   }
 
   return (
-    <section aria-labelledby="support-heading" className={compact ? "space-y-5" : "mx-auto max-w-[var(--container-page)] space-y-6"}>
+    <section aria-labelledby="support-heading" className="mx-auto max-w-[var(--container-page)] space-y-6">
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">Palermo support</p>
-        {compact ? <h2 id="support-heading" className="mt-2 text-h2 tracking-tight text-text">Ask the concierge</h2> : <h1 id="support-heading" className="mt-3 text-h1 tracking-tight text-text">Ask the fragrance concierge</h1>}
+        <h1 id="support-heading" className="mt-3 text-h1 tracking-tight text-text">Ask the fragrance concierge</h1>
         <p className="mt-3 text-sm leading-6 text-text-muted">Get product, policy, order, delivery or service guidance from Palermo’s AI-assisted support experience.</p>
       </header>
 
@@ -97,7 +206,7 @@ export function SupportAssistance({ session, sessionLoading = false, compact = f
         <p className="mt-2 text-sm leading-6 text-text-muted">The concierge can provide information only. It cannot issue refunds, take payments, change orders, or make delivery changes. Order and delivery context is available only to signed-in customers and is checked on the server.</p>
       </aside>
 
-      <div className={compact ? "grid gap-5" : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]"}>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <Card className="min-w-0 p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -157,7 +266,7 @@ export function SupportAssistance({ session, sessionLoading = false, compact = f
           </section>}
         </Card>
 
-        {!compact && <aside className="space-y-4">
+        <aside className="space-y-4">
           <Card className="p-5">
             <h2 className="text-h3 font-semibold">Supported topics</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-text-muted">
@@ -168,8 +277,14 @@ export function SupportAssistance({ session, sessionLoading = false, compact = f
             </ul>
           </Card>
           {!customer && <Card className="p-5"><h2 className="text-h3 font-semibold">Need order help?</h2><p className="mt-2 text-sm leading-6 text-text-muted">Sign in to let support use your own order or delivery context. We never ask public visitors for an order identifier here.</p></Card>}
-        </aside>}
+        </aside>
       </div>
     </section>
   );
+}
+
+export function SupportAssistance({ session, sessionLoading = false, compact = false }: Readonly<{ session: Session | null; sessionLoading?: boolean; compact?: boolean }>) {
+  return compact
+    ? <CompactSupportAssistance session={session} sessionLoading={sessionLoading} />
+    : <DetailedSupportAssistance session={session} sessionLoading={sessionLoading} />;
 }
