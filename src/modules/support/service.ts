@@ -1,4 +1,5 @@
 import type { ApiResult } from "../../contracts/common";
+import { publishedPolicyContext } from "../../content/published-policy";
 import { failure, success } from "../../lib/api/result";
 import type { PrismaClient } from "../../lib/db/generated/client";
 
@@ -10,6 +11,7 @@ export interface SupportTool { readonly name: SupportToolName; invoke(input: Rea
 const id = /^[0-9a-f-]{10,64}$/i;
 export const supportIntents: readonly SupportIntent[] = ["PRODUCT", "POLICY", "ORDER", "DELIVERY", "FEEDBACK"];
 export const supportToolAllowlist: readonly SupportToolName[] = ["order.lookup"];
+const PRODUCT_CONTEXT_LIMIT = 100;
 
 export class OrderLookupSupportTool implements SupportTool {
   readonly name = "order.lookup" as const;
@@ -34,11 +36,50 @@ export class SupportService {
   constructor(private readonly db: PrismaClient, private readonly provider: SupportProvider, private readonly now: () => Date = () => new Date(), private readonly timeoutMs = 5_000, tools: readonly SupportTool[] = [new OrderLookupSupportTool(db)]) {
     this.tools = new Map(tools.map(tool => [tool.name, tool]));
   }
+
+  private async productContext(): Promise<Readonly<{ catalogueScope: string; products: readonly Readonly<{ name: string; slug: string; description: string; family: string; intensity: string | null; audiences: readonly string[]; notes: readonly Readonly<{ layer: string; name: string }>[] }>[]}>> {
+    const products = await this.db.perfume.findMany({
+      where: {
+        status: "ACTIVE",
+        primaryFamily: { active: true },
+        variants: { some: { availability: { in: ["AVAILABLE", "OUT_OF_STOCK"] } } },
+      },
+      select: {
+        name: true,
+        slug: true,
+        description: true,
+        primaryFamily: { select: { name: true } },
+        intensity: { select: { name: true } },
+        notes: { where: { note: { active: true } }, select: { layer: true, note: { select: { name: true } } }, orderBy: [{ layer: "asc" }, { note: { name: "asc" } }] },
+        collections: { where: { collection: { active: true } }, select: { collection: { select: { name: true } } }, orderBy: { collection: { name: "asc" } } },
+      },
+      orderBy: [{ name: "asc" }, { id: "asc" }],
+      take: PRODUCT_CONTEXT_LIMIT,
+    });
+    return {
+      catalogueScope: "This is the complete bounded list of Palermo's currently public perfume catalogue. Palermo does not sell items outside this list.",
+      products: products.map(product => ({
+        name: product.name,
+        slug: product.slug,
+        description: product.description,
+        family: product.primaryFamily.name,
+        intensity: product.intensity?.name ?? null,
+        audiences: product.collections.map(({ collection }) => collection.name),
+        notes: product.notes.map(({ layer, note }) => ({ layer, name: note.name })),
+      })),
+    };
+  }
+
   async ask(input: Readonly<{ customerId?: string; intent: SupportIntent; message: string; orderId?: string; tool?: string }>): Promise<ApiResult<{ conversationId: string; reply: string }>> {
     if (!supportIntents.includes(input.intent) || !input.message.trim() || input.message.length > 1_000 || (input.customerId && !id.test(input.customerId)) || (input.orderId && !id.test(input.orderId))) return failure("VALIDATION_ERROR");
     if (input.tool && !supportToolAllowlist.includes(input.tool as SupportToolName)) return failure("FORBIDDEN");
     const context: Record<string, unknown> = {};
-    if (input.intent === "POLICY") context.policy = "Approved policy information is available through Palermo support.";
+    try {
+      if (input.intent === "PRODUCT") context.product = await this.productContext();
+    } catch {
+      return failure("TEMPORARILY_UNAVAILABLE");
+    }
+    if (input.intent === "POLICY") context.policy = publishedPolicyContext();
     if (input.orderId) {
       if (!input.customerId || !["ORDER", "DELIVERY"].includes(input.intent)) return failure("FORBIDDEN");
       const tool = this.tools.get("order.lookup");

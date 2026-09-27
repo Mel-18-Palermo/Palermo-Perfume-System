@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SendHorizontal, ThumbsDown, ThumbsUp } from "lucide-react";
 import type { Session } from "@/contracts/auth";
 import type { OrderSummary } from "@/contracts/orders";
 import type { SupportIntent } from "@/contracts/support";
@@ -34,6 +35,7 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
   const [transcript, setTranscript] = useState<readonly CompactChatMessage[]>([]);
   const [pending, setPending] = useState(false);
   const nextMessageId = useRef(0);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const canUseOrderContext = customer !== null && supportsOrderContext(intent);
 
   useEffect(() => {
@@ -46,6 +48,13 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
     });
     return () => { active = false; };
   }, [canUseOrderContext]);
+
+  useEffect(() => {
+    const composer = composerRef.current;
+    if (!composer) return;
+    composer.style.height = "auto";
+    composer.style.height = `${Math.min(composer.scrollHeight, 144)}px`;
+  }, [message]);
 
   function changeIntent(nextIntent: SupportIntent): void {
     setIntent(nextIntent);
@@ -88,46 +97,45 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
 
   return (
     <section aria-labelledby="compact-support-heading" className="flex min-h-0 flex-1 flex-col">
-      <header className="shrink-0 border-b border-border pb-4">
-        <h2 id="compact-support-heading" className="text-h3 font-semibold tracking-tight text-text">Ask the concierge</h2>
-        <p className="mt-1 text-xs leading-5 text-text-muted">AI-assisted information only. It cannot take payments, issue refunds, or change orders or delivery.</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+      <header className="shrink-0 border-b border-border pb-3">
+        <p id="compact-support-heading" className="text-xs leading-5 text-text-muted">AI-assisted information. The concierge cannot take payments, issue refunds, or change orders or delivery.</p>
+        <div className="mt-2 flex items-center justify-between gap-3">
           <label htmlFor="compact-support-intent" className="sr-only">Support topic</label>
-          <select id="compact-support-intent" value={intent} onChange={event => changeIntent(event.target.value as SupportIntent)} className="min-h-11 rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <select id="compact-support-intent" value={intent} onChange={event => changeIntent(event.target.value as SupportIntent)} className="min-h-11 min-w-0 rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             {intents.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
-          <span className="text-xs text-text-muted">{sessionLoading ? "Checking your account" : customer ? "Your customer session" : "Public support"}</span>
+          <span className="shrink-0 text-xs text-text-muted">{sessionLoading ? "Checking account" : customer ? "Customer session" : "Public support"}</span>
         </div>
-        {supportsOrderContext(intent) && !customer && <p role="status" className="mt-3 rounded-md bg-surface-muted px-3 py-2 text-xs leading-5 text-text-muted">Sign in to include your own order or delivery context. Public support cannot access orders.</p>}
-        {canUseOrderContext && <div className="mt-3">
+        {supportsOrderContext(intent) && !customer && <p role="status" className="mt-2 text-xs leading-5 text-text-muted">Sign in to include your own order or delivery context. Public support cannot access orders.</p>}
+        {canUseOrderContext && <div className="mt-2">
           <label htmlFor="compact-support-order" className="block text-xs font-medium text-text">Related order (optional)</label>
-          {orders === null && !ordersError && <div role="status" aria-label="Loading your orders" className="mt-2"><Skeleton className="h-11" /></div>}
-          {ordersError && <p role="alert" className="mt-2 text-xs text-danger">Your orders are unavailable: {ordersError}</p>}
-          {orders && <select id="compact-support-order" value={orderId} onChange={event => setOrderId(event.target.value)} className="mt-2 min-h-11 w-full rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><option value="">No order context</option>{orders.map(order => <option key={order.id} value={order.id}>{order.orderNumber} · {order.status}</option>)}</select>}
+          {orders === null && !ordersError && <div role="status" aria-label="Loading your orders" className="mt-1"><Skeleton className="h-11" /></div>}
+          {ordersError && <p role="alert" className="mt-1 text-xs text-danger">Your orders are unavailable: {ordersError}</p>}
+          {orders && <select id="compact-support-order" value={orderId} onChange={event => setOrderId(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><option value="">No order context</option>{orders.map(order => <option key={order.id} value={order.id}>{order.orderNumber} · {order.status}</option>)}</select>}
         </div>}
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto py-4" aria-live="polite" aria-label="Current conversation">
-        {transcript.length === 0 ? <p className="rounded-md bg-surface-muted p-4 text-sm leading-6 text-text-muted">Tell us what you need help with. Each reply is based only on the message and authorised context you send now.</p> : <ol className="space-y-3">
-          {transcript.map(chat => <li key={chat.id} className={chat.actor === "CUSTOMER" ? "ml-8 rounded-lg bg-primary px-4 py-3 text-sm leading-6 text-primary-text" : "mr-4 rounded-lg border border-border bg-surface-muted px-4 py-3 text-sm leading-6 text-text"}>
-            <p className={`text-xs font-medium ${chat.actor === "CUSTOMER" ? "text-primary-text/80" : "text-text-muted"}`}>{chat.actor === "CUSTOMER" ? "You" : "Palermo concierge"}</p>
-            {chat.state === "pending" ? <div role="status" aria-busy="true" className="mt-2 flex items-center gap-2 text-text-muted"><Skeleton className="h-3 w-3 rounded-full" /><span>Thinking…</span></div> : <p className="mt-1 whitespace-pre-wrap break-words">{chat.content}</p>}
-            {chat.state === "error" && <Button type="button" size="sm" variant="outline" className="mt-3" onClick={() => { void ask(chat); }}>Retry</Button>}
-            {chat.actor === "ASSISTANT" && !chat.state && chat.conversationId && <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3" aria-label="Rate this response">
-              <span className="text-xs text-text-muted">Helpful?</span>
-              <Button type="button" size="sm" variant="outline" disabled={chat.feedback === "sending" || chat.feedback === "sent"} onClick={() => { void sendFeedback(chat, 5); }}>Yes</Button>
-              <Button type="button" size="sm" variant="outline" disabled={chat.feedback === "sending" || chat.feedback === "sent"} onClick={() => { void sendFeedback(chat, 1); }}>No</Button>
-              {chat.feedback === "sent" && <span role="status" className="text-xs text-text-muted">Thank you.</span>}
-              {chat.feedback === "error" && <span role="alert" className="text-xs text-danger">Feedback could not be saved.</span>}
+        {transcript.length === 0 ? <div className="py-3"><p className="max-w-[28rem] text-sm leading-6 text-text-muted">Ask about the public perfume catalogue, notes, or Palermo policy information.</p><div className="mt-4 flex flex-wrap gap-2">{["What perfumes do you sell?", "Which fragrances contain vanilla?", "Tell me about Saphire Chocolate."].map(prompt => <button key={prompt} type="button" onClick={() => setMessage(prompt)} className="min-h-11 rounded-full border border-border px-3 text-left text-xs text-text-muted transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{prompt}</button>)}</div></div> : <ol className="space-y-4">
+          {transcript.map(chat => <li key={chat.id} className={chat.actor === "CUSTOMER" ? "ml-auto max-w-[85%] rounded-md rounded-br-sm bg-primary px-3 py-2 text-sm leading-6 text-primary-text sm:max-w-[78%]" : "max-w-[92%] border-l-2 border-accent px-3 text-sm leading-6 text-text sm:max-w-[86%]"}>
+            <p className={`text-xs font-medium ${chat.actor === "CUSTOMER" ? "text-primary-text/75" : "text-text-muted"}`}>{chat.actor === "CUSTOMER" ? "You" : "Palermo concierge"}</p>
+            {chat.state === "pending" ? <div role="status" aria-busy="true" className="mt-1 flex items-center gap-2 text-text-muted"><Skeleton className="h-3 w-12" /><span className="text-xs">Thinking</span></div> : <p className="mt-1 whitespace-pre-wrap break-words">{chat.content}</p>}
+            {chat.state === "error" && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => { void ask(chat); }}>Retry</Button>}
+            {chat.actor === "ASSISTANT" && !chat.state && chat.conversationId && <div className="mt-2 flex items-center gap-1" aria-label="Rate this response">
+              <span className="mr-1 text-xs text-text-muted">Helpful?</span>
+              <Button type="button" size="icon" variant="ghost" className="h-10 min-h-10 w-10" disabled={chat.feedback === "sending" || chat.feedback === "sent"} onClick={() => { void sendFeedback(chat, 5); }} aria-label="This response was helpful" title="Helpful"><ThumbsUp className="h-4 w-4" aria-hidden="true" /></Button>
+              <Button type="button" size="icon" variant="ghost" className="h-10 min-h-10 w-10" disabled={chat.feedback === "sending" || chat.feedback === "sent"} onClick={() => { void sendFeedback(chat, 1); }} aria-label="This response was not helpful" title="Not helpful"><ThumbsDown className="h-4 w-4" aria-hidden="true" /></Button>
+              {chat.feedback === "sent" && <span role="status" className="text-xs text-text-muted">Thanks.</span>}
+              {chat.feedback === "error" && <span role="alert" className="text-xs text-danger">Could not save feedback.</span>}
             </div>}
           </li>)}
         </ol>}
       </div>
 
-      <form className="shrink-0 border-t border-border pt-4" onSubmit={event => { event.preventDefault(); void ask(); }}>
+      <form className="shrink-0 border-t border-border bg-surface pt-3" onSubmit={event => { event.preventDefault(); void ask(); }}>
         <label htmlFor="compact-support-message" className="sr-only">Message</label>
-        <textarea id="compact-support-message" value={message} maxLength={1000} rows={2} placeholder="Write your question" onChange={event => setMessage(event.target.value)} onKeyDown={event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") { event.preventDefault(); void ask(); } }} className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" />
-        <div className="mt-2 flex items-center justify-between gap-3"><p className="text-xs text-text-muted">{message.length}/1000 · Ctrl/⌘ + Enter sends</p><Button type="submit" size="sm" isLoading={pending} disabled={!message.trim() || pending}>Send</Button></div>
+        <div className="relative"><textarea ref={composerRef} id="compact-support-message" value={message} maxLength={1000} rows={1} placeholder="Ask Palermo" onChange={event => setMessage(event.target.value)} onKeyDown={event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") { event.preventDefault(); void ask(); } }} className="block min-h-11 w-full resize-none rounded-md border border-border bg-surface py-2 pl-3 pr-14 text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" /><Button type="submit" size="icon" className="!absolute bottom-0.5 right-0.5 h-10 min-h-10 w-10" isLoading={pending} disabled={!message.trim() || pending} aria-label="Send message"><SendHorizontal className="h-4 w-4" aria-hidden="true" /></Button></div>
+        <p className="mt-1 text-xs text-text-muted">{message.length}/1000. Ctrl or Command + Enter sends.</p>
       </form>
     </section>
   );
