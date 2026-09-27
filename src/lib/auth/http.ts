@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 import type { ApiResult, AppErrorCode } from "../../contracts/common";
 import type { IdentityService, LoginResult } from "../../modules/identity/service";
 import { AuthFault } from "./errors";
+import { SESSION_COOKIE } from "./session-cookie";
 
-export const SESSION_COOKIE = process.env["NODE_ENV"] === "production" ? "__Host-palermo_session" : "palermo_session";
+export { SESSION_COOKIE } from "./session-cookie";
 const statuses: Record<AppErrorCode, number> = { VALIDATION_ERROR: 400, UNAUTHENTICATED: 401, FORBIDDEN: 403, NOT_FOUND: 404, CONFLICT: 409, TEMPORARILY_UNAVAILABLE: 503, INTEGRATION_ERROR: 502, INTERNAL_ERROR: 500 };
 const acknowledged = { acknowledged: true } as const;
 
