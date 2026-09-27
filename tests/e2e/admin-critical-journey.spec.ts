@@ -13,8 +13,17 @@ test("admin routes reject anonymous access and allow the fixed administrator fix
   await page.getByRole("button", { name: "Sign in to administration" }).click();
 
   await expect(page).toHaveURL(/\/admin\/catalogue\?view=active$/);
+  await expect(page.getByText("Operational console", { exact: true })).toBeVisible();
+  const administration = page.getByRole("navigation", { name: "Administration" });
+  await expect(administration.getByRole("link", { name: "Orders", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Catalogue", exact: true })).toBeVisible();
   await expect(page.getByText("E2E Citrus").last()).toBeVisible();
+
+  await page.goto("/admin/orders");
+  await expect(page.getByText("Operational console", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Orders", exact: true })).toBeVisible();
+  await expect(administration.getByRole("link", { name: "Orders", exact: true })).toHaveAttribute("aria-current", "page");
+
   await page.goto("/admin/inventory");
   await expect(page.getByRole("heading", { name: "Inventory", exact: true })).toBeVisible();
   await expect(page.getByRole("row", { name: /E2E-CITRUS-50/ })).toBeVisible();
