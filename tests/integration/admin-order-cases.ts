@@ -13,10 +13,22 @@ export function adminOrderCases(db: PrismaClient): void {
   describe("administrator order read service", () => {
     const service = new AdminOrdersService(db);
 
+    async function listedOrder(id: string) {
+      let page = 1;
+      const pageSize = 20;
+
+      while (true) {
+        const result = data(await service.list({ page, pageSize }));
+        const order = result.items.find(item => item.id === id);
+        if (order) return order;
+        if (!result.hasMore) throw new Error(`Expected canonical order ${id} in administrator list.`);
+        page += 1;
+      }
+    }
+
     it("lists truthful order, payment and shipment states without customer ownership filtering", async () => {
-      const result = data(await service.list({ page: 1, pageSize: 20 }));
-      const paid = result.items.find(item => item.id === ids.paidOrder);
-      const pending = result.items.find(item => item.id === ids.pendingOrder);
+      const paid = await listedOrder(ids.paidOrder);
+      const pending = await listedOrder(ids.pendingOrder);
 
       expect(paid).toMatchObject({
         customer: { name: "Demo Customer", email: "customer@example.test" },
