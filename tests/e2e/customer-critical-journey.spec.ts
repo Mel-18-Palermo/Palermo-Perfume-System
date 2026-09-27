@@ -72,10 +72,10 @@ test("verified checkout completion moves to the existing order detail confirmati
   await page.getByLabel("Password").fill(customer.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/orders/${e2eOrderId}\\?confirmed=1$`));
   const confirmation = page.getByRole("status").filter({ hasText: "Order confirmed" });
   await expect(confirmation).toBeVisible();
   await expect(confirmation.getByRole("heading", { name: "Your order has been placed successfully." })).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`/orders/${e2eOrderId}$`));
   await expect(confirmation).toContainText("E2E-393");
   await expect(page.getByText("Current delivery state")).toBeVisible();
 
@@ -84,6 +84,16 @@ test("verified checkout completion moves to the existing order detail confirmati
     await expect(confirmation).toBeVisible();
     await page.screenshot({ path: `test-results/issue-429-confirmation-${width}.png`, fullPage: true });
   }
+
+  await page.reload();
+  await expect(page.getByRole("status").filter({ hasText: "Order confirmed" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
+  await expect(page.getByText("Current delivery state")).toBeVisible();
+
+  await page.goto(`/orders/${e2eOrderId}?source=checkout&confirmed=1#delivery`);
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation.getByRole("heading", { name: "Your order has been placed successfully." })).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`/orders/${e2eOrderId}\\?source=checkout#delivery$`));
 });
 
 test("support uses the real public and customer support boundaries", async ({ page }) => {
