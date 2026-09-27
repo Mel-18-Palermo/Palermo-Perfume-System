@@ -1,6 +1,8 @@
 import type {
   AdminApi,
   AdminCatalogueReferences,
+  AdminOrderDetail,
+  AdminOrderSummary,
   AdminPerfume,
   Dashboard,
   InventoryBalance,
@@ -107,11 +109,17 @@ export function createAdminHttpClient(
   const promotions = <T>(operation: string, input?: unknown) =>
     call<T>(`/api/admin/promotions/${operation}`, input, fetcher);
 
+  const orders = <T>(path: string) => call<T>(`/api/admin/orders${path}`, undefined, fetcher);
+
   return {
     getDashboard: (period: ReportingPeriod) =>
       catalogue<Dashboard>(
         `dashboard?from=${encodeURIComponent(period.from)}&to=${encodeURIComponent(period.to)}`,
       ),
+
+    listOrders: input => orders<Page<AdminOrderSummary>>(pageQuery(input)),
+
+    getOrder: input => orders<AdminOrderDetail>(`/${encodeURIComponent(input.id)}`),
 
     getCatalogueReferences: () =>
       catalogue<AdminCatalogueReferences>("references"),

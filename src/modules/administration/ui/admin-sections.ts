@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Boxes, ChartNoAxesCombined, LayoutDashboard, MessageSquareText, PackageSearch, ShieldCheck, Tags } from "lucide-react";
+import { Boxes, ChartNoAxesCombined, LayoutDashboard, MessageSquareText, PackageSearch, ReceiptText, ShieldCheck, Tags } from "lucide-react";
 
 export const adminSections = {
   dashboard: {
@@ -36,6 +36,13 @@ export const adminSections = {
     description: "The review moderation queue will appear here.",
     group: "Administration",
     icon: MessageSquareText,
+  },
+  orders: {
+    href: "/admin/orders",
+    title: "Orders",
+    description: "Read-only customer order and delivery information.",
+    group: "Administration",
+    icon: ReceiptText,
   },
   reporting: {
     href: "/admin/reporting",

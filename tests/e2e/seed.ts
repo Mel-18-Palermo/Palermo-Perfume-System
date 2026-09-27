@@ -12,6 +12,7 @@ export const e2e = {
   reportingPermissionId: "39300000-0000-4000-8000-000000000120",
   reviewsPermissionId: "39300000-0000-4000-8000-000000000121",
   promotionsPermissionId: "39300000-0000-4000-8000-000000000122",
+  ordersPermissionId: "39300000-0000-4000-8000-000000000124",
   reviewId: "39300000-0000-4000-8000-000000000123",
   familyId: "39300000-0000-4000-8000-000000000106",
   intensityId: "39300000-0000-4000-8000-000000000107",
@@ -42,6 +43,7 @@ try {
       { id: e2e.reportingPermissionId, code: "reporting:read", description: "E2E reporting access" },
       { id: e2e.reviewsPermissionId, code: "reviews:moderate", description: "E2E review moderation access" },
       { id: e2e.promotionsPermissionId, code: "promotions:manage", description: "E2E promotion management access" },
+      { id: e2e.ordersPermissionId, code: "orders:read", description: "E2E order read access" },
     ] });
     await tx.rolePermission.createMany({ data: [
       { roleId: e2e.roleId, permissionId: e2e.cataloguePermissionId },
@@ -49,6 +51,7 @@ try {
       { roleId: e2e.roleId, permissionId: e2e.reportingPermissionId },
       { roleId: e2e.roleId, permissionId: e2e.reviewsPermissionId },
       { roleId: e2e.roleId, permissionId: e2e.promotionsPermissionId },
+      { roleId: e2e.roleId, permissionId: e2e.ordersPermissionId },
     ] });
     await tx.adminAccount.create({ data: { id: e2e.adminId, authUserId: e2e.adminAuthId, email: "e2e.admin@example.test", name: "E2E Administrator", roleId: e2e.roleId, createdAt: at } });
     await tx.customer.create({ data: { id: e2e.customerId, authUserId: e2e.customerAuthId, name: "E2E Customer", email: "e2e.customer@example.test", status: "ACTIVE", emailVerifiedAt: at, createdAt: at } });

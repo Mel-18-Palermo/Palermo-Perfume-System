@@ -1,4 +1,4 @@
-import type { AdminPerfume, Dashboard, InventoryBalance, ProductionBatch } from "../../../contracts/admin";
+import type { AdminOrderDetail, AdminPerfume, Dashboard, InventoryBalance, ProductionBatch } from "../../../contracts/admin";
 import type { SessionUser } from "../../../contracts/auth";
 import type { CartCustomisation, CartDto } from "../../../contracts/cart";
 import type { CatalogueFilters, PerfumeDetail, PerfumeSummary } from "../../../contracts/catalogue";
@@ -138,6 +138,21 @@ export const recommendation: RecommendationResult = {
   items: [{ perfumeId: citrus.id, perfume: summary(citrus), reason: "Deterministic demo result; no AI provider was called." }],
 };
 export const adminPerfume: AdminPerfume = { perfume: citrus, status: "ACTIVE", revision: "catalogue-1" };
+export const adminOrder: AdminOrderDetail = {
+  id: order.id, orderNumber: order.orderNumber, customer: { name: customer.displayName, email: customer.email },
+  placedAt: order.placedAt, status: order.status, paymentStatus: order.paymentStatus, shipmentState: "PENDING",
+  trackingPresent: true, total: order.total, subtotal: order.subtotal, discountTotal: order.discountTotal,
+  deliveryCharge: money(1000), deliveryAddress: order.deliveryAddress, paymentReference: invoice.paymentReference,
+  cancellationRequest: null,
+  items: order.items.map(item => ({
+    id: item.id, sku: item.sku, title: item.title, quantity: item.quantity, unitPrice: item.unitPrice,
+    lineTotal: money(item.unitPrice.amountMinor * item.quantity), personalisation: item.customisation,
+  })),
+  shipment: {
+    state: tracking.status, trackingReference: tracking.trackingReference, deliveredAt: null,
+    events: tracking.events,
+  },
+};
 export const inventory: InventoryBalance = {
   variantId: "variant-citrus", sku: "DEMO-CITRUS-50", onHand: 12, reserved: 2, available: 10,
   lowStockThreshold: 3, lowStock: false, updatedAt: FIXTURE_TIME,

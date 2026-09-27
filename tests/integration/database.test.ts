@@ -16,6 +16,7 @@ import { paymentCases } from "./payment-cases";
 import { inventoryCases } from "./inventory-cases";
 import { orderCases } from "./order-cases";
 import { adminCatalogueCases } from "./admin-catalogue-cases";
+import { adminOrderCases } from "./admin-order-cases";
 import { availabilityCases } from "./availability-cases";
 import { reportingCases } from "./reporting-cases";
 import { deliveryCases } from "./delivery-cases";
@@ -194,6 +195,7 @@ paymentCases(db);
 inventoryCases(db);
 orderCases(db);
 adminCatalogueCases(db);
+adminOrderCases(db);
 reportingCases(db);
 deliveryCases(db);
 // Canonical discovery population must run after suites that depend on the exact synthetic seed baseline.
