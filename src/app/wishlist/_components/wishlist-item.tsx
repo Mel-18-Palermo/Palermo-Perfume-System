@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { HeartOff } from "lucide-react";
 import type { MoneyValue } from "@/contracts/common";
 import type { WishlistItem } from "@/contracts/wishlist";
 import { Button } from "@/components/ui/button";
+import { ActionLink } from "@/components/ui/action-link";
 
 function formatMoney(value: MoneyValue): string {
   return new Intl.NumberFormat("en-AU", {
@@ -68,12 +68,13 @@ export function WishlistItemRow({
 
       <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-stretch">
         {perfume ? (
-          <Link
+          <ActionLink
             href={`/product/${perfume.id}`}
-            className="inline-flex min-h-11 items-center justify-center border border-text px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-text transition-colors hover:bg-text hover:!text-primary-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text"
+            variant="outline"
+            className="rounded-none text-xs uppercase tracking-[0.12em]"
           >
             View fragrance
-          </Link>
+          </ActionLink>
         ) : null}
         <Button
           type="button"

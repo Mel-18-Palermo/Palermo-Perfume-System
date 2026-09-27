@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { actionClassName } from "@/components/ui/action-link";
 
 type AdminButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 type AdminButtonSize = "sm" | "md";
@@ -12,25 +13,13 @@ export interface AdminButtonProps
   isLoading?: boolean;
 }
 
-const variantClasses: Record<AdminButtonVariant, string> = {
-  primary: "bg-primary text-primary-text hover:bg-primary-hover",
-  secondary: "bg-surface text-text border border-border hover:bg-surface-muted",
-  danger: "bg-danger text-primary-text hover:opacity-90",
-  ghost: "bg-transparent text-text hover:bg-surface-muted",
-};
-
-const sizeClasses: Record<AdminButtonSize, string> = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2 text-base",
-};
-
 export const AdminButton = React.forwardRef<HTMLButtonElement, AdminButtonProps>(
   ({ className = "", variant = "primary", size = "md", isLoading = false, disabled, children, ...props }, ref) => {
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-        disabled={disabled ?? isLoading}
+        className={actionClassName({ variant, size, className })}
+        disabled={disabled || isLoading}
         aria-busy={isLoading}
         {...props}
       >

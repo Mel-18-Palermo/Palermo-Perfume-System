@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import type { AppError } from "@/contracts/common";
+import { useTransientStatus } from "@/components/ui/transient-status";
 import { api } from "@/lib/api";
 
 type WishlistStatus = "loading" | "ready" | "signed-out" | "error";
@@ -9,6 +10,7 @@ const unavailable: AppError = { code: "TEMPORARILY_UNAVAILABLE", message: "The w
 const requiresSignIn = (code: AppError["code"]) => code === "UNAUTHENTICATED" || code === "FORBIDDEN";
 
 export function useWishlist() {
+  const { announce } = useTransientStatus();
   const [status, setStatus] = React.useState<WishlistStatus>("loading");
   const [savedIds, setSavedIds] = React.useState<ReadonlySet<string>>(() => new Set());
   const [pendingIds, setPendingIds] = React.useState<ReadonlySet<string>>(() => new Set());
@@ -37,7 +39,8 @@ export function useWishlist() {
     setPendingIds(current => new Set(current).add(perfumeId));
     setError(null);
     try {
-      const result = savedIds.has(perfumeId) ? await api.wishlist.remove({ perfumeId }) : await api.wishlist.add({ perfumeId });
+      const wasSaved = savedIds.has(perfumeId);
+      const result = wasSaved ? await api.wishlist.remove({ perfumeId }) : await api.wishlist.add({ perfumeId });
       if (!result.ok) {
         if (requiresSignIn(result.error.code)) setStatus("signed-out");
         else setError(result.error);
@@ -45,11 +48,12 @@ export function useWishlist() {
       }
       setSavedIds(new Set(result.data.items.map(item => item.perfumeId)));
       setStatus("ready");
+      announce(wasSaved ? "Removed from saved fragrances." : "Saved to your fragrances.");
     } catch { setError(unavailable); }
     finally {
       setPendingIds(current => { const next = new Set(current); next.delete(perfumeId); return next; });
     }
-  }, [pendingIds, savedIds, status]);
+  }, [announce, pendingIds, savedIds, status]);
 
   return { status, savedIds, pendingIds, error, toggle } as const;
 }

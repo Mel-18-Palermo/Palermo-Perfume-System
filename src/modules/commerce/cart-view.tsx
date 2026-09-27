@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { ActionLink } from "@/components/ui/action-link";
 import { Alert } from "@/components/ui/alert";
 import { api } from "@/lib/api";
 import type { CartDto, CartItemDto, CartValidationMessage } from "@/contracts/cart";
@@ -371,12 +372,13 @@ export function CartView({
             )}
             <div className="mt-7">
               {cart.checkoutEligible ? (
-                <Link
+                <ActionLink
                   href="/checkout"
-                  className="inline-flex min-h-[52px] w-full items-center justify-between bg-primary px-5 py-3 text-sm font-medium text-primary-text transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:translate-y-0 motion-reduce:transform-none"
+                  size="lg"
+                  className="w-full justify-between rounded-none"
                 >
                   Proceed to checkout <span aria-hidden="true">→</span>
-                </Link>
+                </ActionLink>
               ) : (
                 <Button
                   className="min-h-[52px] w-full rounded-none"
