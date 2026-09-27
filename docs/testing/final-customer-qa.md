@@ -36,7 +36,7 @@ pm test | PASS | **134 / 134 passing tests across 21 test files** (Vitest v4.1.1
 | **Orders & Tracking (/orders, /orders/[id])** | PASS | PASS | PASS | Timeline badges, itemized line records, order lifecycle status visible |
 | **Customer Wishlist (/wishlist)** | PASS | PASS | PASS | Saved perfume items grid layout responsive |
 | **Rewards & Loyalty (/account/rewards, /participation)**| PASS | PASS | PASS | Loyalty tier progress, point balance card, referral mechanics stable |
-| **Customer Support / Concierge (/support)** | PASS | PASS | PASS | Support interface layout responsive; assistive drawer functional |
+| **Customer Support / Concierge (/support)** | DEFECT / PARTIAL | DEFECT / PARTIAL | DEFECT / PARTIAL | Base static FAQ/help layout renders, but interactive AI concierge chat does not connect/respond due to missing live backend dependency #273 |
 | **Policy Pages (/privacy, /shipping, /returns, /terms)** | PASS | PASS | PASS | Legal disclosure prose constrained without horizontal scroll |
 
 ---
@@ -52,13 +52,13 @@ pm test | PASS | **134 / 134 passing tests across 21 test files** (Vitest v4.1.1
 
 ## 4. Console & Runtime Inspection
 
-- **Console Log / Error Findings**: 0 unhandled runtime exceptions or broken image resource requests across customer discovery and order routes.
+- **Console Log / Error Findings**: 0 unhandled runtime exceptions on standard catalog/auth routes. AI concierge triggers network failure/unresponsive state when attempting to connect to live assistant endpoint.
 - **Network Resilience**: Graceful fallback boundaries demonstrated for unauthenticated states and empty data sets.
 
 ---
 
-## 5. Checkout Safety & Genuine Limitations
+## 5. Defects & Genuine Limitations
 
+- **Defect — AI Concierge Non-functional**: The floating AI assistant and support chat interactive dispatch fails to exchange messages because the upstream conversational AI runtime/backend contract (#273) is not active in this baseline. Documented as a known limitation per issue instructions (not silently modified).
 - **Checkout Sandbox Execution**: Verification executed strictly within mock/sandbox testmode boundaries; zero real payment authorization calls introduced.
-- **AI Streaming Concierge**: Upstream live backend streaming staged behind dependency #273.
 - **Protected Paths**: No protected backend contracts, Prisma schema definitions, or payment authorities modified.
