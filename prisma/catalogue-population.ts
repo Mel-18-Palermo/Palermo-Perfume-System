@@ -19,6 +19,7 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const assetNamePattern = /^(?:primary|detail-[0-9]{2})\.(?:png|webp)$/;
 const audienceCollectionIds = new Set(Object.values(approvedCatalogueAudienceCollectionIds));
+const cataloguePopulationTransactionTimeoutMs = 180_000;
 
 export class CatalogueManifestError extends Error {
   constructor(readonly issues: readonly string[]) {
@@ -508,7 +509,7 @@ export async function populateApprovedCatalogue(
   manifest: ApprovedCatalogueManifest,
 ): Promise<CataloguePopulationSummary> {
   assertApprovedCatalogueManifest(manifest);
-  await db.$transaction(tx => populate(tx, manifest), { timeout: 60_000 });
+  await db.$transaction(tx => populate(tx, manifest), { timeout: cataloguePopulationTransactionTimeoutMs });
   return {
     products: manifest.products.length,
     variants: manifest.products.reduce((total, product) => total + product.variants.length, 0),
@@ -525,7 +526,7 @@ export async function populateFinalCatalogue(
   await db.$transaction(async tx => {
     await populate(tx, manifest);
     await archiveSyntheticDemoProducts(tx);
-  }, { timeout: 60_000 });
+  }, { timeout: cataloguePopulationTransactionTimeoutMs });
   return {
     products: manifest.products.length,
     variants: manifest.products.reduce((total, product) => total + product.variants.length, 0),
@@ -543,7 +544,7 @@ export async function populateApprovedCatalogueAndQuiz(
   await db.$transaction(async tx => {
     await populate(tx, catalogue);
     await populateApprovedQuizInTransaction(tx, quiz, catalogue);
-  }, { timeout: 60_000 });
+  }, { timeout: cataloguePopulationTransactionTimeoutMs });
   return {
     products: catalogue.products.length,
     variants: catalogue.products.reduce((total, product) => total + product.variants.length, 0),
@@ -565,7 +566,7 @@ export async function populateFinalCatalogueAndQuiz(
     await populate(tx, catalogue);
     await populateApprovedQuizInTransaction(tx, quiz, catalogue);
     await archiveSyntheticDemoProducts(tx);
-  }, { timeout: 60_000 });
+  }, { timeout: cataloguePopulationTransactionTimeoutMs });
   return {
     products: catalogue.products.length,
     variants: catalogue.products.reduce((total, product) => total + product.variants.length, 0),
