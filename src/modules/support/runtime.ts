@@ -1,14 +1,9 @@
 import "server-only";
 
+import { configuredOpenAISupportProvider } from "../../integrations/ai/openai-support-provider";
 import { getDatabase } from "../../lib/db";
-import { SupportService, type SupportProvider } from "./service";
-
-const unavailableProvider: SupportProvider = {
-  respond: async () => {
-    throw new Error("Support provider is not configured.");
-  },
-};
+import { SupportService } from "./service";
 
 export function getSupportService(): SupportService {
-  return new SupportService(getDatabase(), unavailableProvider);
+  return new SupportService(getDatabase(), configuredOpenAISupportProvider());
 }
