@@ -130,7 +130,11 @@ export function OrderDetailView({ orderId, confirmed = false }: OrderDetailViewP
     && isVerifiedOrderCompletion(orderState.order);
 
   React.useEffect(() => {
-    if (showConfirmation) confirmationHeadingRef.current?.focus();
+    if (!showConfirmation) return;
+    confirmationHeadingRef.current?.focus();
+    const url = new URL(window.location.href);
+    url.searchParams.delete("confirmed");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
   }, [showConfirmation]);
 
   return (
