@@ -66,6 +66,26 @@ test("catalogue, cart, checkout boundary, and owned tracking work through the br
   await expect(page.getByText("E2E deterministic transit event.")).toBeVisible();
 });
 
+test("verified checkout completion moves to the existing order detail confirmation", async ({ page }) => {
+  await page.goto(`/login?next=${encodeURIComponent(`/checkout?orderId=${e2eOrderId}`)}`);
+  await page.getByLabel("Email").fill(customer.email);
+  await page.getByLabel("Password").fill(customer.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(page).toHaveURL(new RegExp(`/orders/${e2eOrderId}\\?confirmed=1$`));
+  const confirmation = page.getByRole("status").filter({ hasText: "Order confirmed" });
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation.getByRole("heading", { name: "Your order has been placed successfully." })).toBeFocused();
+  await expect(confirmation).toContainText("E2E-393");
+  await expect(page.getByText("Current delivery state")).toBeVisible();
+
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(confirmation).toBeVisible();
+    await page.screenshot({ path: `test-results/issue-429-confirmation-${width}.png`, fullPage: true });
+  }
+});
+
 test("support uses the real public and customer support boundaries", async ({ page }) => {
   await page.goto("/support");
   await expect(page.getByRole("button", { name: "Open Palermo concierge" })).toHaveCount(0);

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, PackageX } from "lucide-react";
+import { ArrowLeft, CheckCircle2, PackageX } from "lucide-react";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,11 @@ import { formatDate, formatMoney } from "@/app/orders/_components/format";
 import { OrderErrorView } from "@/app/orders/_components/order-error-view";
 import { safeResult } from "@/app/orders/_components/safe-result";
 import { TrackingTimeline } from "@/app/orders/_components/tracking-timeline";
+import { isVerifiedOrderCompletion } from "@/modules/commerce/checkout/presentation/verified-order-completion";
 
 export interface OrderDetailViewProps {
   orderId: string;
+  confirmed?: boolean;
 }
 
 type OrderState =
@@ -48,7 +50,7 @@ const paymentStatusLabels = {
   EXPIRED: "Payment expired",
 } as const;
 
-export function OrderDetailView({ orderId }: OrderDetailViewProps) {
+export function OrderDetailView({ orderId, confirmed = false }: OrderDetailViewProps) {
   const router = useRouter();
   const [shell, setShell] = React.useState<{ session: Session | null; cart: CartDto | null }>({
     session: null,
@@ -58,6 +60,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
   const [trackingState, setTrackingState] = React.useState<TrackingState>({ status: "idle" });
   const [reloadToken, setReloadToken] = React.useState(0);
   const [trackingReloadToken, setTrackingReloadToken] = React.useState(0);
+  const confirmationHeadingRef = React.useRef<HTMLHeadingElement>(null);
 
   React.useEffect(() => {
     let active = true;
@@ -122,6 +125,14 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
     };
   }, []);
 
+  const showConfirmation = confirmed
+    && orderState.status === "ready"
+    && isVerifiedOrderCompletion(orderState.order);
+
+  React.useEffect(() => {
+    if (showConfirmation) confirmationHeadingRef.current?.focus();
+  }, [showConfirmation]);
+
   return (
     <CustomerShell cart={shell.cart} session={shell.session}>
       <div className="mx-auto max-w-[var(--container-page)]">
@@ -158,10 +169,43 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
 
         {orderState.status === "ready" && (
           <div className="mt-6">
+            {showConfirmation && (
+              <section
+                className="border border-success/30 bg-success-background px-5 py-7 shadow-sm sm:px-8 sm:py-9"
+                role="status"
+                aria-live="polite"
+                aria-labelledby="order-confirmation-heading"
+              >
+                <div className="flex items-start gap-4">
+                  <CheckCircle2 className="mt-1 h-6 w-6 shrink-0 text-success" aria-hidden="true" />
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.16em] text-success">Order confirmed</p>
+                    <h1
+                      id="order-confirmation-heading"
+                      ref={confirmationHeadingRef}
+                      tabIndex={-1}
+                      className="mt-3 text-h1 tracking-tight text-text focus:outline-none"
+                    >
+                      Your order has been placed successfully.
+                    </h1>
+                    <p className="mt-4 text-sm leading-6 text-text-muted">
+                      Order number <span className="font-medium text-text">{orderState.order.orderNumber}</span> is paid and confirmed.
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-text-muted">
+                      Keep this reference for your records. We’ll post delivery updates here when they are available.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
             <header className="border-b border-border pb-7">
               <p className="text-xs font-medium text-text-muted">Your purchase</p>
               <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                <h1 className="text-h1 tracking-tight text-text">{orderState.order.items[0]?.title ?? "Palermo purchase"}</h1>
+                {showConfirmation ? (
+                  <h2 className="text-h1 tracking-tight text-text">{orderState.order.items[0]?.title ?? "Palermo purchase"}</h2>
+                ) : (
+                  <h1 className="text-h1 tracking-tight text-text">{orderState.order.items[0]?.title ?? "Palermo purchase"}</h1>
+                )}
                 <span className="text-sm font-medium text-text">{orderStatusLabels[orderState.order.status]}</span>
               </div>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-text-muted">

@@ -3,33 +3,31 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import type { Stripe, StripeElements, StripePaymentElement } from "@stripe/stripe-js";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 import type { CheckoutRequest, CheckoutResult, DeliveryMethod } from "@/contracts/checkout";
-import type { OrderDetail } from "@/contracts/orders";
 import type { CustomerProfile } from "@/contracts/profile";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { getStripeClient } from "@/lib/payment/stripe-elements";
+import { isVerifiedOrderCompletion, orderConfirmationHref } from "./verified-order-completion";
 
 type Stage =
   | "INITIALISING" | "AUTH_REQUIRED" | "CHECKOUT_READY" | "CHECKOUT_SUBMITTING"
   | "READY_FOR_PAYMENT" | "PAYMENT_INITIALISING" | "PAYMENT_READY"
-  | "PAYMENT_PROCESSING" | "VERIFYING_ORDER" | "SUCCESS" | "PAYMENT_FAILED"
+  | "PAYMENT_PROCESSING" | "VERIFYING_ORDER" | "PAYMENT_FAILED"
   | "PAYMENT_EXPIRED" | "PAYMENT_PENDING" | "REQUIRES_CART_REVIEW"
   | "OUT_OF_STOCK" | "INVALID_PROMOTION" | "CHECKOUT_CONFLICT" | "ERROR";
 
 const money = (value: { amountMinor: number; currency: string }) =>
   new Intl.NumberFormat("en-AU", { style: "currency", currency: value.currency }).format(value.amountMinor / 100);
 const pause = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
-const confirmedOrderStatuses: ReadonlySet<OrderDetail["status"]> = new Set([
-  "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED",
-]);
-
 export function CheckoutPage() {
+  const router = useRouter();
   const [stage, setStage] = React.useState<Stage>("INITIALISING");
   const [session, setSession] = React.useState<Session | null>(null);
   const [profile, setProfile] = React.useState<CustomerProfile | null>(null);
@@ -40,7 +38,6 @@ export function CheckoutPage() {
   const [message, setMessage] = React.useState("");
   const [orderId, setOrderId] = React.useState<string | null>(null);
   const [clientSecret, setClientSecret] = React.useState<string | null>(null);
-  const [confirmedOrder, setConfirmedOrder] = React.useState<OrderDetail | null>(null);
   const [idempotency, setIdempotency] = React.useState<{ fingerprint: string; key: string } | null>(null);
   const [promotionBusy, setPromotionBusy] = React.useState(false);
   const [promotionError, setPromotionError] = React.useState<string | null>(null);
@@ -98,7 +95,6 @@ export function CheckoutPage() {
     verificationRunRef.current += 1;
     setOrderId(null);
     setClientSecret(null);
-    setConfirmedOrder(null);
     const url = new URL(window.location.href);
     url.searchParams.delete("orderId");
     window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
@@ -114,7 +110,10 @@ export function CheckoutPage() {
       const result = await api.orders.get({ id: targetOrderId });
       if (run !== verificationRunRef.current) return;
       if (result.ok) {
-        if (result.data.paymentStatus === "SUCCEEDED" && confirmedOrderStatuses.has(result.data.status)) { setConfirmedOrder(result.data); setStage("SUCCESS"); return; }
+        if (isVerifiedOrderCompletion(result.data)) {
+          router.replace(orderConfirmationHref(result.data.id));
+          return;
+        }
         if (result.data.paymentStatus === "FAILED") { setStage("PAYMENT_FAILED"); return; }
         if (result.data.paymentStatus === "EXPIRED") { setStage("PAYMENT_EXPIRED"); return; }
         sawPending = result.data.paymentStatus === "PENDING";
@@ -126,7 +125,7 @@ export function CheckoutPage() {
     }
     if (sawPending) setStage("PAYMENT_PENDING");
     else { setMessage("We could not verify the order status."); setStage("ERROR"); }
-  }, [recoverFromInvalidResume]);
+  }, [recoverFromInvalidResume, router]);
 
   React.useEffect(() => {
     let active = true;
@@ -313,8 +312,6 @@ export function CheckoutPage() {
           </>}
 
           {paymentUiActive && <section className="border-b border-border py-8 sm:py-10" aria-labelledby="payment-heading"><div className="flex items-baseline gap-4"><span className="text-xs font-medium uppercase tracking-[0.16em] text-text-muted">03</span><h2 id="payment-heading" className="text-2xl font-normal tracking-[-0.04em] text-text">Payment</h2></div><div className="mt-6 border border-border bg-surface p-4 sm:p-6"><p className="mb-5 text-sm text-text-muted">Enter your payment details below to complete your order.</p><div ref={stripeContainerRef} />{stage === "PAYMENT_READY" && <Button className="mt-6 w-full rounded-none transition-transform duration-[var(--duration-normal)] hover:-translate-y-0.5 active:translate-y-0 motion-reduce:transform-none" onClick={() => { void confirmPayment(); }}>Confirm payment</Button>}</div></section>}
-
-          {stage === "SUCCESS" && confirmedOrder && <section className="border-b border-success py-8 sm:py-10" aria-labelledby="confirmation-heading"><p className="text-xs font-medium uppercase tracking-[0.16em] text-success">Order confirmed</p><h2 id="confirmation-heading" className="mt-3 text-3xl font-normal tracking-[-0.045em] text-text">Thank you for choosing Palermo.</h2><p className="mt-4 text-sm leading-6 text-text-muted">Order {confirmedOrder.orderNumber} is confirmed. Total: {money(confirmedOrder.total)}.</p></section>}
 
           {stage === "PAYMENT_PENDING" && <div className="border-b border-warning py-6 text-sm leading-6" role="status"><p className="font-medium">Payment is still being confirmed.</p><p className="mt-1 text-text-muted">Your order status has not changed yet.</p>{orderId && <Button variant="link" className="mt-3" onClick={() => { void verifyOrder(orderId); }}>Check status</Button>}</div>}
           {stage === "PAYMENT_EXPIRED" && <div className="border-b border-warning py-6 text-sm leading-6" role="alert"><p className="font-medium">Your payment session has expired.</p><p className="mt-1 text-text-muted">Start a new payment attempt to continue.</p></div>}

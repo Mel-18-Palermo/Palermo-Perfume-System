@@ -6,7 +6,14 @@ export const metadata: Metadata = {
   description: "View order items, delivery details and shipment tracking.",
 };
 
-export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ confirmed?: string | string[] }>;
+}) {
   const { id } = await params;
-  return <OrderDetailView orderId={id} />;
+  const { confirmed } = await searchParams;
+  return <OrderDetailView orderId={id} confirmed={confirmed === "1"} />;
 }
