@@ -310,6 +310,9 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         return success({ ...fixtures.dashboard, period, totalOrders: hasOrder ? 1 : 0,
           totalSales: fixtures.money(hasOrder ? 13000 : 0), bestSelling: hasOrder ? fixtures.dashboard.bestSelling : [] });
       }),
+      listOrders: run("admin.listOrders", "ADMIN", input => paginate(settings.empty ? [] : [fixtures.adminOrder], input)),
+      getOrder: run("admin.getOrder", "ADMIN", ({ id }) => id === fixtures.adminOrder.id && !settings.empty
+        ? success(fixtures.adminOrder) : failure("NOT_FOUND")),
       getCatalogueReferences: run("admin.getCatalogueReferences", "ADMIN", () => success({
         family: fixtures.filters.family,
         note: fixtures.filters.note,
