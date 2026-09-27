@@ -1,21 +1,36 @@
 import { expect, test } from "playwright/test";
 
 const admin = { email: "e2e.admin@example.test", password: "e2e-admin-password-393" };
+const customer = { email: "e2e.customer@example.test", password: "e2e-customer-password-393" };
 
 test("admin routes reject anonymous access and allow the fixed administrator fixture", async ({ page }) => {
-  await page.goto("/admin/catalogue");
-  await expect(page).toHaveURL(/\/admin\/login\?next=/);
+  await page.goto("/admin/catalogue?view=active");
+  await expect(page).toHaveURL(/\/admin\/login\?next=%2Fadmin%2Fcatalogue%3Fview%3Dactive$/);
+  await expect(page.getByText("Operational console")).toHaveCount(0);
 
   await page.getByLabel("Email").fill(admin.email);
   await page.getByLabel("Password").fill(admin.password);
   await page.getByRole("button", { name: "Sign in to administration" }).click();
 
-  await expect(page).toHaveURL(/\/admin\/catalogue$/);
+  await expect(page).toHaveURL(/\/admin\/catalogue\?view=active$/);
   await expect(page.getByRole("heading", { name: "Catalogue", exact: true })).toBeVisible();
   await expect(page.getByText("E2E Citrus").last()).toBeVisible();
   await page.goto("/admin/inventory");
   await expect(page.getByRole("heading", { name: "Inventory", exact: true })).toBeVisible();
   await expect(page.getByRole("row", { name: /E2E-CITRUS-50/ })).toBeVisible();
+});
+
+test("customer sessions are redirected from protected admin deep links without an admin shell", async ({ page }) => {
+  await page.goto("/login?next=/catalogue");
+  await page.getByLabel("Email").fill(customer.email);
+  await page.getByLabel("Password").fill(customer.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/catalogue$/);
+
+  await page.goto("/admin/inventory?tab=low-stock");
+  await expect(page).toHaveURL(/\/admin\/login\?next=%2Fadmin%2Finventory%3Ftab%3Dlow-stock$/);
+  await expect(page.getByRole("heading", { name: "Administrator sign in" })).toBeVisible();
+  await expect(page.getByText("Operational console")).toHaveCount(0);
 });
 
 test("administrator uses real reporting, moderation and promotion boundaries", async ({ page }) => {

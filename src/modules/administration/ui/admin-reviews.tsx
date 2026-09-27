@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTransientStatus } from "@/components/ui/transient-status";
 import { getAdminMilestoneApi } from "./admin-milestone-api";
 
 type ReviewState =
@@ -22,6 +23,7 @@ const labels = {
 } as const;
 
 export function AdminReviews() {
+  const { announce } = useTransientStatus();
   const [state, setState] = useState<ReviewState>({ status: "loading" });
   const [page, setPage] = useState(1);
   const [reloadToken, setReloadToken] = useState(0);
@@ -63,6 +65,7 @@ export function AdminReviews() {
       setActionError(result.error.message);
       return;
     }
+    announce(`Review marked ${labels[status].toLowerCase()}.`);
     reload();
   }
 

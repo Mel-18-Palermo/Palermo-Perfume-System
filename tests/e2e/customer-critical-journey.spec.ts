@@ -116,11 +116,13 @@ test("wishlist saves from catalogue and product detail through the real customer
 
   await customerLogin(page, "/catalogue");
   await page.getByRole("button", { name: "Save E2E Citrus to wishlist" }).click();
+  await expect(page.getByText("Saved to your fragrances.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove E2E Citrus from wishlist" })).toBeVisible();
 
   await page.goto("/wishlist");
   await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
   await page.getByRole("button", { name: "Remove E2E Citrus from wishlist" }).click();
+  await expect(page.getByText("Removed from saved fragrances.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Nothing saved yet" })).toBeVisible();
 
   await page.goto(e2eCitrusProductPath);

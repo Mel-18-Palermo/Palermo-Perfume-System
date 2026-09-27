@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTransientStatus } from "@/components/ui/transient-status";
 import { getAdminMilestoneApi } from "./admin-milestone-api";
 
 type PromotionState =
@@ -26,6 +27,7 @@ function timestamp(value: string): string | null | undefined {
 }
 
 export function AdminPromotions() {
+  const { announce } = useTransientStatus();
   const [state, setState] = useState<PromotionState>({ status: "loading" });
   const [reloadToken, setReloadToken] = useState(0);
   const [promotion, setPromotion] = useState<PromotionForm>(initialPromotion);
@@ -81,6 +83,7 @@ export function AdminPromotions() {
       reload();
       return;
     }
+    announce("Changes saved.");
     reload();
   }
 

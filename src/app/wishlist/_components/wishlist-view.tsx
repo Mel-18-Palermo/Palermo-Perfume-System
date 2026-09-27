@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { Heart, RefreshCw } from "lucide-react";
 import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
@@ -9,7 +8,9 @@ import type { AppError } from "@/contracts/common";
 import type { WishlistItem } from "@/contracts/wishlist";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { Button } from "@/components/ui/button";
+import { ActionLink } from "@/components/ui/action-link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTransientStatus } from "@/components/ui/transient-status";
 import { api } from "@/lib/api";
 import { canLoadWishlist } from "./wishlist-session";
 import { WishlistItemRow } from "./wishlist-item";
@@ -29,6 +30,7 @@ async function safely<T>(work: () => Promise<T>): Promise<T | null> {
 }
 
 export function WishlistView() {
+  const { announce } = useTransientStatus();
   const [shell, setShell] = React.useState<{ session: Session | null; cart: CartDto | null }>({ session: null, cart: null });
   const [sessionResolved, setSessionResolved] = React.useState(false);
   const [sessionError, setSessionError] = React.useState<AppError | null>(null);
@@ -116,6 +118,7 @@ export function WishlistView() {
       else setActionError(result.error);
     } else {
       setState({ status: "ready", items: result.data.items });
+      announce("Removed from saved fragrances.");
     }
   }
 
@@ -148,7 +151,7 @@ export function WishlistView() {
               <Heart className="h-5 w-5 text-text-muted" aria-hidden="true" />
               <h2 className="mt-4 text-h2 tracking-tight text-text">Sign in to see your wishlist</h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-text-muted">Saved fragrances stay with your Palermo customer account across devices.</p>
-              <Link href="/login?next=/wishlist" className="mt-6 inline-flex min-h-11 items-center justify-center bg-text px-5 py-2 text-xs font-medium uppercase tracking-[0.12em] !text-primary-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text">Sign in</Link>
+              <ActionLink href="/login?next=/wishlist" variant="primary" className="mt-6 rounded-none text-xs uppercase tracking-[0.12em]">Sign in</ActionLink>
             </div>
           ) : null}
 
@@ -166,7 +169,7 @@ export function WishlistView() {
               <Heart className="h-5 w-5 text-text-muted" aria-hidden="true" />
               <h2 className="mt-4 text-h2 tracking-tight text-text">Nothing saved yet</h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-text-muted">Explore the collection and save the fragrances you want to consider again.</p>
-              <Link href="/catalogue" className="mt-6 inline-flex min-h-11 items-center justify-center border border-text px-5 py-2 text-xs font-medium uppercase tracking-[0.12em] text-text transition-colors hover:bg-text hover:!text-primary-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text">Explore the collection</Link>
+              <ActionLink href="/catalogue" variant="outline" className="mt-6 rounded-none text-xs uppercase tracking-[0.12em]">Explore the collection</ActionLink>
             </div>
           ) : null}
 

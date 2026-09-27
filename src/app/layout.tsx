@@ -3,6 +3,7 @@ import { Inter, Newsreader } from "next/font/google";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+import { TransientStatusProvider } from "@/components/ui/transient-status";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,7 +29,7 @@ type RootLayoutProps = Readonly<{
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${inter.variable} ${newsreader.variable}`}>
-      <body>{children}</body>
+      <body><TransientStatusProvider>{children}</TransientStatusProvider></body>
     </html>
   );
 }

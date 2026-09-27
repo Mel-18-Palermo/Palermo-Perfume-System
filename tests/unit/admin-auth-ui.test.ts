@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Session } from "../../src/contracts/auth";
 import { createMockApi } from "../../src/lib/api/mocks";
-import { adminLoginHref, adminSessionDestination } from "../../src/modules/administration/ui/admin-auth-routing";
+import { adminLoginHref, adminSessionDestination, safeAdminNextPath } from "../../src/modules/administration/ui/admin-auth-routing";
 import { safeNextPath } from "../../src/modules/identity/ui/safe-next-path";
 import { adminSections } from "../../src/modules/administration/ui/admin-sections";
 
@@ -33,6 +33,14 @@ describe("administrator authentication UI behaviour", () => {
 
   it("sends an anonymous admin route to administrator sign-in", () => {
     expect(adminLoginHref("/admin/reporting")).toBe("/admin/login?next=%2Fadmin%2Freporting");
+  });
+
+  it("preserves an admin deep-link query while rejecting non-admin and login next paths", () => {
+    expect(adminLoginHref("/admin/inventory?tab=low-stock&page=2"))
+      .toBe("/admin/login?next=%2Fadmin%2Finventory%3Ftab%3Dlow-stock%26page%3D2");
+    expect(safeAdminNextPath("/catalogue")).toBe("/admin");
+    expect(safeAdminNextPath("/admin/login")).toBe("/admin");
+    expect(safeAdminNextPath("https://attacker.invalid/admin")).toBe("/admin");
   });
 
   it("includes a dedicated Security destination in administrator navigation", () => {
