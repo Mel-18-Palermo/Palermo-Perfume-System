@@ -12,8 +12,11 @@ export function safeAdminNextPath(
   fallback = "/admin",
 ): string {
   const nextPath = safeNextPath(value, fallback);
+  const isAdminLogin = nextPath === "/admin/login"
+    || nextPath.startsWith("/admin/login?")
+    || nextPath.startsWith("/admin/login#");
   return nextPath === "/admin" || nextPath.startsWith("/admin/")
-    ? nextPath === "/admin/login" ? fallback : nextPath
+    ? isAdminLogin ? fallback : nextPath
     : fallback;
 }
 

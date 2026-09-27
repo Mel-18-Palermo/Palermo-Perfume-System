@@ -17,17 +17,25 @@ export function AdminSessionPreview({
 }: AdminSessionPreviewProps) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   async function logout(): Promise<void> {
     if (loggingOut) return;
     setLoggingOut(true);
-    const result = await api.auth.logout();
-    if (!result.ok) {
+    setLogoutError(null);
+    try {
+      const result = await api.auth.logout();
+      if (!result.ok) {
+        setLogoutError(result.error.message);
+        setLoggingOut(false);
+        return;
+      }
+      router.replace("/admin/login");
+      router.refresh();
+    } catch {
+      setLogoutError("The account service is temporarily unavailable. Please try again.");
       setLoggingOut(false);
-      return;
     }
-    router.replace("/admin/login");
-    router.refresh();
   }
 
   return (
@@ -38,6 +46,7 @@ export function AdminSessionPreview({
           Sign out
         </Button>
       </div>
+      {logoutError ? <p role="alert" className="-mt-3 text-sm text-danger">{logoutError}</p> : null}
       {children}
     </div>
   );

@@ -40,6 +40,8 @@ describe("administrator authentication UI behaviour", () => {
       .toBe("/admin/login?next=%2Fadmin%2Finventory%3Ftab%3Dlow-stock%26page%3D2");
     expect(safeAdminNextPath("/catalogue")).toBe("/admin");
     expect(safeAdminNextPath("/admin/login")).toBe("/admin");
+    expect(safeAdminNextPath("/admin/login?next=/admin/inventory")).toBe("/admin");
+    expect(safeAdminNextPath("/admin/login#passkey")).toBe("/admin");
     expect(safeAdminNextPath("https://attacker.invalid/admin")).toBe("/admin");
   });
 
