@@ -1,6 +1,8 @@
 import type { Session } from "@/contracts/auth";
 import { safeNextPath } from "@/modules/identity/ui/safe-next-path";
 
+export const ADMIN_NEXT_HEADER = "x-palermo-admin-next";
+
 /** A customer session is never authority to enter the administrator interface. */
 export function adminSessionDestination(session: Session, nextPath: string): string | null {
   return session.user?.role === "ADMIN" ? nextPath : null;

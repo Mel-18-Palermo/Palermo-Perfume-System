@@ -1,23 +1,25 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { AdminResponsiveNavigation } from "@/modules/administration/ui/admin-responsive-navigation";
 import { AdminSessionPreview } from "@/modules/administration/ui/admin-session-preview";
-import { SESSION_COOKIE } from "@/lib/auth/http";
+import { SESSION_COOKIE } from "@/lib/auth/session-cookie";
 import { getIdentityService } from "@/lib/auth/runtime";
+import { ADMIN_NEXT_HEADER, adminLoginHref, safeAdminNextPath } from "@/modules/administration/ui/admin-auth-routing";
 
 type ProtectedAdminLayoutProps = Readonly<{ children: ReactNode }>;
 
 /**
- * The proxy supplies the deep-link redirect. This server check remains the
- * render boundary, so a protected shell can never be streamed to a non-admin.
+ * This server-side check is the authorization boundary, so a protected shell
+ * can never be streamed to an anonymous or non-admin session.
  */
 export default async function ProtectedAdminLayout({ children }: ProtectedAdminLayoutProps) {
-  const cookieStore = await cookies();
+  const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
   const principal = await getIdentityService().principal(cookieStore.get(SESSION_COOKIE)?.value);
+  const originalAdminPath = safeAdminNextPath(requestHeaders.get(ADMIN_NEXT_HEADER) ?? undefined);
 
-  if (principal?.user.role !== "ADMIN") redirect("/admin/login");
+  if (principal?.user.role !== "ADMIN") redirect(adminLoginHref(originalAdminPath));
 
   return (
     <div className="min-h-screen bg-bg text-text">
