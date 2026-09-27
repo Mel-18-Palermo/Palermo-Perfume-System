@@ -17,6 +17,17 @@ const conversationId = "27300000-0000-4000-8000-000000000005";
 
 function database(conversationOwner: string | null = customer) {
   return {
+    perfume: {
+      findMany: vi.fn(async () => [{
+        name: "Saphire Chocolate",
+        slug: "saphire-chocolate",
+        description: "A published Palermo fragrance.",
+        primaryFamily: { name: "Amber" },
+        intensity: null,
+        collections: [{ collection: { name: "Women" } }],
+        notes: [{ layer: "MIDDLE", note: { name: "Cacao Pod" } }],
+      }]),
+    },
     supportConversation: {
       create: vi.fn(async () => ({ id: conversationId })),
       findFirst: vi.fn(async ({ where }: { where: { customerId: string | null } }) =>
@@ -29,16 +40,48 @@ function database(conversationOwner: string | null = customer) {
 
 const provider = (respond: SupportProvider["respond"] = async () => "Safe support reply"): SupportProvider => ({ respond });
 const fixedNow = () => new Date("2026-09-24T00:00:00.000Z");
+function record(value: unknown): Readonly<Record<string, unknown>> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
 
 describe("bounded support assistance", () => {
-  it("keeps public policy help generic and rejects public order access", async () => {
+  it("grounds policy help in the published policy source and rejects public order access", async () => {
     let context: Readonly<Record<string, unknown>> | undefined;
     const db = database();
     const service = new SupportService(db, provider(async input => { context = input.context; return "Policy answer"; }), fixedNow);
 
     await expect(service.ask({ intent: "POLICY", message: "What is your returns policy?" })).resolves.toEqual({ ok: true, data: { conversationId, reply: "Policy answer" } });
-    expect(context).toEqual({ policy: "Approved policy information is available through Palermo support." });
+    const policy = context?.["policy"];
+    expect(Array.isArray(policy)).toBe(true);
+    const policyEntries = policy as readonly unknown[];
+    expect(policyEntries.some(entry => record(entry)?.["title"] === "Returns & Refunds")).toBe(true);
     await expect(service.ask({ intent: "ORDER", message: "Show order", orderId: ownOrder })).resolves.toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+  });
+
+  it("supplies a bounded product-only snapshot from the active public catalogue", async () => {
+    let context: Readonly<Record<string, unknown>> | undefined;
+    const db = database();
+    const service = new SupportService(db, provider(async input => { context = input.context; return "Product answer"; }), fixedNow);
+
+    await expect(service.ask({ intent: "PRODUCT", message: "Tell me about Saphire Chocolate" })).resolves.toMatchObject({ ok: true });
+    expect(context).toEqual({ product: {
+      catalogueScope: "This is the complete bounded list of Palermo's currently public perfume catalogue. Palermo does not sell items outside this list.",
+      products: [{
+        name: "Saphire Chocolate",
+        slug: "saphire-chocolate",
+        description: "A published Palermo fragrance.",
+        family: "Amber",
+        intensity: null,
+        audiences: ["Women"],
+        notes: [{ layer: "MIDDLE", name: "Cacao Pod" }],
+      }],
+    } });
+    const source = readFileSync(new URL("../../src/modules/support/service.ts", import.meta.url), "utf8");
+    expect(source).toContain('status: "ACTIVE"');
+    expect(source).toContain('primaryFamily: { active: true }');
+    expect(source).toContain('availability: { in: ["AVAILABLE", "OUT_OF_STOCK"] }');
+    expect(source).toContain("take: PRODUCT_CONTEXT_LIMIT");
+    expect(JSON.stringify(context)).not.toMatch(/customerId|orderNumber|inventory|priceMinor|sku/i);
   });
 
   it("returns only an authenticated customer's owned order and does not disclose another customer's order", async () => {
