@@ -1,173 +1,117 @@
 # Palermo Perfume System
 
-Palermo Perfume System is a server-authoritative perfume commerce platform built as a Next.js modular monolith. It combines catalogue discovery, customer identity, cart and checkout workflows, inventory reservations, Stripe test-mode payments, order history, and administrator boundaries over Prisma and Supabase PostgreSQL.
-
-Canonical requirements and decisions live under [`docs/requirements/`](docs/requirements/). GitHub issues and pull requests record implementation ownership, acceptance evidence, and current delivery status.
+Palermo is a university capstone perfume-commerce system. It is a Next.js modular monolith with a customer storefront and protected administrator surfaces. The application is designed so that prices, stock, payment outcomes, orders, permissions, and inventory changes are decided on the server rather than trusted from the browser.
 
 ## Current status
 
-The project is in **Sprint 2 — Mid Integration**. The repository has progressed beyond the original application scaffold.
+As of 29 September 2026, Palermo is at final release-candidate/presentation stage. A controlled demonstration deployment is available at [palermoperfumes.store](https://www.palermoperfumes.store/). It is not a commercial live store: it uses synthetic presentation data and Stripe test mode only.
 
-Current `main` includes server-side boundaries and tests for:
+The deployed system includes:
 
-- Supabase-backed customer and administrator identity, sessions, ownership checks, and RBAC;
-- public catalogue summary/detail reads with inventory-backed availability;
-- customer profile, saved addresses, cart, and wishlist persistence;
-- deterministic quiz/recommendation foundations;
-- checkout revalidation, idempotent order creation, and bounded inventory reservations;
-- inventory balances, movements, reservations, and finished-product batch recording/release;
-- real Stripe test-mode PaymentIntent and verified webhook adapters;
-- payment, order, inventory, and invoice finalisation in authoritative database transactions;
-- customer-owned order history, order detail, invoice reads, and cancellation requests;
-- administrator shell, catalogue presentation baseline, and server catalogue mutation authority;
-- protected CI, database integration checks, governance checks, and Vercel deployments.
+- public catalogue, filters, product detail, fragrance quiz and recommendations;
+- customer registration/login, profile, addresses, wishlist, cart, checkout, orders, tracking, reviews, rewards/referrals, and support/concierge;
+- Stripe test-mode PaymentIntent and verified-webhook handling;
+- administrator catalogue, inventory/batches, orders, promotions/content, review moderation, reporting, and security surfaces.
 
-Some feature acceptance and presentation integration work remains open. In particular, real Stripe service evidence still depends on approved test-mode credentials, and incomplete GitHub issues remain the authority for outstanding scope. Passing builds or previews alone does not mark an issue complete.
+`GET /api/health` is deliberately a process-liveness endpoint only. It does not probe the database or external providers.
 
-`GET /api/health` reports application-process liveness only. It deliberately does not probe the database or external providers.
+## Architecture and trust boundaries
+
+The application uses the Next.js App Router with TypeScript strict mode. Domain services live in `src/modules`; shared API contracts live in `src/contracts`; server infrastructure is in `src/lib`; and provider access is kept behind server-side integration boundaries.
+
+- Prisma 7.10.0 accesses PostgreSQL; Supabase provides PostgreSQL and Auth.
+- Checkout revalidates current server-side price, cart, promotion, address, delivery and stock state. Payment webhook processing finalises payment, order and inventory transitions transactionally.
+- Customer ownership and administrator RBAC are enforced server-side. UI visibility is not authority.
+- Stripe is configured for test mode. Card data remains in Stripe Elements and is not stored by Palermo.
+- Production application data is in the `palermo_prod` schema. Owner-only migration authority is outside Vercel; the production runtime must not receive `DIRECT_URL`, `TEST_DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, or demo passwords.
+
+## Environment model
+
+| Environment | Application schema | Purpose |
+| --- | --- | --- |
+| Local/development | `palermo` (and disposable `palermo_test`) | development and integration testing |
+| Vercel Preview | `palermo` | branch/PR preview with synthetic data |
+| Vercel Production | `palermo_prod` | controlled presentation deployment |
+
+Preview and Production have isolated application tables and runtime roles. Supabase Auth is project-scoped and shared between them because of the Supabase Free-plan project limit; only synthetic/demo identities and data are permitted. Production currently has all 16 repository migrations, 22 active canonical catalogue products, two intentionally archived legacy demo products, and synthetic presentation history.
 
 ## Technology
 
-- Next.js 16 and React 19
-- strict TypeScript 6
-- Tailwind CSS 4
-- Prisma 7 with PostgreSQL
-- Supabase PostgreSQL and Supabase Auth
-- Stripe test-mode server SDK and Stripe.js browser boundary
-- Vitest unit, contract, and PostgreSQL integration tests
-- GitHub Actions and Vercel
-
-The browser is never authoritative for price, stock, payment success, order status, administrator permission, or other protected business outcomes. Shared DTOs live in `src/contracts`, domain services in `src/modules`, server infrastructure in `src/lib`, and provider SDK access behind trusted server boundaries.
+- Node.js 24.19.0; pnpm 11.24.0
+- Next.js 16.3.3; React 19.2.8; TypeScript 6.0.3
+- Prisma 7.10.0; PostgreSQL via Supabase
+- Tailwind CSS 4.3.3; Stripe 22.6.1 / Stripe.js 9.15.0
+- Vitest 4.1.11; Playwright 1.63.0; GitHub Actions and Vercel
 
 ## Local setup
-
-Use **Node.js 24.19.0** from [`.nvmrc`](.nvmrc) and **pnpm 11.24.0** from [`package.json`](package.json).
 
 ```sh
 nvm install
 nvm use
 npm install --global pnpm@11.24.0
 pnpm install --frozen-lockfile
+cp .env.example .env.local
 pnpm dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:3000>. The home page and liveness endpoint can start without database credentials; database-backed, Auth and payment flows require approved local configuration.
 
-The home page and health endpoint can start without service credentials. Database-backed APIs, authentication, and payment operations require their corresponding local configuration. Copy the documented names before adding approved development values:
+Never commit `.env.local`, connection strings, provider credentials, tokens, passwords, real personal data, card data, or private production logs. `NEXT_PUBLIC_` values are browser-visible; keep privileged values server-only. [`.env.example`](.env.example) and [the database guide](prisma/README.md) describe variable purpose and target guards.
 
-```sh
-cp .env.example .env.local
-```
+## Database and demo-data workflow
 
-Never commit `.env.local`, connection URLs, provider credentials, tokens, or real customer data. [`.env.example`](.env.example) explains each variable and its permitted environment.
-
-Important configuration groups are:
-
-- `DATABASE_URL` for trusted application access to the private `palermo` schema;
-- `DIRECT_URL` for Prisma migration authority;
-- `TEST_DATABASE_URL` for the disposable `palermo_test` schema;
-- `PALERMO_DATABASE_ENV=development` or `preview` for guarded seed/test operations;
-- Supabase server connection variables for authentication;
-- Stripe test-mode server secrets and the browser-safe publishable key.
-
-Missing Stripe server configuration fails closed. The deterministic sandbox gateway is an explicitly injected test double and cannot silently become deployed payment authority. PAN, expiry, and CVC remain inside Stripe-controlled Elements and must never enter Palermo state, APIs, storage, or logs.
-
-## Database workflow
-
-Prisma migrations under [`prisma/migrations/`](prisma/migrations/) are the schema authority. Supabase CLI migration history is not evidence that Prisma migrations were applied.
+Prisma migrations in [`prisma/migrations/`](prisma/migrations/) are the schema authority. For an approved local or Preview target:
 
 ```sh
 pnpm db:generate
-pnpm exec prisma migrate status
 pnpm db:migrate
 pnpm db:seed
 pnpm db:check
-pnpm test:db
 ```
 
-Before migration or seed commands, verify that `DIRECT_URL`/`DATABASE_URL` point only to the approved isolated development or preview project. `pnpm test:db` additionally requires a guarded `palermo_test` target. Never run `prisma migrate reset` against a shared database, and never expose connection details in command output or evidence.
+`pnpm test:db` uses only disposable `palermo_test`. `pnpm catalogue:populate` is guarded for development/Preview catalogue population. The controlled-production synthetic-history tool is owner-operated and requires explicit `palermo_prod` confirmation; see [demo-history.md](docs/development/demo-history.md). Do not run reset or migration commands against a shared target without first verifying its schema and authority. Production migrations and population are explicit owner operations, not Vercel build/runtime work.
 
-The production build does not apply migrations or seed data. Database deployment remains an explicit owner operation.
+Synthetic catalogue, customer, order and payment history exist solely for demonstration and assessment. They are not real customer, warehouse or payment-provider records.
 
-## Validation
+## Validation commands
 
-Run the repository checks relevant to every code change:
+These scripts are defined in [`package.json`](package.json):
 
 ```sh
 pnpm typecheck
 pnpm lint
 pnpm test
 pnpm test:db
+pnpm test:e2e
 pnpm build
 git diff --check
 ```
 
-`pnpm typecheck` generates Prisma and Next.js route types before strict TypeScript validation. `pnpm test` runs unit and contract tests; `pnpm test:db` applies every repository migration to the isolated test schema before running persistence, transaction, concurrency, and integration cases.
+Targeted browser suites are `pnpm e2e:customer` and `pnpm e2e:admin`; the full E2E command prepares its disposable local database first. `pnpm auth:check` is an owner-only live Auth check and is not an ordinary CI command.
 
-If the local host cannot run the default Turbopack production builder, validate the same application through Next.js's production Webpack builder and document the environment-only fallback:
+## Repository layout
 
-```sh
-pnpm db:generate
-pnpm exec next build --webpack
+```text
+src/app/           App Router pages and HTTP route adapters
+src/contracts/     shared typed API contracts
+src/modules/       domain services and UI modules
+src/integrations/  provider boundaries
+src/lib/           server infrastructure and browser clients
+prisma/            schema, migrations, fixtures and guarded data tools
+tests/             unit, database integration and Playwright E2E tests
+docs/              current guides plus requirements and delivery evidence
 ```
 
-With the development or production server running in another terminal:
+## Documentation map
 
-```sh
-curl --fail-with-body --include http://localhost:3000/api/health
-```
+- [Documentation index](docs/README.md) — current guides versus historical evidence.
+- [Database guide](prisma/README.md) — schema isolation, migrations and synthetic-data tooling.
+- [Implementation handbook](docs/development/implementation-handbook.md) and [frontend contracts](docs/development/frontend-contracts.md) — architecture and delivery rules.
+- [Security guide](SECURITY.md), [privacy assessment](docs/privacy/dpia.md), and [testing index](docs/testing/README.md) — security, privacy, test strategy and evidence.
+- [Requirements](docs/requirements/) and [SRS source](docs/srs/) — approved requirement and report material.
 
-Expected: HTTP 200, `Cache-Control: no-store`, and `{"status":"ok"}`.
+## Governance and limitations
 
-## Application boundaries
+`main` is protected. Normal changes use an issue, short-lived branch, pull request, review, and CI/Vercel gates; direct pushes and force pushes to protected branches are prohibited. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-The App Router exposes typed HTTP adapters for:
-
-- authentication and session operations;
-- catalogue summary/detail reads;
-- profile and address mutations;
-- cart and wishlist reads/mutations;
-- recommendation/quiz operations;
-- checkout and delivery-method operations;
-- payment initiation and verified webhooks;
-- order, invoice, and cancellation-request operations;
-- authorised administrator catalogue and inventory operations.
-
-React components must use the approved API/client boundary rather than calling Prisma, Supabase database APIs, Stripe, or other providers directly. See [`docs/development/frontend-contracts.md`](docs/development/frontend-contracts.md) and the [`implementation handbook`](docs/development/implementation-handbook.md).
-
-## Repository workflow and governance
-
-`main` is the protected integration branch. Normal work follows:
-
-1. one assigned GitHub issue;
-2. one short-lived branch from current `main`;
-3. small focused commits;
-4. one scoped pull request with validation evidence;
-5. required governance and technical checks;
-6. merge into `main` only when the complete issue acceptance criteria are satisfied.
-
-Direct pushes to `main` and force pushes to protected branches are prohibited. There is no shared `develop` branch.
-
-Contributor-authored pull requests are read-only to automated implementation agents unless the repository owner explicitly authorises a specific action on that specific PR. Dependency status, passing CI, Vercel success, and requested-reviewer state do not grant merge authority.
-
-The governance check applies these rules:
-
-- a `HexCodeYT`-authored PR does not require external approval;
-- another contributor's current PR head requires an `APPROVED` review from `HexCodeYT`;
-- a new commit or force-pushed head invalidates approval for the older head;
-- technical CI and Vercel checks remain independent requirements.
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch naming, protected areas, evidence expectations, and the definition of done.
-
-## Documentation structure
-
-- `docs/requirements/` — canonical functional/non-functional requirements, decisions, and traceability
-- `docs/srs/` — SRS source material
-- `docs/development/` — implementation, ownership, API, and frontend contracts
-- `docs/diagrams/` — canonical Mermaid system diagrams
-- `docs/ui/` — presentation and responsive design specifications
-- `docs/privacy/` and `docs/security/` — privacy and security material
-- `docs/testing/` — test strategy, cases, results, and evidence
-- `docs/project-management/` — delivery planning and contribution evidence
-
-Markdown is canonical for project documentation, and Mermaid source is canonical for system diagrams.
+This is a controlled capstone demonstration. Stripe live mode, real customer data, commercial fulfilment/courier integration, and fully project-isolated Supabase Auth are outside its deployment scope. Service availability and third-party provider behaviour should not be inferred from the liveness endpoint alone.

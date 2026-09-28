@@ -4,7 +4,7 @@
 
 ## Use an adapter
 
-The default client in `src/lib/api/index.ts` uses the real server HTTP adapter for `auth`. Other modules return `TEMPORARILY_UNAVAILABLE` until their server adapters are supplied. It never silently falls back to synthetic success. The mock module is a separate import and is not imported by the default client.
+The default client in `src/lib/api/index.ts` composes real server HTTP adapters for authentication, catalogue, profile, cart, wishlist, recommendations, checkout, payment, orders, tracking, participation, reviews, support, and administrator operations. `createUnavailableApi()` supplies the explicit default only for contract operations that have no composed adapter; it never silently falls back to synthetic success. The mock module is a separate import and is not imported by the default client.
 
 ```ts
 import { createApiClient } from "@/lib/api";
@@ -20,9 +20,9 @@ if (result.ok) {
 }
 ```
 
-Replace the injected adapter with an implementation of `PalermoApi` when real endpoints become available. Do not create an adapter on every render, put a mutable mock singleton in a server request handler, or select mocks automatically after a network/server error. No environment variables are needed here.
+Use an injected adapter for isolated tests or UI demonstrations. Do not create an adapter on every render, put a mutable mock singleton in a server request handler, or select mocks automatically after a network/server error. No environment variables are needed here.
 
-The real adapter currently has placeholders only. Real transport implementations must validate `unknown` responses, map failures to the stable application error codes, and keep credentials/provider internals out of DTOs. A TypeScript type is not runtime validation. `isMoneyValue` demonstrates the explicit minor-unit invariant; it is not a validator for an entire response or an ISO currency registry.
+Real transport implementations validate `unknown` responses, map failures to stable application error codes, and keep credentials/provider internals out of DTOs. A TypeScript type is not runtime validation. `isMoneyValue` demonstrates the explicit minor-unit invariant; it is not a validator for an entire response or an ISO currency registry.
 
 ## Contract inventory
 

@@ -1,8 +1,8 @@
 # Palermo Perfume System — Frontend Contract Rules
 
-Status: **Contract baseline for parallel implementation**
+Status: **Current client/server boundary**
 
-This document defines how customer/admin UI communicates with Palermo server/domain logic. The exact code is created by scaffold/contract issues; these rules are frozen.
+This document defines how customer/admin UI communicates with Palermo server/domain logic. Current browser clients use the shared contracts and route adapters; the rules below remain the boundary for future changes. Historical mock fixtures are retained for isolated UI and contract testing, not as a fallback for deployed behaviour.
 
 ## 1. Single contract source
 
