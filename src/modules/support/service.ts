@@ -12,6 +12,11 @@ const id = /^[0-9a-f-]{10,64}$/i;
 export const supportIntents: readonly SupportIntent[] = ["PRODUCT", "POLICY", "ORDER", "DELIVERY", "FEEDBACK"];
 export const supportToolAllowlist: readonly SupportToolName[] = ["order.lookup"];
 const PRODUCT_CONTEXT_LIMIT = 100;
+type PublicVariantAvailability = "AVAILABLE" | "OUT_OF_STOCK";
+
+function isPublicVariantAvailability(value: string): value is PublicVariantAvailability {
+  return value === "AVAILABLE" || value === "OUT_OF_STOCK";
+}
 
 export class OrderLookupSupportTool implements SupportTool {
   readonly name = "order.lookup" as const;
@@ -37,7 +42,7 @@ export class SupportService {
     this.tools = new Map(tools.map(tool => [tool.name, tool]));
   }
 
-  private async productContext(): Promise<Readonly<{ catalogueScope: string; products: readonly Readonly<{ name: string; slug: string; description: string; family: string; intensity: string | null; audiences: readonly string[]; notes: readonly Readonly<{ layer: string; name: string }>[] }>[]}>> {
+  private async productContext(): Promise<Readonly<{ catalogueScope: string; products: readonly Readonly<{ name: string; slug: string; description: string; family: string; intensity: string | null; audiences: readonly string[]; notes: readonly Readonly<{ layer: string; name: string }>[]; variants: readonly Readonly<{ bottleSize: string; concentration: string; price: Readonly<{ amountMinor: number; currency: string }>; availability: "AVAILABLE" | "OUT_OF_STOCK" }>[] }>[]}>> {
     const products = await this.db.perfume.findMany({
       where: {
         status: "ACTIVE",
@@ -52,6 +57,7 @@ export class SupportService {
         intensity: { select: { name: true } },
         notes: { where: { note: { active: true } }, select: { layer: true, note: { select: { name: true } } }, orderBy: [{ layer: "asc" }, { note: { name: "asc" } }] },
         collections: { where: { collection: { active: true } }, select: { collection: { select: { name: true } } }, orderBy: { collection: { name: "asc" } } },
+        variants: { where: { availability: { in: ["AVAILABLE", "OUT_OF_STOCK"] } }, select: { bottleSize: true, concentration: true, priceMinor: true, currency: true, availability: true }, orderBy: [{ priceMinor: "asc" }, { bottleSize: "asc" }, { concentration: "asc" }] },
       },
       orderBy: [{ name: "asc" }, { id: "asc" }],
       take: PRODUCT_CONTEXT_LIMIT,
@@ -66,6 +72,12 @@ export class SupportService {
         intensity: product.intensity?.name ?? null,
         audiences: product.collections.map(({ collection }) => collection.name),
         notes: product.notes.map(({ layer, note }) => ({ layer, name: note.name })),
+        variants: product.variants.flatMap(variant => !isPublicVariantAvailability(variant.availability) ? [] : [{
+          bottleSize: variant.bottleSize,
+          concentration: variant.concentration,
+          price: { amountMinor: variant.priceMinor, currency: variant.currency },
+          availability: variant.availability,
+        }]),
       })),
     };
   }
