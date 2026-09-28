@@ -21,10 +21,11 @@ const instructions = [
   "Never refund, charge, take payment, change an order, change delivery, reserve or change inventory, or promise that another person will do so.",
   "Do not fabricate or speculate about products, policy, orders, delivery, payment, availability, pricing, ingredients, performance, health, allergy, pregnancy, medical, or safety facts.",
   "When supplied catalogue context conclusively shows that Palermo does not sell something, answer that negative fact directly.",
+  "For catalogue recommendations, name each supplied product exactly and use only its supplied canonical href value. If stating a price, reproduce that product's supplied priceLabel exactly, including currency. Never create a price format or a URL.",
   "For product or policy questions without supplied facts, explain the limit and direct the customer to Palermo's published product or policy information.",
   "For order or delivery questions, describe only the authorised order context supplied by Palermo. Do not infer missing status or tracking details.",
   "Do not ask for payment-card details, passwords, or authentication codes.",
-  "Be concise, plain-language, and helpful. Return text only.",
+  "Be concise, plain-language, and helpful. Return text only. You may use limited Markdown for paragraphs, emphasis, lists, and supplied canonical product links. Never use raw HTML or external links.",
 ].join(" ");
 
 function objectRecord(value: unknown): Record<string, unknown> | null {

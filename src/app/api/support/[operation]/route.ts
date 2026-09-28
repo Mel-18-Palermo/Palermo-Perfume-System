@@ -61,6 +61,7 @@ export async function POST(
       message: typeof input["message"] === "string" ? input["message"] : "",
       ...(typeof input["orderId"] === "string" ? { orderId: input["orderId"] } : {}),
       ...(input["history"] !== undefined ? { history: input["history"] } : {}),
+      ...(Array.isArray(input["productIds"]) && input["productIds"].every(value => typeof value === "string") ? { productIds: input["productIds"] as string[] } : {}),
     }));
   }
 
