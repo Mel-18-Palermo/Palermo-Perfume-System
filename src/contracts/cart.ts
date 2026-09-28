@@ -10,7 +10,7 @@ export type CartValidationMessage = Readonly<{
 }>;
 export type CartItemDto = Readonly<{
   id: EntityId; perfumeId: EntityId; variantId: EntityId; title: string;
-  bottleSize: string; concentration: string; quantity: number;
+  imageUrl: string | null; imageAlt: string; bottleSize: string; concentration: string; quantity: number;
   unitPrice: MoneyValue; itemTotal: MoneyValue; customisation: CartCustomisation;
 }>;
 /** Display-only, server supplied. Delivery is quoted separately at checkout. */

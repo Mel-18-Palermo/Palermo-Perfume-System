@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import type { ApiResult, AppErrorCode } from "../../../contracts/common";
 import { failure, success } from "../../../lib/api/result";
 import type { Prisma, PrismaClient } from "../../../lib/db/generated/client";
+import { ParticipationService } from "../../participation/loyalty/service";
 
 export type PaymentEvent = Readonly<{
   eventId: string;
@@ -194,6 +195,16 @@ export class PaymentService {
     private readonly gateway: PaymentGateway = configuredGateway(),
     private readonly now: () => Date = () => new Date(),
   ) {}
+
+  private async awardParticipation(orderId: string): Promise<void> {
+    const order = await this.db.order.findUnique({ where: { id: orderId }, select: { customerId: true } });
+    if (!order) throw new PaymentFault("INTERNAL_ERROR");
+    const participation = new ParticipationService(this.db);
+    const orderReward = await participation.rewardCompletedOrder(order.customerId, orderId, 100);
+    if (!orderReward.ok) throw new PaymentFault("INTERNAL_ERROR");
+    const referralReward = await participation.rewardQualifyingReferral(orderId, 100);
+    if (!referralReward.ok && referralReward.error.code !== "NOT_FOUND") throw new PaymentFault("INTERNAL_ERROR");
+  }
 
   private async ensureActiveReservations(
     tx: Prisma.TransactionClient,
@@ -491,12 +502,14 @@ export class PaymentService {
         ? await this.db.payment.findUnique({ where: { id: result.paymentId } })
         : result.payment;
       if (!payment || payment.status !== "SUCCEEDED") return failure("CONFLICT");
-      return success({
+      const outcome = {
         orderId: payment.orderId,
         paymentId: payment.id,
         status: "SUCCEEDED",
         providerReference: payment.providerReference,
-      });
+      } as const;
+      await this.awardParticipation(outcome.orderId);
+      return success(outcome);
     } catch (error) {
       if (error instanceof PaymentFault) return failure(error.code);
       throw error;

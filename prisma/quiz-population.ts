@@ -34,28 +34,31 @@ export function validateApprovedQuizManifest(
   if (!unique(ids)) issues.push("Quiz, question and option IDs must be globally unique.");
   if (!ids.every(id => uuidPattern.test(id))) issues.push("Quiz, question and option IDs must use stable UUIDs.");
   if (!text(manifest.version, 80)) issues.push("Quiz version must be trimmed and 1-80 characters.");
-  if (manifest.questions.length !== 1) issues.push("Canonical quiz must contain exactly one question.");
+  if (manifest.questions.length < 4 || manifest.questions.length > 6) issues.push("Canonical quiz must contain 4-6 purposeful questions.");
 
   const familyIds = new Set(catalogue.vocabulary.families.filter(family => family.active).map(family => family.id));
   const familyNames = new Map(catalogue.vocabulary.families.map(family => [family.id, family.name]));
+  const noteIds = new Set(catalogue.vocabulary.notes.filter(note => note.active).map(note => note.id));
+  const noteNames = new Map(catalogue.vocabulary.notes.map(note => [note.id, note.name]));
   for (const question of manifest.questions) {
     if (!text(question.prompt, 500) || !Number.isSafeInteger(question.sortOrder) || question.sortOrder < 1
       || !Number.isSafeInteger(question.minSelections) || !Number.isSafeInteger(question.maxSelections)
       || question.minSelections < 0 || question.maxSelections < question.minSelections) {
       issues.push("Quiz question has invalid text or selection bounds.");
     }
-    if (!question.required || question.minSelections !== 1 || question.maxSelections !== 1) {
-      issues.push("Canonical family question must be required with exactly one selection.");
+    if (!question.required || question.minSelections < 1 || question.maxSelections > 2) {
+      issues.push("Canonical consultation questions must be required with one or two selections.");
     }
     if (!unique(question.options.map(option => option.id)) || !unique(question.options.map(option => String(option.sortOrder)))
       || !unique(question.options.map(option => option.value))) {
       issues.push("Quiz option IDs, values and sort orders must be unique per question.");
     }
     for (const option of question.options) {
-      if (!text(option.label, 120) || !uuidPattern.test(option.id) || !familyIds.has(option.value)) {
-        issues.push(`Quiz option ${option.label || "<unnamed>"} must reference an active canonical family.`);
-      } else if (familyNames.get(option.value) !== option.label) {
-        issues.push(`Quiz option ${option.label} must match its canonical family label.`);
+      const canonicalLabel = familyNames.get(option.value) ?? noteNames.get(option.value);
+      if (!text(option.label, 120) || !uuidPattern.test(option.id) || (!familyIds.has(option.value) && !noteIds.has(option.value))) {
+        issues.push(`Quiz option ${option.label || "<unnamed>"} must reference an active canonical family or note.`);
+      } else if (canonicalLabel !== option.label) {
+        issues.push(`Quiz option ${option.label} must match its canonical catalogue label.`);
       }
     }
   }
@@ -105,8 +108,12 @@ export async function populateApprovedQuizInTransaction(
     },
     select: { id: true },
   });
-  if (families.length !== values.length) {
-    throw new QuizPopulationConflictError("each quiz family must have an active recommendation-eligible catalogue product");
+  const notes = await tx.fragranceNote.findMany({
+    where: { id: { in: values }, active: true, perfumes: { some: { perfume: { status: "ACTIVE", variants: { some: { availability: { in: [...visibleAvailability] } } } } } } },
+    select: { id: true },
+  });
+  if (new Set([...families.map(family => family.id), ...notes.map(note => note.id)]).size !== new Set(values).size) {
+    throw new QuizPopulationConflictError("each quiz option must have an active recommendation-eligible catalogue product");
   }
 
   await tx.quiz.updateMany({ where: { active: true, id: { not: manifest.id } }, data: { active: false } });

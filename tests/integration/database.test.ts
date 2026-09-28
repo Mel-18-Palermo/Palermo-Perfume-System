@@ -16,10 +16,14 @@ import { paymentCases } from "./payment-cases";
 import { inventoryCases } from "./inventory-cases";
 import { orderCases } from "./order-cases";
 import { adminCatalogueCases } from "./admin-catalogue-cases";
+import { adminOrderCases } from "./admin-order-cases";
 import { availabilityCases } from "./availability-cases";
 import { reportingCases } from "./reporting-cases";
 import { deliveryCases } from "./delivery-cases";
 import { cataloguePopulationCases } from "./catalogue-population-cases";
+import { reviewCases } from "./review-cases";
+import { loyaltyCases } from "./loyalty-cases";
+import { promotionalContentCases } from "./promotional-content-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -32,6 +36,9 @@ cartCases(db);
 profileCases(db);
 wishlistCases(db);
 availabilityCases(db);
+reviewCases(db);
+loyaltyCases(db);
+promotionalContentCases(db);
 
 beforeAll(async () => {
   await pool.query("SET search_path = palermo_test");
@@ -58,6 +65,7 @@ async function rejectsConstraint(sql: string, values: readonly unknown[], code: 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await client.query("SET LOCAL search_path = palermo_test");
     await expect(client.query(sql, [...values])).rejects.toMatchObject({ code });
   } finally { await client.query("ROLLBACK"); client.release(); }
 }
@@ -104,6 +112,8 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
     await rejectsConstraint('INSERT INTO "Cart" (id,"customerId","updatedAt") VALUES ($1,$2,now())', [seedId(901), ids.customer], "23505");
   });
   it("rejects missing variants and non-positive cart quantities", async () => {
+    await seedCore(db);
+    expect(await db.cartItem.findUnique({ where: { id: ids.cartItem }, select: { id: true } })).toEqual({ id: ids.cartItem });
     await rejectsConstraint('UPDATE "CartItem" SET "variantId"=$1 WHERE id=$2', [seedId(999), ids.cartItem], "23503");
     await rejectsConstraint('UPDATE "CartItem" SET quantity=0 WHERE id=$1', [ids.cartItem], "23514");
   });
@@ -151,6 +161,33 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
     await rejectsConstraint('UPDATE "QuizResponse" SET "questionId"=$1 WHERE "attemptId"=$2', [seedId(999), ids.attempt], "23503");
     await rejectsConstraint('UPDATE "RecommendationItem" SET rank=0 WHERE "runId"=$1', [ids.recommendation], "23514");
   });
+  it("enforces review uniqueness, ratings, and moderation metadata", async () => {
+    const reviewId = seedId(920);
+    await db.review.create({
+      data: {
+        id: reviewId,
+        customerId: ids.customer,
+        perfumeId: ids.perfume,
+        rating: 5,
+        text: "Synthetic constraint-test review",
+      },
+    });
+    await seedCore(db);
+    await rejectsConstraint('INSERT INTO "Review" (id,"customerId","perfumeId",rating,text,"updatedAt") VALUES ($1,$2,$3,5,$4,now())', [seedId(909), ids.customer, ids.perfume, "Duplicate review"], "23505");
+    await rejectsConstraint('UPDATE "Review" SET rating=0 WHERE id=$1', [reviewId], "23514");
+    await rejectsConstraint('UPDATE "Review" SET status=$1, "moderatedById"=NULL, "moderatedAt"=NULL WHERE id=$2', ["APPROVED", reviewId], "23514");
+  });
+  it("requires subscription timestamps to match the opt-in state", async () => {
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","optedInAt","updatedAt") VALUES ($1,$2,true,NULL,now())', [seedId(921), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","optedInAt","optedOutAt","updatedAt") VALUES ($1,$2,true,now(),now(),now())', [seedId(922), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","updatedAt") VALUES ($1,$2,false,now())', [seedId(923), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Subscription" (id,"customerId","optedIn","optedInAt","updatedAt") VALUES ($1,$2,false,now(),now())', [seedId(924), ids.customer], "23514");
+  });
+  it("requires referrals to have distinct customers and paired qualification metadata", async () => {
+    await rejectsConstraint('INSERT INTO "Referral" (id,"referrerCustomerId","referredCustomerId") VALUES ($1,$2,$2)', [seedId(925), ids.customer], "23514");
+    await rejectsConstraint('INSERT INTO "Referral" (id,"referrerCustomerId","referredCustomerId","qualifyingOrderId") VALUES ($1,$2,$3,$4)', [seedId(926), ids.otherCustomer, ids.customer, ids.paidOrder], "23514");
+    await rejectsConstraint('INSERT INTO "Referral" (id,"referrerCustomerId","referredCustomerId","qualifiedAt") VALUES ($1,$2,$3,now())', [seedId(927), ids.otherCustomer, ids.customer], "23514");
+  });
 });
 
 checkoutCases(db);
@@ -158,6 +195,7 @@ paymentCases(db);
 inventoryCases(db);
 orderCases(db);
 adminCatalogueCases(db);
+adminOrderCases(db);
 reportingCases(db);
 deliveryCases(db);
 // Canonical discovery population must run after suites that depend on the exact synthetic seed baseline.

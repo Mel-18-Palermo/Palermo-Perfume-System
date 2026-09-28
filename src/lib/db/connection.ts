@@ -3,6 +3,8 @@ import type { PoolConfig } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/client";
 
+const allowedSchemas = new Set(["palermo", "palermo_prod", "palermo_test"]);
+
 export function databaseConfiguration(value: string | undefined): { pool: PoolConfig; schema: string } {
   if (!value) throw new Error("Database connection is not configured.");
   let url: URL;
@@ -11,7 +13,7 @@ export function databaseConfiguration(value: string | undefined): { pool: PoolCo
     throw new Error("Invalid database connection configuration.");
   }
   const schema = url.searchParams.get("schema");
-  if (schema !== "palermo" && schema !== "palermo_test") throw new Error("Database schema must be palermo or palermo_test.");
+  if (!schema || !allowedSchemas.has(schema)) throw new Error("Database schema must be palermo, palermo_prod, or palermo_test.");
   const local = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname);
   if (!local && url.searchParams.get("sslmode") !== "verify-full") throw new Error("Remote database connections require verified TLS.");
   // The pg adapter receives TLS settings explicitly; query parameters must not weaken them.

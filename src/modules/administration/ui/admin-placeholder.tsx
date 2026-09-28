@@ -22,9 +22,10 @@ export function AdminPlaceholder({ section }: AdminPlaceholderProps) {
       <p className="max-w-reading text-base text-text-muted">
         {content.description}
       </p>
-      <p className="text-sm text-text-muted">
-        This section is not connected yet.
-      </p>
+      <div className="border-y border-border py-5">
+        <p className="text-sm font-medium text-text">This workspace is being prepared.</p>
+        <p className="mt-1 text-sm text-text-muted">No management actions are available in this release.</p>
+      </div>
     </section>
   );
 }

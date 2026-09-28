@@ -9,7 +9,7 @@ interface DrawerProps {
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: "default" | "wide";
+  size?: "default" | "wide" | "concierge";
 }
 
 export function Drawer({
@@ -79,10 +79,8 @@ export function Drawer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label={title}>
+    <div className={`fixed inset-0 z-50 ${isOpen ? "flex" : "hidden"} ${size === "concierge" ? "items-end sm:items-center" : ""}`} role="dialog" aria-modal="true" aria-label={title} aria-hidden={!isOpen}>
       <div
         className="fixed inset-0 bg-primary/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
@@ -91,11 +89,11 @@ export function Drawer({
       <div
         ref={drawerRef}
         tabIndex={-1}
-        className={`relative ml-auto flex h-dvh flex-col border-l border-border bg-surface focus:outline-none ${
-          size === "wide" ? "w-[calc(100%-1rem)] sm:w-96" : "w-80"
+        className={`relative ml-auto flex flex-col border-border bg-surface focus:outline-none ${
+          size === "concierge" ? "h-[100dvh] w-full border-l sm:mr-4 sm:h-[min(88dvh,44rem)] sm:w-[min(26rem,calc(100vw-2rem))] sm:rounded-lg sm:border" : `h-dvh border-l ${size === "wide" ? "w-[calc(100%-1rem)] sm:w-96" : "w-80"}`
         }`}
       >
-        <div className="mx-6 flex shrink-0 items-center justify-between border-b border-border pb-4 pt-6">
+        <div className={`${size === "concierge" ? "px-4 pb-3 pt-4" : "mx-6 pb-4 pt-6"} flex shrink-0 items-center justify-between border-b border-border`}>
           <h2 className="text-base font-semibold text-text">{title}</h2>
           <button
             type="button"
@@ -106,7 +104,7 @@ export function Drawer({
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">{children}</div>
+        <div className={`min-h-0 flex-1 ${size === "concierge" ? "flex flex-col overflow-hidden px-4 pb-4 pt-3" : "overflow-y-auto px-6 pb-6 pt-4"}`}>{children}</div>
         {footer && (
           <div className="shrink-0 border-t border-border bg-surface px-6 py-4">
             {footer}

@@ -7,15 +7,25 @@ import { approvedCatalogueManifest, approvedCatalogueFamilyIds } from "../../pri
 import { populateApprovedCatalogueAndQuiz } from "../../prisma/catalogue-population";
 import { approvedQuizManifest } from "../../prisma/quiz-data";
 
+function defaultOptionId(question: typeof approvedQuizManifest.questions[number]): string {
+  const option = question.options[0];
+  if (!option) throw new Error(`Canonical quiz question ${question.id} requires an option.`);
+  return option.id;
+}
+
 const familyQuestion = approvedQuizManifest.questions[0];
 const amberOption = familyQuestion?.options[0];
 const matchingAmberPerfume = approvedCatalogueManifest.products.find(product => product.primaryFamilyId === approvedCatalogueFamilyIds.amber);
 if (!familyQuestion || !amberOption || !matchingAmberPerfume) throw new Error("Canonical quiz fixtures are incomplete.");
 const amberPerfume = matchingAmberPerfume;
-const request: RecommendationRequest = {
+const canonicalRequest = (familyOptionId = amberOption.id): RecommendationRequest => ({
   quizId: approvedQuizManifest.id, quizVersion: approvedQuizManifest.version,
-  answers: [{ questionId: familyQuestion.id, optionIds: [amberOption.id] }],
-};
+  answers: approvedQuizManifest.questions.filter(question => question.required).map(question => ({
+    questionId: question.id,
+    optionIds: [question.id === familyQuestion.id ? familyOptionId : defaultOptionId(question)],
+  })),
+});
+const request = canonicalRequest();
 
 async function removeRun(db: PrismaClient, runId: string): Promise<void> {
   const run = await db.recommendationRun.findUniqueOrThrow({ where: { id: runId } });
@@ -64,8 +74,9 @@ export function discoveryCompletionCases(db: PrismaClient): void {
     it("honors structured optional multi-select bounds, version and persisted responses", async () => {
       const questionId = seedId(9310);
       const optionIds = [seedId(9311), seedId(9312), seedId(9313)];
+      const sortOrder = Math.max(...approvedQuizManifest.questions.map(question => question.sortOrder)) + 1;
       await db.quizQuestion.create({ data: {
-        id: questionId, quizId: approvedQuizManifest.id, prompt: "Synthetic optional preferences", sortOrder: 2,
+        id: questionId, quizId: approvedQuizManifest.id, prompt: "Synthetic optional preferences", sortOrder,
         required: false, minSelections: 0, maxSelections: 2,
       } });
       let runId: string | undefined;
@@ -76,15 +87,29 @@ export function discoveryCompletionCases(db: PrismaClient): void {
           await db.quizOption.create({ data: { id: optionId, questionId, label: `Synthetic option ${index}`, value, sortOrder: index } });
         }
         const definition = await service.getQuiz();
-        expect(definition).toMatchObject({ ok: true, data: { questions: [{ id: familyQuestion.id }, { id: questionId, required: false, minSelections: 0, maxSelections: 2 }] } });
+        expect(definition.ok).toBe(true);
+        if (definition.ok) {
+          expect(definition.data.questions.find(question => question.id === questionId)).toEqual({
+            id: questionId,
+            prompt: "Synthetic optional preferences",
+            required: false,
+            minSelections: 0,
+            maxSelections: 2,
+            options: optionIds.map((id, index) => ({ id, label: `Synthetic option ${index}` })),
+          });
+        }
         expect(await service.getCandidateContext({ ...request, quizVersion: "obsolete" })).toMatchObject({ ok: false, error: { code: "CONFLICT" } });
         expect(await service.generate({ ...request, answers: [...request.answers, { questionId, optionIds }] })).toMatchObject({ ok: false, error: { code: "VALIDATION_ERROR" } });
-        const result = await service.generate({ ...request, answers: [...request.answers, { questionId, optionIds: optionIds.slice(0, 2) }] });
+        const submittedAnswers = [...request.answers, { questionId, optionIds: optionIds.slice(0, 2) }];
+        const result = await service.generate({ ...request, answers: submittedAnswers });
         expect(result.ok).toBe(true);
         if (result.ok) {
           runId = result.data.runId;
           const run = await db.recommendationRun.findUniqueOrThrow({ where: { id: runId }, include: { quizAttempt: { include: { responses: true } } } });
-          expect(run.quizAttempt?.responses).toHaveLength(3);
+          expect(run.quizAttempt?.responses).toHaveLength(submittedAnswers.flatMap(answer => answer.optionIds).length);
+          expect(run.quizAttempt?.responses.map(response => ({ questionId: response.questionId, optionId: response.optionId }))).toEqual(expect.arrayContaining(
+            submittedAnswers.flatMap(answer => answer.optionIds.map(optionId => ({ questionId: answer.questionId, optionId }))),
+          ));
           expect(run.quizAttempt?.status).toBe("COMPLETED");
           expect(result.data.fallback).toBe(true);
         }
@@ -105,11 +130,21 @@ export function discoveryCompletionCases(db: PrismaClient): void {
         expect(first).toEqual(await service.getCandidateContext(request));
         expect(first).toMatchObject({ ok: true, data: {
           selectedFamilies: [{ id: approvedCatalogueFamilyIds.amber, label: "Amber" }],
-          candidates: [{ perfume: { id: amberPerfume.id, priceFrom: { amountMinor: 3500 } } }],
         } });
-        if (first.ok) expect(first.data.candidates.map(item => item.perfume.id)).not.toContain(unpricedId);
+        if (first.ok) {
+          expect(first.data.candidates.length).toBeLessThanOrEqual(12);
+          expect(first.data.candidates.find(item => item.perfume.id === amberPerfume.id)).toMatchObject({
+            perfume: { id: amberPerfume.id, priceFrom: { amountMinor: 3500, currency: "AUD" } },
+          });
+          expect(first.data.candidates.map(item => item.perfume.id)).not.toContain(unpricedId);
+        }
         await db.perfume.update({ where: { id: amberPerfume.id }, data: { status: "ARCHIVED", archivedAt: new Date("2026-09-08T00:00:00.000Z") } });
-        expect(await service.getCandidateContext(request)).toMatchObject({ ok: true, data: { candidates: [] } });
+        const archived = await service.getCandidateContext(request);
+        expect(archived.ok).toBe(true);
+        if (archived.ok) {
+          expect(archived.data.candidates.length).toBeLessThanOrEqual(12);
+          expect(archived.data.candidates.map(item => item.perfume.id)).not.toContain(amberPerfume.id);
+        }
       } finally {
         await db.perfume.update({ where: { id: amberPerfume.id }, data: { status: "ACTIVE", archivedAt: null } });
         await db.perfume.delete({ where: { id: unpricedId } });

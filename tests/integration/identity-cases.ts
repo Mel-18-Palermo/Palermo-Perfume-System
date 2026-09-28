@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PrismaClient } from "../../src/lib/db/generated/client";
 import type { IdentityProvider, ProviderIdentity, RecoveryGrant } from "../../src/lib/auth/provider";
 import { AuthFault } from "../../src/lib/auth/errors";
@@ -234,15 +234,41 @@ export function identityCases(db: PrismaClient): void {
       expect(await service.session(login.token)).toEqual({ user: null });
       expect((await db.identitySession.findFirstOrThrow()).lastActivityAt).toEqual(before.lastActivityAt);
     });
-    it("does not let a stale concurrent clock move activity backwards", async () => {
+    it("authenticates both concurrent valid requests without moving activity backwards", async () => {
       const login = await active();
       const startedAt = time;
-      time = new Date(startedAt.getTime() + 10 * 60_000);
-      expect((await service.session(login.token)).user?.id).toBe(login.session.user?.id);
-      const refreshed = await db.identitySession.findFirstOrThrow();
       const stale = new IdentityService(db, provider, () => new Date(startedAt.getTime() + 5 * 60_000));
-      expect(await stale.session(login.token)).toEqual({ user: null });
-      expect((await db.identitySession.findFirstOrThrow()).lastActivityAt).toEqual(refreshed.lastActivityAt);
+      time = new Date(startedAt.getTime() + 10 * 60_000);
+
+      const originalFindUnique = db.identitySession.findUnique.bind(db.identitySession);
+      let releaseStaleRead: () => void = () => undefined;
+      const staleReadReady = new Promise<void>(resolve => { releaseStaleRead = resolve; });
+      let signalStaleRead: () => void = () => undefined;
+      const staleReadStarted = new Promise<void>(resolve => { signalStaleRead = resolve; });
+      let firstRead = true;
+      const findUnique = vi.spyOn(db.identitySession, "findUnique").mockImplementation((async (...args: Parameters<typeof db.identitySession.findUnique>) => {
+        const session = await originalFindUnique(...args);
+        if (firstRead) {
+          firstRead = false;
+          signalStaleRead();
+          await staleReadReady;
+        }
+        return session;
+      }) as never);
+      try {
+        const staleRequest = stale.session(login.token);
+        await staleReadStarted;
+        expect((await service.session(login.token)).user?.id).toBe(login.session.user?.id);
+        const refreshed = await db.identitySession.findFirstOrThrow();
+        releaseStaleRead();
+        expect((await staleRequest).user?.id).toBe(login.session.user?.id);
+        expect((await db.identitySession.findFirstOrThrow()).lastActivityAt).toEqual(refreshed.lastActivityAt);
+
+        await db.customer.update({ where: { id: refreshed.customerId ?? "" }, data: { authVersion: { increment: 1 } } });
+        expect(await stale.session(login.token)).toEqual({ user: null });
+        await db.identitySession.delete({ where: { tokenHash: refreshed.tokenHash } });
+        expect(await service.session(login.token)).toEqual({ user: null });
+      } finally { findUnique.mockRestore(); }
     });
     it("reset requests acknowledge ineligible accounts without sending recovery email", async () => {
       await service.requestPasswordReset({ email });

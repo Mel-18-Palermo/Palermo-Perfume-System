@@ -15,6 +15,25 @@ Retrieved on 2026-09-21 from Palermo Perfumes' official product pages. The prima
 | Palermo Woman | https://palermoperfumes.com.au/products/palermo-woman-palermo-317 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_730400a7-faaf-44e0-b750-61d3fec59275.png?v=1769752334 | `public/catalogue/products/palermo-woman/primary.webp` |
 | Baran | https://palermoperfumes.com.au/products/barran-palermo-263 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_dc66750a-071c-4f1f-b427-487751030a19.png?v=1769753036 | `public/catalogue/products/baran/primary.webp` |
 
+## B2 source acquisition
+
+Retrieved on 2026-09-23 from Palermo Perfumes' official Shopify product pages and stored as local 1200 × 1200 WebP assets. No product page in this batch published usable main accords or a note pyramid. The product page text says notes are available soon where it exposes note status.
+
+| Product | Official product page | Original primary image | Local asset | Published main accords | Note availability / modelling limitation |
+| --- | --- | --- | --- | --- | --- |
+| Vanille Divine | https://palermoperfumes.com.au/products/vanille-divine-palermo-409 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_3_87c7c849-0dbf-4c3d-99c0-d885cfb8d94f.png?v=1769753201 | `public/catalogue/products/vanille-divine/primary.webp` | Not published | Notes available soon; no source-backed note pyramid. |
+| Candy Pink | https://palermoperfumes.com.au/products/candy-pink-palermo-388 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_92f1b958-e27e-4358-8b61-d04f9926c7e4.png?v=1769753175 | `public/catalogue/products/candy-pink/primary.webp` | Not published | No source-backed note pyramid. |
+| Sweet Floss | https://palermoperfumes.com.au/products/sweet-floss-palermo-387 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_4971d27d-6c55-4248-a41c-3a778a404f8b.png?v=1769753174 | `public/catalogue/products/sweet-floss/primary.webp` | Not published | No source-backed note pyramid. |
+| Vanille Sauvage | https://palermoperfumes.com.au/products/vanille-sauvage-palermo-398 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_f0055989-d7c5-4d1f-abaa-16a36b4716da.png?v=1769753188 | `public/catalogue/products/vanille-sauvage/primary.webp` | Not published | No source-backed note pyramid. |
+| Dessert Storm | https://palermoperfumes.com.au/products/dessert-storm-palermo-147 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Mens_Shade_3_847098ed-ee04-4123-92d0-3d6064dbacdd.png?v=1769752489 | `public/catalogue/products/dessert-storm/primary.webp` | Not published | No source-backed note pyramid. |
+| Palermo Men | https://palermoperfumes.com.au/products/palermo-sport-palermo-166 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Mens_Shade_2_edf3dcaa-eae0-444e-b818-8f4f1a246cb4.png?v=1769752512 | `public/catalogue/products/palermo-men/primary.webp` | Not published | Official collection text is Palermo Men M166 while its product URL is Palermo Sport M166; identity retained from the collection and no note pyramid added. |
+| Dreams | https://palermoperfumes.com.au/products/dreams-palermo-286 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_b4780840-8bc7-4723-98d9-3481511cb2a2.png?v=1769753058 | `public/catalogue/products/dreams/primary.webp` | Not published | No source-backed note pyramid. |
+| Prototype | https://palermoperfumes.com.au/products/prototype-palermo-290 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Mens_Shade_3_0d0b408b-8227-40f5-b8e0-8f1cc5a90c8b.png?v=1769752673 | `public/catalogue/products/prototype/primary.webp` | Not published | No source-backed note pyramid. |
+| Palermo Blackinfus | https://palermoperfumes.com.au/products/palermo-blackinfus-palermo-93 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Mens_Shade_2_550e6aaa-dfb0-4005-8df3-ebd3090ecaea.png?v=1769752431 | `public/catalogue/products/palermo-blackinfus/primary.webp` | Not published | Official URL omits the SKU's leading zero; no source-backed note pyramid. |
+| Palermo Homme | https://palermoperfumes.com.au/products/palermo-homme-palermo-169 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Mens_Shade_2_a94c890c-235b-4e70-9d6a-fec080b8818c.png?v=1769752514 | `public/catalogue/products/palermo-homme/primary.webp` | Not published | No source-backed note pyramid. |
+| Mondial | https://palermoperfumes.com.au/products/mondial-palermo-195 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_a5c1e2f5-d295-4363-a7c5-88f699103fe1.png?v=1769752953 | `public/catalogue/products/mondial/primary.webp` | Not published | No source-backed note pyramid. |
+| Hurrem | https://palermoperfumes.com.au/products/hurrem-palermo-274 | https://cdn.shopify.com/s/files/1/0580/2498/4782/files/Womens_Shade_2_257a1cb7-9734-4409-8647-0a2e9b073855.png?v=1769753046 | `public/catalogue/products/hurrem/primary.webp` | Not published | No source-backed note pyramid. |
+
 ## Modelling notes
 
 - Published main accords were transcribed as follows. The first accord is the manifest's primary family because the current domain has one primary-family relationship.
@@ -33,7 +52,32 @@ Retrieved on 2026-09-21 from Palermo Perfumes' official product pages. The prima
 | Baran | Rose, Floral, Fresh, Fruity |
 
 - `Unclassified` is the project taxonomy for Palermo Sport and Palermo Woman because Palermo has not published an accord/family for either product.
-- Palermo Sport, Palermo Woman, and Baran have no note records because their official pages say fragrance notes are coming soon.
-- Intensity, longevity, projection, suitability, and collection membership remain unset because no approved source facts were supplied.
+- Palermo Sport, Palermo Woman, and Baran have no Palermo-published note records because their official pages say fragrance notes are coming soon.
+- Intensity, longevity, projection, and suitability remain unset because no approved source facts were supplied.
 - Personalised-label, engraving, gift-message, and gift-packaging values are conservative system capability defaults, not Palermo product claims.
-- Opening inventory is deterministic synthetic demo-system data: 10 on hand for available variants and 0 for Baran. It is not a statement about Palermo's real stock.
+
+## B3 merchandising provenance
+
+### A. Official Palermo-sourced data
+
+Product identity, SKU/code, price, official imagery, official customer audience/category, published accords, and published note pyramids are Palermo facts transcribed from the official product and collection categorisation captured above. Customer audience is represented in the application as the general collections `Women`, `Men`, and `Unisex`; it is not a fragrance-family assertion.
+
+| Official audience | Products |
+| --- | --- |
+| Women | Golden Dust, Candy, Saphire Chocolate, Candy Summer, Palermo Woman, Baran, Sweet Floss, Dreams, Mondial, Hurrem |
+| Men | Musk Rose, Palermo Gold, Palermo Sport, Dessert Storm, Palermo Men, Prototype, Palermo Blackinfus, Palermo Homme |
+| Unisex | Vanilla, Vanille Divine, Candy Pink, Vanille Sauvage |
+
+Audience was reconciled on 2026-09-23 against Palermo's first-party Shopify `target-gender` facet on the official collection page: Female (10), Male (8), and Unisex (4). The Unisex-filtered official collection identifies Vanilla, Vanille Divine, Candy Pink, and Vanille Sauvage; this metadata takes precedence over SKU prefixes and image naming.
+
+The following seven products retain their existing Palermo-published note pyramids exactly: Golden Dust, Candy, Saphire Chocolate, Vanilla, Candy Summer, Musk Rose, and Palermo Gold.
+
+### B. Palermo Perfume System demo/editorial data
+
+Opening stock, availability, and the pyramids below are project data. They never represent Palermo warehouse availability or manufacturer-published fragrance specifications.
+
+- The deterministic demo-commerce opening state is 10 on hand, 0 reserved, and a low-stock threshold of 3 for each `AVAILABLE` variant. Baran (`W263`) is the deliberate `OUT_OF_STOCK` example with 0 opening stock. Inventory movements remain append-only and population never rewrites carts, orders, order items, or order snapshots.
+- The domain's existing `UNAVAILABLE` state is deliberately omitted from public catalogue and detail results, so it cannot serve as a visible second non-purchasable edge case without an API/domain change. No state was invented for this dataset.
+- The following complete TOP/MIDDLE/BASE pyramids are project-authored editorial/demo material for catalogue demonstration. Palermo did not publish usable notes for these products: Palermo Sport, Palermo Woman, Baran, Vanille Divine, Candy Pink, Sweet Floss, Vanille Sauvage, Dessert Storm, Palermo Men, Dreams, Prototype, Palermo Blackinfus, Palermo Homme, Mondial, and Hurrem.
+
+No new note vocabulary was added for B3; the editorial pyramids reuse the approved catalogue note vocabulary.

@@ -1,0 +1,187 @@
+import { expect, test, type Page } from "playwright/test";
+
+const customer = { email: "e2e.customer@example.test", password: "e2e-customer-password-393" };
+const e2eCitrusProductPath = "/product/39300000-0000-4000-8000-000000000108";
+const e2eOrderId = "39300000-0000-4000-8000-000000000112";
+const e2eShipmentId = "39300000-0000-4000-8000-000000000113";
+
+async function customerLogin(page: Page, next: string): Promise<void> {
+  await page.goto(`/login?next=${encodeURIComponent(next)}`);
+  await page.getByLabel("Email").fill(customer.email);
+  await page.getByLabel("Password").fill(customer.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(next);
+}
+
+test("catalogue, cart, checkout boundary, and owned tracking work through the browser", async ({ page }) => {
+  await page.goto("/checkout");
+  await expect(page.getByRole("heading", { name: "Sign in to continue" })).toBeVisible();
+
+  await customerLogin(page, "/catalogue");
+  await expect(page.getByRole("heading", { name: "E2E Citrus" }).first()).toBeVisible();
+  await page
+    .getByRole("region", { name: "Unisex fragrances" })
+    .getByRole("link", { name: "View E2E Citrus" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`${e2eCitrusProductPath}$`));
+  await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
+  await page.getByRole("button", { name: "Add to cart" }).click();
+  await expect(page.getByText("Added to your cart.")).toBeVisible();
+  await page.goto("/cart");
+  await expect(page.getByText("E2E Citrus").first()).toBeVisible();
+  const checkoutLink = page.getByRole("link", { name: /Proceed to checkout/ });
+  await expect(checkoutLink).toBeVisible();
+  await checkoutLink.click();
+  await expect(page.getByRole("heading", { name: "Checkout" })).toBeVisible();
+  await page.getByRole("button", { name: /Place order/ }).click();
+  await expect(page.getByRole("button", { name: /Continue to payment/ })).toBeVisible();
+
+  await page.goto("/orders");
+  await expect(page.getByText("E2E-393")).toBeVisible();
+  const orderResponse = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname === "/api/orders/detail"
+      && url.searchParams.get("id") === e2eOrderId;
+  });
+  const trackingResponse = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname === "/api/tracking" && url.searchParams.get("orderId") === e2eOrderId;
+  });
+  await page.getByRole("button", { name: /E2E Citrus.*reference E2E-393/ }).click();
+  const orderJson: unknown = await (await orderResponse).json();
+  expect(orderJson).toMatchObject({ ok: true, data: { id: e2eOrderId, shipmentId: e2eShipmentId } });
+  const tracking = await trackingResponse;
+  expect(tracking.status()).toBe(200);
+  const trackingJson: unknown = await tracking.json();
+  expect(trackingJson).toMatchObject({
+    ok: true,
+    data: {
+      shipmentId: e2eShipmentId,
+      orderId: e2eOrderId,
+      trackingReference: "E2E-TRACK-393",
+      events: [{ description: "E2E deterministic transit event." }],
+    },
+  });
+  await expect(page.getByText("Tracking reference E2E-TRACK-393")).toBeVisible();
+  await expect(page.getByText("E2E deterministic transit event.")).toBeVisible();
+});
+
+test("verified checkout completion moves to the existing order detail confirmation", async ({ page }) => {
+  await page.goto(`/login?next=${encodeURIComponent(`/checkout?orderId=${e2eOrderId}`)}`);
+  await page.getByLabel("Email").fill(customer.email);
+  await page.getByLabel("Password").fill(customer.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  const confirmation = page.getByRole("status").filter({ hasText: "Order confirmed" });
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation.getByRole("heading", { name: "Your order has been placed successfully." })).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`/orders/${e2eOrderId}$`));
+  await expect(confirmation).toContainText("E2E-393");
+  await expect(page.getByText("Current delivery state")).toBeVisible();
+
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(confirmation).toBeVisible();
+    await page.screenshot({ path: `test-results/issue-429-confirmation-${width}.png`, fullPage: true });
+  }
+
+  await page.reload();
+  await expect(page.getByRole("status").filter({ hasText: "Order confirmed" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
+  await expect(page.getByText("Current delivery state")).toBeVisible();
+
+  await page.goto(`/orders/${e2eOrderId}?source=checkout&confirmed=1#delivery`);
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation.getByRole("heading", { name: "Your order has been placed successfully." })).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`/orders/${e2eOrderId}\\?source=checkout#delivery$`));
+});
+
+test("support uses the real public and customer support boundaries", async ({ page }) => {
+  await page.goto("/support");
+  await expect(page.getByRole("button", { name: "Open Palermo concierge" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Ask the fragrance concierge", exact: true })).toBeVisible();
+  await expect(page.getByText(/cannot issue refunds, take payments, change orders/)).toBeVisible();
+  await expect(page.getByText("Public support", { exact: true })).toBeVisible();
+  await page.getByLabel("Your message").fill("Please explain fragrance concentration.");
+  await page.getByRole("button", { name: "Ask the concierge" }).click();
+  await expect(page.getByRole("heading", { name: "The concierge could not respond", exact: true })).toBeVisible();
+
+  await customerLogin(page, "/support");
+  await expect(page.getByText("Customer session")).toBeVisible();
+  await page.getByRole("radio", { name: /Delivery help/ }).check();
+  await expect(page.getByLabel("Related order (optional)")).toBeVisible();
+  await page.getByLabel("Related order (optional)").selectOption({ label: "E2E-393 · CONFIRMED" });
+  await page.getByLabel("Your message").fill("Where is my delivery?");
+  await page.getByRole("button", { name: "Ask the concierge" }).press("Enter");
+  await expect(page.getByRole("heading", { name: "The concierge could not respond", exact: true })).toBeVisible();
+});
+
+test("account hub, rewards compatibility route, and floating concierge are discoverable", async ({ page }) => {
+  await page.goto("/catalogue");
+  const launcher = page.getByRole("button", { name: "Open Palermo concierge" });
+  await launcher.click();
+  await expect(page.getByRole("dialog", { name: "Palermo concierge" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Palermo concierge" })).toBeVisible();
+  await expect(page.getByLabel("Support topic")).toBeVisible();
+  const message = page.getByRole("textbox", { name: "Message" });
+  await expect(message).toBeVisible();
+  await message.fill("Can you help with a product?");
+  await page.getByRole("button", { name: "Send message" }).click();
+  await expect(page.getByText("You", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
+  await page.getByLabel("Support topic").selectOption("ORDER");
+  await expect(page.getByText(/Sign in to include your own order/)).toBeVisible();
+  await page.getByRole("button", { name: "Close palermo concierge" }).click();
+  await launcher.click();
+  await expect(page.getByText("Can you help with a product?")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(launcher).toBeFocused();
+
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await launcher.click();
+    await expect(page.getByRole("dialog", { name: "Palermo concierge" })).toBeVisible();
+    await expect(page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).resolves.toBe(true);
+    await page.keyboard.press("Escape");
+  }
+
+  await customerLogin(page, "/account");
+  await page.getByRole("button", { name: "Open Palermo concierge" }).click();
+  await page.getByLabel("Support topic").selectOption("DELIVERY");
+  await expect(page.getByLabel("Related order (optional)")).toBeVisible();
+  await page.keyboard.press("Escape");
+  const hub = page.getByRole("navigation", { name: "Your Palermo" });
+  await expect(hub.getByRole("link", { name: "Profile" })).toBeVisible();
+  await expect(hub.getByRole("link", { name: "Purchases" })).toHaveAttribute("href", "/orders");
+  await expect(hub.getByRole("link", { name: "Saved fragrances" })).toHaveAttribute("href", "/wishlist");
+  await expect(hub.getByRole("link", { name: "Rewards & referrals" })).toHaveAttribute("href", "/account/rewards");
+
+  await page.goto("/participation");
+  await expect(page).toHaveURL(/\/account\/rewards$/);
+  await expect(page.getByRole("heading", { name: "Rewards & referrals" })).toBeVisible();
+  await expect(page.getByText(/points/)).toBeVisible();
+});
+
+test("wishlist saves from catalogue and product detail through the real customer boundary", async ({ page }) => {
+  await page.goto("/catalogue");
+  const signedOutSave = page.getByRole("link", { name: "Sign in to save E2E Citrus" });
+  await expect(signedOutSave).toBeVisible();
+  await expect(signedOutSave).toHaveAttribute("href", "/login?next=%2Fcatalogue");
+
+  await customerLogin(page, "/catalogue");
+  await page.getByRole("button", { name: "Save E2E Citrus to wishlist" }).click();
+  await expect(page.getByText("Saved to your fragrances.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove E2E Citrus from wishlist" })).toBeVisible();
+
+  await page.goto("/wishlist");
+  await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
+  await page.getByRole("button", { name: "Remove E2E Citrus from wishlist" }).click();
+  await expect(page.getByText("Removed from saved fragrances.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Nothing saved yet" })).toBeVisible();
+
+  await page.goto(e2eCitrusProductPath);
+  await page.getByRole("button", { name: "Save fragrance" }).click();
+  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
+  await page.goto("/wishlist");
+  await expect(page.getByRole("heading", { name: "E2E Citrus" })).toBeVisible();
+});

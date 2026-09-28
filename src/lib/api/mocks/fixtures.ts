@@ -1,4 +1,4 @@
-import type { AdminPerfume, Dashboard, InventoryBalance, ProductionBatch } from "../../../contracts/admin";
+import type { AdminOrderDetail, AdminPerfume, Dashboard, InventoryBalance, ProductionBatch } from "../../../contracts/admin";
 import type { SessionUser } from "../../../contracts/auth";
 import type { CartCustomisation, CartDto } from "../../../contracts/cart";
 import type { CatalogueFilters, PerfumeDetail, PerfumeSummary } from "../../../contracts/catalogue";
@@ -58,7 +58,7 @@ export const woody: PerfumeDetail = {
 export const perfumes: readonly PerfumeDetail[] = [citrus, woody];
 export function summary(perfume: PerfumeDetail): PerfumeSummary {
   const { id, slug, name, primaryFamily, imageUrl, priceFrom, intensity } = perfume;
-  return { id, slug, name, primaryFamily, imageUrl, priceFrom, intensity };
+  return { id, slug, name, primaryFamily, imageUrl, priceFrom, intensity, audience: "UNISEX", sku: perfume.variants[0]?.sku ?? null, availability: perfume.variants[0]?.availability === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : "AVAILABLE" };
 }
 const addressSnapshot: AddressInput = {
   recipientName: "Demo Customer", line1: "1 Example Street", line2: null,
@@ -78,6 +78,7 @@ export const cart: CartDto = {
   id: "cart-demo", revision: "cart-1", kind: "CUSTOMER", checkoutEligible: true, validationMessages: [],
   items: [{
     id: "cart-item-demo", perfumeId: citrus.id, variantId: "variant-citrus", title: citrus.name,
+    imageUrl: citrus.images[0]?.url ?? null, imageAlt: citrus.images[0]?.alt || citrus.name,
     bottleSize: "50 ml", concentration: "Eau de Parfum", quantity: 1,
     unitPrice: money(12000), itemTotal: money(12000), customisation: noCustomisation,
   }],
@@ -92,7 +93,8 @@ export const checkout: CheckoutResult = {
 };
 export const order: OrderDetail = {
   id: "order-demo", orderNumber: "DEMO-001", placedAt: FIXTURE_TIME, status: "CONFIRMED",
-  paymentStatus: "SUCCEEDED", total: money(13000), subtotal: money(12000), discountTotal: money(0),
+  paymentStatus: "SUCCEEDED", total: money(13000), primaryItemTitle: citrus.name, itemCount: 1,
+  subtotal: money(12000), discountTotal: money(0),
   items: [{ id: "order-item-demo", variantId: "variant-citrus", sku: "DEMO-CITRUS-50", title: citrus.name,
     quantity: 1, unitPrice: money(12000), customisation: noCustomisation }],
   deliveryAddress: addressSnapshot, billingAddress: addressSnapshot, deliveryMethod,
@@ -104,7 +106,11 @@ export const pendingOrder: OrderDetail = {
 };
 export function orderSummary(order: OrderDetail): OrderSummary {
   const { id, orderNumber, placedAt, status, paymentStatus, total } = order;
-  return { id, orderNumber, placedAt, status, paymentStatus, total };
+  return {
+    id, orderNumber, placedAt, status, paymentStatus, total,
+    primaryItemTitle: order.items[0]?.title ?? null,
+    itemCount: order.items.reduce((count, item) => count + item.quantity, 0),
+  };
 }
 export const invoice: Invoice = {
   id: "invoice-demo", invoiceNumber: "DEMO-INV-001", issuedAt: FIXTURE_TIME,
@@ -132,6 +138,21 @@ export const recommendation: RecommendationResult = {
   items: [{ perfumeId: citrus.id, perfume: summary(citrus), reason: "Deterministic demo result; no AI provider was called." }],
 };
 export const adminPerfume: AdminPerfume = { perfume: citrus, status: "ACTIVE", revision: "catalogue-1" };
+export const adminOrder: AdminOrderDetail = {
+  id: order.id, orderNumber: order.orderNumber, customer: { name: customer.displayName, email: customer.email },
+  placedAt: order.placedAt, status: order.status, paymentStatus: order.paymentStatus, shipmentState: "PENDING",
+  trackingPresent: true, total: order.total, subtotal: order.subtotal, discountTotal: order.discountTotal,
+  deliveryCharge: money(1000), deliveryAddress: order.deliveryAddress, paymentReference: invoice.paymentReference,
+  cancellationRequest: null,
+  items: order.items.map(item => ({
+    id: item.id, sku: item.sku, title: item.title, quantity: item.quantity, unitPrice: item.unitPrice,
+    lineTotal: money(item.unitPrice.amountMinor * item.quantity), personalisation: item.customisation,
+  })),
+  shipment: {
+    state: tracking.status, trackingReference: tracking.trackingReference, deliveredAt: null,
+    events: tracking.events,
+  },
+};
 export const inventory: InventoryBalance = {
   variantId: "variant-citrus", sku: "DEMO-CITRUS-50", onHand: 12, reserved: 2, available: 10,
   lowStockThreshold: 3, lowStock: false, updatedAt: FIXTURE_TIME,

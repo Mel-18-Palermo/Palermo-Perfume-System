@@ -6,7 +6,7 @@ import {
   assertCatalogueAssets,
   CatalogueManifestError,
   CataloguePopulationConflictError,
-  populateApprovedCatalogueAndQuiz,
+  populateFinalCatalogueAndQuiz,
 } from "./catalogue-population";
 import { QuizManifestError, QuizPopulationConflictError } from "./quiz-population";
 
@@ -16,7 +16,7 @@ async function main(): Promise<void> {
   assertDevelopmentDatabase(databaseUrl);
   const db = createDatabase(databaseUrl);
   try {
-    const result = await populateApprovedCatalogueAndQuiz(db, approvedCatalogueManifest, approvedQuizManifest);
+    const result = await populateFinalCatalogueAndQuiz(db, approvedCatalogueManifest, approvedQuizManifest);
     console.log(`Approved catalogue and quiz population complete: ${result.products} products, ${result.variants} variants, ${result.images} images.`);
   } finally {
     await db.$disconnect();

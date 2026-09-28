@@ -1,29 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { Menu } from "lucide-react";
+import { Drawer } from "@/components/ui/drawer";
 import { AdminNavigation } from "./admin-navigation";
 
 export function AdminResponsiveNavigation() {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const navRef = useRef<HTMLDivElement>(null);
-
   const close = () => {
     setIsOpen(false);
-    triggerRef.current?.focus();
   };
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        close();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
 
   return (
     <>
@@ -37,25 +24,19 @@ export function AdminResponsiveNavigation() {
           type="button"
           aria-expanded={isOpen}
           aria-controls="admin-mobile-nav"
-          onClick={() => setIsOpen(current => !current)}
-          className="min-h-12 w-full cursor-pointer rounded-md px-4 py-3 text-left text-label font-semibold"
+          onClick={() => setIsOpen(true)}
+          className="flex min-h-12 w-full items-center gap-3 rounded-md border border-border bg-surface px-4 py-3 text-left text-label font-semibold"
         >
-          {isOpen ? "▼" : "▶"} Admin menu
+          <Menu className="h-5 w-5" aria-hidden="true" />
+          Administration menu
         </button>
-        {isOpen ? (
-          <div
-            id="admin-mobile-nav"
-            ref={navRef}
-            className="pt-3"
-            onClick={event => {
-              if (event.target instanceof Element && event.target.closest("a")) {
-                close();
-              }
-            }}
-          >
+        <Drawer isOpen={isOpen} onClose={close} title="Administration">
+          <div id="admin-mobile-nav" onClick={event => {
+            if (event.target instanceof Element && event.target.closest("a")) close();
+          }}>
             <AdminNavigation />
           </div>
-        ) : null}
+        </Drawer>
       </div>
     </>
   );

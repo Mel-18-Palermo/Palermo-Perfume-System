@@ -197,6 +197,7 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
           || (custom.giftPackagingId !== null && !capabilities.giftPackaging.some(option => option.id === custom.giftPackagingId))) return failure("VALIDATION_ERROR");
         return replaceItems([...activeCart().items, {
           id: `mock-item-${++itemSequence}`, perfumeId: perfume.id, variantId: variant.id, title: perfume.name,
+          imageUrl: perfume.images[0]?.url ?? null, imageAlt: perfume.images[0]?.alt || perfume.name,
           bottleSize: variant.bottleSize, concentration: variant.concentration, quantity: input.quantity,
           unitPrice: variant.price, itemTotal: fixtures.money(variant.price.amountMinor * input.quantity), customisation: custom,
         }]);
@@ -237,6 +238,21 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         wishlist = wishlist.filter(item => item.perfumeId !== input.perfumeId);
         return success({ items: wishlist });
       }),
+    },
+    reviews: {
+      publicForPerfume: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      create: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      update: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+    },
+    participation: {
+      account: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      setSubscription: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      referralCode: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      applyReferral: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+    },
+    support: {
+      ask: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      feedback: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
     },
     checkout: {
       getDeliveryMethods: run("checkout.getDeliveryMethods", "CUSTOMER", () => success([fixtures.deliveryMethod])),
@@ -294,6 +310,9 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         return success({ ...fixtures.dashboard, period, totalOrders: hasOrder ? 1 : 0,
           totalSales: fixtures.money(hasOrder ? 13000 : 0), bestSelling: hasOrder ? fixtures.dashboard.bestSelling : [] });
       }),
+      listOrders: run("admin.listOrders", "ADMIN", input => paginate(settings.empty ? [] : [fixtures.adminOrder], input)),
+      getOrder: run("admin.getOrder", "ADMIN", ({ id }) => id === fixtures.adminOrder.id && !settings.empty
+        ? success(fixtures.adminOrder) : failure("NOT_FOUND")),
       getCatalogueReferences: run("admin.getCatalogueReferences", "ADMIN", () => success({
         family: fixtures.filters.family,
         note: fixtures.filters.note,
@@ -343,6 +362,15 @@ export function createMockApi(options: MockOptions = {}): PalermoApi {
         batchReleased = true;
         return success({ ...fixtures.batch, status: "RELEASED", releasedAt: fixtures.FIXTURE_TIME });
       }),
+      listReviews: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      moderateReview: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      listPromotions: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      listPromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      createPromotion: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      updatePromotion: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      createPromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      generatePromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
+      reviewPromotionalContent: () => Promise.resolve(failure("TEMPORARILY_UNAVAILABLE")),
     },
   };
   return api;

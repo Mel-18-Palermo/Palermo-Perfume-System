@@ -1,6 +1,8 @@
 import type {
   AdminApi,
   AdminCatalogueReferences,
+  AdminOrderDetail,
+  AdminOrderSummary,
   AdminPerfume,
   Dashboard,
   InventoryBalance,
@@ -13,6 +15,8 @@ import type {
   PageRequest,
 } from "../../contracts/common";
 import type { PerfumeVariantSummary } from "../../contracts/catalogue";
+import type { PromotionRecord, PromotionalContentRecord } from "../../contracts/promotions";
+import type { ReviewModerationRecord } from "../../contracts/reviews";
 
 function result<T>(value: unknown): value is ApiResult<T> {
   return typeof value === "object"
@@ -99,17 +103,29 @@ export function createAdminHttpClient(
       fetcher,
     );
 
+  const reviews = <T>(operation: string, input?: unknown) =>
+    call<T>(`/api/admin/reviews/${operation}`, input, fetcher);
+
+  const promotions = <T>(operation: string, input?: unknown) =>
+    call<T>(`/api/admin/promotions/${operation}`, input, fetcher);
+
+  const orders = <T>(path: string) => call<T>(`/api/admin/orders${path}`, undefined, fetcher);
+
   return {
     getDashboard: (period: ReportingPeriod) =>
       catalogue<Dashboard>(
         `dashboard?from=${encodeURIComponent(period.from)}&to=${encodeURIComponent(period.to)}`,
       ),
 
+    listOrders: input => orders<Page<AdminOrderSummary>>(pageQuery(input)),
+
+    getOrder: input => orders<AdminOrderDetail>(`/${encodeURIComponent(input.id)}`),
+
     getCatalogueReferences: () =>
       catalogue<AdminCatalogueReferences>("references"),
 
     listCatalogue: input =>
-      catalogue<Page<AdminPerfume>>("list", input),
+      catalogue<Page<AdminPerfume>>(`list${pageQuery(input)}`),
 
     getPerfume: input =>
       catalogue<AdminPerfume>(
@@ -158,5 +174,32 @@ export function createAdminHttpClient(
         "batch-release",
         input,
       ),
+
+    listReviews: input =>
+      reviews<Page<ReviewModerationRecord>>(`list${pageQuery(input)}`),
+
+    moderateReview: input =>
+      reviews<null>("moderate", input),
+
+    listPromotions: input =>
+      promotions<Page<PromotionRecord>>(`list-promotions${pageQuery(input)}`),
+
+    listPromotionalContent: input =>
+      promotions<Page<PromotionalContentRecord>>(`list-content${pageQuery(input)}`),
+
+    createPromotion: input =>
+      promotions<{ readonly id: string }>("create-promotion", input),
+
+    updatePromotion: input =>
+      promotions<null>("update-promotion", input),
+
+    createPromotionalContent: input =>
+      promotions<{ readonly id: string }>("create-content", input),
+
+    generatePromotionalContent: input =>
+      promotions<null>("generate-content", input),
+
+    reviewPromotionalContent: input =>
+      promotions<null>("review-content", input),
   };
 }

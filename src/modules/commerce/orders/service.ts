@@ -76,6 +76,8 @@ export class OrdersService {
       status: order.status,
       paymentStatus: order.payment?.status ?? "PENDING",
       total: { amountMinor: order.totalMinor, currency: order.currency },
+      primaryItemTitle: order.items[0]?.nameSnapshot ?? null,
+      itemCount: order.items.reduce((count, item) => count + item.quantity, 0),
     };
   }
 

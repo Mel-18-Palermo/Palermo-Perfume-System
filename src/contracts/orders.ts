@@ -9,6 +9,8 @@ export type PaymentStatus = "PENDING" | "SUCCEEDED" | "FAILED" | "EXPIRED";
 export type OrderSummary = Readonly<{
   id: EntityId; orderNumber: string; placedAt: Timestamp; status: OrderStatus;
   paymentStatus: PaymentStatus; total: MoneyValue;
+  /** Immutable purchase snapshots, kept deliberately small for the history view. */
+  primaryItemTitle: string | null; itemCount: number;
 }>;
 export type OrderItem = Readonly<{
   id: EntityId; variantId: EntityId; sku: string; title: string; quantity: number;

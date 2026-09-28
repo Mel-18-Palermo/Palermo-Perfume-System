@@ -47,7 +47,7 @@ export function MobileNav({
           className={navigationClassName("/quiz")}
           aria-current={pathname === "/quiz" ? "page" : undefined}
         >
-          Quiz
+          Consultation
         </Link>
         <Link
           href="/cart"
@@ -56,6 +56,9 @@ export function MobileNav({
           aria-current={pathname === "/cart" ? "page" : undefined}
         >
           Cart
+        </Link>
+        <Link href="/wishlist" onClick={onClose} className={navigationClassName("/wishlist")} aria-current={pathname === "/wishlist" ? "page" : undefined}>
+          Wishlist
         </Link>
         <div className="pt-4 border-t border-border">
           {isLoading ? (
@@ -72,6 +75,17 @@ export function MobileNav({
                 aria-current={pathname === "/account" ? "page" : undefined}
               >
                 Account
+              </Link>
+              <Link
+                href="/orders"
+                onClick={onClose}
+                className={navigationClassName("/orders")}
+                aria-current={pathname === "/orders" ? "page" : undefined}
+              >
+                Orders
+              </Link>
+              <Link href="/account/rewards" onClick={onClose} className={navigationClassName("/account/rewards")} aria-current={pathname === "/account/rewards" ? "page" : undefined}>
+                Rewards &amp; referrals
               </Link>
               <button
                 type="button"

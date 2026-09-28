@@ -6,12 +6,16 @@ import type { CheckoutApi } from "./checkout";
 import type { OrdersApi } from "./orders";
 import type { PaymentApi } from "./payment";
 import type { ProfileApi } from "./profile";
+import type { ParticipationApi } from "./participation";
 import type { RecommendationsApi } from "./recommendations";
+import type { ReviewsApi } from "./reviews";
+import type { SupportApi } from "./support";
 import type { TrackingApi } from "./tracking";
 import type { WishlistApi } from "./wishlist";
 
 export type PalermoApi = Readonly<{
   auth: AuthApi; catalogue: CatalogueApi; profile: ProfileApi;
   recommendations: RecommendationsApi; cart: CartApi; wishlist: WishlistApi;
+  reviews: ReviewsApi; participation: ParticipationApi; support: SupportApi;
   checkout: CheckoutApi; orders: OrdersApi; payment: PaymentApi; tracking: TrackingApi; admin: AdminApi;
 }>;

@@ -20,6 +20,10 @@ export type PerfumeImageSummary = Readonly<{ id: EntityId; url: string; alt: str
 export type PerfumeSummary = Readonly<{
   id: EntityId; slug: string; name: string; primaryFamily: Option;
   imageUrl: string | null; priceFrom: MoneyValue; intensity: Option | null;
+  /** Published collection metadata used only for catalogue merchandising. */
+  audience?: "WOMEN" | "MEN" | "UNISEX";
+  sku?: string | null;
+  availability?: "AVAILABLE" | "OUT_OF_STOCK";
 }>;
 export type PerfumeDetail = PerfumeSummary & Readonly<{
   description: string; notes: readonly NoteAssignment[];

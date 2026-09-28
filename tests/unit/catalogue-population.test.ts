@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   approvedCatalogueManifest,
+  approvedCatalogueAudienceCollectionIds,
   type ApprovedCatalogueManifest,
 } from "../../prisma/catalogue-data";
 import {
@@ -53,6 +54,15 @@ describe("approved catalogue manifest", () => {
     expect(validateApprovedCatalogueManifest(fixture())).toEqual([]);
   });
 
+  it("requires every active canonical product to declare a primary image at sort order zero", () => {
+    const valid = fixture();
+    const product = valid.products[0];
+    expect(product).toBeDefined();
+    if (!product) return;
+    expect(validateApprovedCatalogueManifest({ ...valid, products: [{ ...product, images: [] }] }))
+      .toContain(`Product ${product.slug} images require a primary image with sortOrder 0.`);
+  });
+
   it("rejects duplicate identity, commercial and inventory errors before persistence", () => {
     const valid = fixture();
     const product = valid.products[0];
@@ -72,7 +82,6 @@ describe("approved catalogue manifest", () => {
     expect(issues.some(issue => issue.includes("product slug must be unique"))).toBe(true);
     expect(issues.some(issue => issue.includes("SKU must be unique"))).toBe(true);
     expect(issues.some(issue => issue.includes("stable database id must be unique"))).toBe(true);
-    expect(issues.some(issue => issue.includes("primary image"))).toBe(true);
     expect(issues.some(issue => issue.includes("non-negative integer AUD price"))).toBe(true);
     expect(issues.some(issue => issue.includes("invalid opening inventory"))).toBe(true);
   });
@@ -115,15 +124,15 @@ describe("approved catalogue manifest", () => {
     expect(malformedIssues.some(issue => issue.includes("invalid opening movement reference"))).toBe(true);
   });
 
-  it("validates the ten approved Palermo products and their local primary assets", async () => {
+  it("validates the complete official Palermo collection and sparse-media fallback", async () => {
     expect(validateApprovedCatalogueManifest(approvedCatalogueManifest)).toEqual([]);
     await expect(assertCatalogueAssets(approvedCatalogueManifest)).resolves.toBeUndefined();
 
-    expect(approvedCatalogueManifest.products).toHaveLength(10);
-    expect(new Set(approvedCatalogueManifest.products.map(product => product.id))).toHaveProperty("size", 10);
+    expect(approvedCatalogueManifest.products).toHaveLength(22);
+    expect(new Set(approvedCatalogueManifest.products.map(product => product.id))).toHaveProperty("size", 22);
 
     const variants = approvedCatalogueManifest.products.flatMap(product => product.variants);
-    expect(new Set(variants.map(variant => variant.sku))).toHaveProperty("size", 10);
+    expect(new Set(variants.map(variant => variant.sku))).toHaveProperty("size", 22);
     for (const variant of variants) {
       const expectedOnHand = variant.availability === "AVAILABLE" ? 10 : 0;
       expect(variant).toMatchObject({
@@ -149,7 +158,7 @@ if (expectedOnHand > 0) {
     const bySlug = new Map(approvedCatalogueManifest.products.map(product => [product.slug, product]));
     expect(bySlug.get("baran")?.variants[0]).toMatchObject({
       sku: "W263",
-      availability: "UNAVAILABLE",
+      availability: "OUT_OF_STOCK",
       openingInventory: {
         onHand: 0,
         reserved: 0,
@@ -158,36 +167,42 @@ if (expectedOnHand > 0) {
         movementReference: null,
       },
     });
+    expect(variants.filter(variant => variant.availability === "AVAILABLE")).toHaveLength(21);
+    expect(variants.filter(variant => variant.availability === "OUT_OF_STOCK")).toHaveLength(1);
+    expect(variants.filter(variant => variant.availability === "UNAVAILABLE")).toHaveLength(0);
     expect(variants.filter(variant => variant.openingInventory.onHand === 0)).toHaveLength(1);
-    expect(variants.filter(variant => variant.openingInventory.onHand > 0)).toHaveLength(9);
+    expect(variants.filter(variant => variant.openingInventory.onHand > 0)).toHaveLength(21);
     expect(variants
       .filter(variant => variant.openingInventory.onHand > 0)
       .every(variant => variant.openingInventory.movementId !== null
         && variant.openingInventory.movementReference !== null)).toBe(true);
     expect(
-      approvedCatalogueManifest.products
-        .filter(product => product.slug !== "baran")
-        .every(product => product.variants[0]?.availability === "AVAILABLE"),
-    ).toBe(true);
-    expect(
-      approvedCatalogueManifest.products.every(product =>
-        product.images[0]?.url === `/catalogue/products/${product.slug}/primary.webp`),
-    ).toBe(true);
+      variants.filter(variant => variant.availability === "OUT_OF_STOCK").map(variant => variant.sku),
+    ).toEqual(["W263"]);
+    expect(approvedCatalogueManifest.products.every(product =>
+      product.images.length === 1
+      && product.images[0]?.url === `/catalogue/products/${product.slug}/primary.webp`,
+    )).toBe(true);
+    expect([...bySlug.keys()].some(slug => slug.startsWith("demo-"))).toBe(false);
 
-    expect(Object.fromEntries(
-      approvedCatalogueManifest.products.map(product => [product.slug, product.notes.length]),
-    )).toEqual({
-      "golden-dust": 7,
-      candy: 11,
-      "saphire-chocolate": 6,
-      vanilla: 10,
-      "candy-summer": 9,
-      "musk-rose": 5,
-      "palermo-gold": 17,
-      "palermo-sport": 0,
-      "palermo-woman": 0,
-      baran: 0,
-    });
+    expect(approvedCatalogueManifest.products.every(product => {
+      const layers = new Set(product.notes.map(note => note.layer));
+      return product.notes.length > 0 && layers.has("TOP") && layers.has("MIDDLE") && layers.has("BASE");
+    })).toBe(true);
+
+    const audienceByCollection = Object.fromEntries(
+      approvedCatalogueManifest.vocabulary.collections.map(collection => [collection.id, collection.name]),
+    );
+    expect(Object.values(approvedCatalogueAudienceCollectionIds).map(id => audienceByCollection[id]).sort())
+      .toEqual(["Men", "Unisex", "Women"]);
+    expect(approvedCatalogueManifest.products.every(product => product.collectionIds.length === 1
+      && Object.hasOwn(audienceByCollection, product.collectionIds[0] ?? ""))).toBe(true);
+    const audienceCounts = approvedCatalogueManifest.products.reduce<Record<string, number>>((counts, product) => {
+      const audience = audienceByCollection[product.collectionIds[0] ?? ""];
+      if (audience) counts[audience] = (counts[audience] ?? 0) + 1;
+      return counts;
+    }, {});
+    expect(audienceCounts).toEqual({ Women: 10, Men: 8, Unisex: 4 });
   });
 });
 

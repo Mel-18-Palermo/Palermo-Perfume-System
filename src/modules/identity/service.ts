@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { PrismaClient } from "../../lib/db/generated/client";
+import type { Prisma, PrismaClient } from "../../lib/db/generated/client";
 import type { Session, SessionUser } from "../../contracts/auth";
 import { AuthFault } from "../../lib/auth/errors";
 import type { IdentityProvider, ProviderIdentity } from "../../lib/auth/provider";
@@ -12,6 +12,8 @@ export const SESSION_INACTIVITY_SECONDS = 30 * 60;
 export type Principal = Readonly<{ user: SessionUser; permissions: readonly string[] }>;
 export type LoginResult = Readonly<{ session: Session; token: string; expiresAt: Date }>;
 const anonymous: Session = { user: null };
+const principalInclude = { customer: true, admin: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } as const;
+type SessionWithPrincipal = Prisma.IdentitySessionGetPayload<{ include: typeof principalInclude }>;
 function hash(token: string): string { return createHash("sha256").update(token).digest("hex"); }
 function denied(): never { throw new AuthFault("UNAUTHENTICATED", "An active, verified account is required."); }
 function isUniqueError(error: unknown): boolean { return typeof error === "object" && error !== null && "code" in error && error.code === "P2002"; }
@@ -137,31 +139,41 @@ export class IdentityService {
     return this.createAdminLogin(challenge.admin);
   }
 
+  private principalForSession(session: SessionWithPrincipal | null, now: Date, inactivityDeadline: Date): Principal | null {
+    if (!session || session.expiresAt <= now || session.lastActivityAt <= inactivityDeadline) return null;
+    const customer = session.customer;
+    if (customer?.status === "ACTIVE" && customer.emailVerifiedAt && customer.authUserId && customer.authVersion === session.authVersion) {
+      return { user: { id: customer.id, role: "CUSTOMER", email: customer.email, displayName: customer.name }, permissions: [] };
+    }
+    const admin = session.admin;
+    if (admin?.active && admin.role.active) {
+      return { user: { id: admin.id, role: "ADMIN", email: admin.email, displayName: admin.name }, permissions: admin.role.permissions.map(({ permission }) => permission.code) };
+    }
+    return null;
+  }
+
   async principal(token: string | undefined): Promise<Principal | null> {
     if (!token || !/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
     const now = this.now();
     const inactivityDeadline = new Date(now.getTime() - SESSION_INACTIVITY_SECONDS * 1000);
-    const session = await this.db.identitySession.findUnique({ where: { tokenHash: hash(token) }, include: { customer: true, admin: { include: { role: { include: { permissions: { include: { permission: true } } } } } } } });
-    if (!session || session.expiresAt <= now || session.lastActivityAt <= inactivityDeadline) return null;
-    const customer = session.customer;
-    let principal: Principal | null = null;
-    if (customer?.status === "ACTIVE" && customer.emailVerifiedAt && customer.authUserId && customer.authVersion === session.authVersion) {
-      principal = { user: { id: customer.id, role: "CUSTOMER", email: customer.email, displayName: customer.name }, permissions: [] };
-    }
-    const admin = session.admin;
-    if (!principal && admin?.active && admin.role.active) {
-      principal = { user: { id: admin.id, role: "ADMIN", email: admin.email, displayName: admin.name }, permissions: admin.role.permissions.map(({ permission }) => permission.code) };
-    }
+    const tokenHash = hash(token);
+    const session = await this.db.identitySession.findUnique({ where: { tokenHash }, include: principalInclude });
+    const principal = this.principalForSession(session, now, inactivityDeadline);
     if (!principal) return null;
     const touched = await this.db.identitySession.updateMany({
       where: {
-        tokenHash: session.tokenHash,
+        tokenHash,
         expiresAt: { gt: now },
         lastActivityAt: { gt: inactivityDeadline, lte: now },
       },
       data: { lastActivityAt: now },
     });
-    return touched.count === 1 ? principal : null;
+    if (touched.count === 1) return principal;
+
+    // A newer request may have already advanced activity. Revalidate so that
+    // losing that monotonic touch race does not turn a valid request anonymous.
+    const current = await this.db.identitySession.findUnique({ where: { tokenHash }, include: principalInclude });
+    return this.principalForSession(current, now, inactivityDeadline);
   }
 
   async session(token: string | undefined): Promise<Session> { const principal = await this.principal(token); return principal ? { user: principal.user } : anonymous; }
