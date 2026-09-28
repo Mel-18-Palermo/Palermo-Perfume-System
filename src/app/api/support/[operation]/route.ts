@@ -60,6 +60,7 @@ export async function POST(
       intent: input["intent"] as SupportIntent,
       message: typeof input["message"] === "string" ? input["message"] : "",
       ...(typeof input["orderId"] === "string" ? { orderId: input["orderId"] } : {}),
+      ...(input["history"] !== undefined ? { history: input["history"] } : {}),
     }));
   }
 

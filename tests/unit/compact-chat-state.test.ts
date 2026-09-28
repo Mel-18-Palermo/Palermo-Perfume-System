@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendPendingTurn, completeTurn, failTurn, markRetryPending } from "../../src/modules/support/ui/compact-chat-state";
+import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory } from "../../src/modules/support/ui/compact-chat-state";
 
 describe("compact concierge chat state", () => {
   it("adds distinct customer and pending assistant turns to the current-session transcript", () => {
@@ -24,5 +24,15 @@ describe("compact concierge chat state", () => {
     expect(failed[0]).toEqual(pending[0]);
     expect(failed[1]).toMatchObject({ state: "error", content: "The support service is temporarily unavailable." });
     expect(markRetryPending(failed, "request-1")[1]).toMatchObject({ state: "pending", content: "" });
+  });
+
+  it("keeps only bounded completed current-session turns for reference resolution", () => {
+    const completed = completeTurn(appendPendingTurn([], { requestId: "request-1", question: "Tell me about Palermo vanilla.", intent: "PRODUCT" }), "request-1", "conversation-1", "Palermo has a vanilla fragrance.");
+    const failed = failTurn(appendPendingTurn(completed, { requestId: "request-2", question: "Unrelated question", intent: "PRODUCT" }), "request-2", "Unavailable");
+
+    expect(recentSupportHistory(failed)).toEqual([
+      { actor: "CUSTOMER", content: "Tell me about Palermo vanilla." },
+      { actor: "ASSISTANT", content: "Palermo has a vanilla fragrance." },
+    ]);
   });
 });
