@@ -6,12 +6,17 @@ import type { Session } from "@/contracts/auth";
 import type { CartDto } from "@/contracts/cart";
 import type { CatalogueFilters, PerfumeSummary } from "@/contracts/catalogue";
 import { api } from "@/lib/api";
+import { getCatalogueService } from "@/modules/catalogue/runtime";
 import { CatalogueView } from "@/modules/catalogue/catalogue-view";
 
 export const metadata: Metadata = {
   title: "Fragrance catalogue | Palermo",
   description: "Explore Palermo fragrances by family, intensity, and price.",
 };
+
+// The page's initial catalogue is database-backed and must not preserve a
+// build-time unavailable fallback in a static production artifact.
+export const dynamic = "force-dynamic";
 
 export default async function CataloguePage() {
   let initialItems: readonly PerfumeSummary[] | null = null;
@@ -21,15 +26,16 @@ export default async function CataloguePage() {
   let initialError: string | null = null;
 
   try {
+    const catalogue = getCatalogueService();
     const [listResult, filterResult, sessionResult, cartResult] =
       await Promise.all([
-        api.catalogue
+        catalogue
           .list({ page: 1, pageSize: 24 })
           .catch(() => ({
             ok: false as const,
             error: { message: "Failed to load catalogue" },
           })),
-        api.catalogue
+        catalogue
           .getFilters()
           .catch(() => ({
             ok: false as const,
