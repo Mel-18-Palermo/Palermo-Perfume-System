@@ -1,69 +1,33 @@
-# Security Policy
+# Security policy
 
-## Current phase
+Palermo is a controlled capstone demonstration, not a commercial production service. Report suspected vulnerabilities privately to the project lead through the approved team channel; do not place credentials, exploit details, personal data, payment data, sessions, or sensitive logs in a public issue.
 
-The Palermo Perfume System is currently in the Software Requirements Specification (SRS) phase.
+## Current implementation boundaries
 
-Security controls documented during this phase describe intended requirements and design decisions. They must not be presented as implemented or verified until the application exists and the relevant controls have been tested.
+The deployed application enforces customer ownership and administrator RBAC server-side, validates untrusted input at server boundaries, and uses Prisma/PostgreSQL transactions for protected commerce and inventory state. Supabase Auth handles provider authentication; Palermo stores application session hashes, not passwords. Stripe is test-mode only, and raw card details remain inside Stripe Elements.
 
-## Reporting a security issue
+The browser is not authoritative for price, stock, payment success, order state, permissions, or inventory. Production uses the isolated `palermo_prod` application schema; owner-only migration credentials and `DIRECT_URL`, `TEST_DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and demo passwords are excluded from the Vercel Production runtime.
 
-Do not disclose vulnerabilities, credentials, personal information, payment information, session data, or other sensitive material in a public GitHub issue.
+These controls reduce defined risks; they are not a claim of comprehensive commercial security certification. `GET /api/health` is process-liveness only and is not a dependency or security health probe.
 
-Report suspected security issues to the project lead through the team's approved private communication channel. Include only the minimum information required to reproduce and assess the issue.
-
-## Repository security rules
+## Repository and data rules
 
 Never commit:
 
-- `.env` files or populated environment configuration;
-- API keys or access tokens;
-- database connection strings or passwords;
-- payment credentials or card data;
-- private keys or certificates;
-- real customer personal information;
-- session identifiers;
-- production database exports;
-- private application logs containing sensitive data.
+- populated `.env` files, API keys, access tokens, passwords, connection strings, private keys, or session identifiers;
+- payment credentials, raw card data, production database exports, or private logs containing sensitive values;
+- real customer or payment data.
 
-Synthetic data must be used for development, testing, demonstrations, screenshots, and assessment evidence.
+Use synthetic data for development, testing, demonstrations, screenshots, and assessment evidence. Keep `NEXT_PUBLIC_` configuration safe for browser exposure. Do not print secrets in command output, CI logs, issues, pull requests, or evidence.
 
-## Application security baseline
+## Review-sensitive changes
 
-When implementation begins, the project must apply security controls appropriate to the approved SRS, including:
+Backend/security-owner review is required for authentication/authorisation, Prisma schema or migrations, Supabase configuration, payment processing, server-side business rules, AI integrations, environment/secrets, security/privacy controls, and CI/CD or deployment configuration.
 
-- server-side authentication and authorisation;
-- least-privilege role-based access control;
-- server-side input validation;
-- safe output handling;
-- protected session management;
-- parameterised database access through Prisma;
-- controlled use of raw database queries;
-- secure secret storage;
-- transport encryption;
-- safe payment-provider integration;
-- privacy-conscious AI integration;
-- security-relevant logging without sensitive payloads;
-- dependency and automated security checks where practical.
+## Supporting material
 
-Security controls must be linked to approved requirements and validated through the project test plan.
+- [`docs/security/`](docs/security/) — supporting security evidence, including dated regression reports.
+- [`docs/privacy/dpia.md`](docs/privacy/dpia.md) — privacy assessment and linked retention/risk records.
+- [`docs/testing/`](docs/testing/) — plans, regression maps and QA evidence.
 
-## High-risk changes
-
-The following areas require review by the backend/security lead before integration:
-
-- authentication and authorisation;
-- Prisma schema and migrations;
-- Supabase configuration;
-- server-side business logic;
-- payment processing;
-- AI integrations;
-- environment and secret configuration;
-- security and privacy controls;
-- CI/CD and deployment configuration.
-
-## Security documentation
-
-Detailed security and privacy documentation will be created under `docs/security/` as the SRS is developed.
-
-No security control should be claimed as implemented merely because it appears in requirements or design documentation.
+Follow the protected-branch pull-request process in [CONTRIBUTING.md](CONTRIBUTING.md) for any remediation.
