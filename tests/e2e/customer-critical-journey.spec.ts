@@ -123,8 +123,9 @@ test("account hub, rewards compatibility route, and floating concierge are disco
   await expect(page.getByRole("dialog", { name: "Palermo concierge" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Palermo concierge" })).toBeVisible();
   await expect(page.getByLabel("Support topic")).toBeVisible();
-  await expect(page.getByLabel("Message")).toBeVisible();
-  await page.getByLabel("Message").fill("Can you help with a product?");
+  const message = page.getByRole("textbox", { name: "Message" });
+  await expect(message).toBeVisible();
+  await message.fill("Can you help with a product?");
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.getByText("You", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
