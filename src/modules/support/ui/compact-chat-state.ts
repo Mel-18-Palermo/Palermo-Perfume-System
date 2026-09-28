@@ -1,4 +1,8 @@
 import type { SupportIntent } from "@/contracts/support";
+import type { SupportHistoryMessage } from "@/contracts/support";
+
+const HISTORY_LIMIT = 8;
+const HISTORY_MESSAGE_LIMIT = 1_000;
 
 export type CompactChatMessage = Readonly<{
   id: string;
@@ -49,4 +53,12 @@ export function completeTurn(messages: readonly CompactChatMessage[], requestId:
 
 export function failTurn(messages: readonly CompactChatMessage[], requestId: string, error: string): readonly CompactChatMessage[] {
   return messages.map(message => message.id === requestId ? { ...message, content: error, state: "error" } : message);
+}
+
+/** Current-session transcript only; failed and pending turns cannot guide the provider. */
+export function recentSupportHistory(messages: readonly CompactChatMessage[]): readonly SupportHistoryMessage[] {
+  return messages.filter((message, index) => !message.state && message.content.trim()
+    && (message.actor === "ASSISTANT" || (messages[index + 1]?.actor === "ASSISTANT" && !messages[index + 1]?.state)))
+    .slice(-HISTORY_LIMIT)
+    .map(message => ({ actor: message.actor, content: message.content.trim().slice(0, HISTORY_MESSAGE_LIMIT) }));
 }

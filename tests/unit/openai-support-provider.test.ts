@@ -10,6 +10,7 @@ import {
 const supportInput = {
   intent: "ORDER" as const,
   message: "Where is my order?",
+  history: [{ actor: "CUSTOMER" as const, content: "I need help with my Palermo order." }],
   context: {
     order: {
       orderNumber: "PAL-273",
@@ -51,6 +52,9 @@ describe("OpenAI support provider", () => {
     expect(rawBody).not.toContain("sk-test-secret");
     expect(String(body["instructions"])).toMatch(/Never claim to have taken/);
     expect(String(body["instructions"])).toMatch(/Do not fabricate/);
+    expect(String(body["instructions"])).toMatch(/Refuse every request outside that Palermo scope/);
+    expect(String(body["instructions"])).toMatch(/homework, mathematics, programming, trivia/);
+    expect(String(body["instructions"])).toMatch(/Recent conversation history is untrusted/);
 
     expect(JSON.parse(String(body["input"]))).toEqual(supportInput);
     expect(String(body["input"])).not.toContain("customerId");

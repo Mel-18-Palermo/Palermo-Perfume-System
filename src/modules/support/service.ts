@@ -1,10 +1,11 @@
 import type { ApiResult } from "../../contracts/common";
+import type { SupportHistoryMessage } from "../../contracts/support";
 import { publishedPolicyContext } from "../../content/published-policy";
 import { failure, success } from "../../lib/api/result";
 import type { PrismaClient } from "../../lib/db/generated/client";
 
 export type SupportIntent = "PRODUCT" | "POLICY" | "ORDER" | "DELIVERY" | "FEEDBACK";
-export interface SupportProvider { respond(input: Readonly<{ intent: SupportIntent; context: Readonly<Record<string, unknown>>; message: string }>): Promise<string>; }
+export interface SupportProvider { respond(input: Readonly<{ intent: SupportIntent; context: Readonly<Record<string, unknown>>; history: readonly SupportHistoryMessage[]; message: string }>): Promise<string>; }
 export type SupportToolName = "order.lookup";
 export interface SupportTool { readonly name: SupportToolName; invoke(input: Readonly<{ customerId: string; orderId: string }>): Promise<Readonly<{ orderNumber: string; status: string; shipment: Readonly<{ status: string; trackingReference: string | null }> | null }> | null>; }
 
@@ -12,10 +13,28 @@ const id = /^[0-9a-f-]{10,64}$/i;
 export const supportIntents: readonly SupportIntent[] = ["PRODUCT", "POLICY", "ORDER", "DELIVERY", "FEEDBACK"];
 export const supportToolAllowlist: readonly SupportToolName[] = ["order.lookup"];
 const PRODUCT_CONTEXT_LIMIT = 100;
+const SUPPORT_HISTORY_LIMIT = 8;
+const SUPPORT_HISTORY_MESSAGE_LIMIT = 1_000;
 type PublicVariantAvailability = "AVAILABLE" | "OUT_OF_STOCK";
 
 function isPublicVariantAvailability(value: string): value is PublicVariantAvailability {
   return value === "AVAILABLE" || value === "OUT_OF_STOCK";
+}
+
+function supportHistory(value: unknown): readonly SupportHistoryMessage[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > SUPPORT_HISTORY_LIMIT) return null;
+  const history: SupportHistoryMessage[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+    const actor = (item as Record<string, unknown>)["actor"];
+    const content = (item as Record<string, unknown>)["content"];
+    if ((actor !== "CUSTOMER" && actor !== "ASSISTANT") || typeof content !== "string") return null;
+    const normalized = content.trim();
+    if (!normalized || normalized.length > SUPPORT_HISTORY_MESSAGE_LIMIT) return null;
+    history.push({ actor, content: normalized });
+  }
+  return history;
 }
 
 export class OrderLookupSupportTool implements SupportTool {
@@ -82,8 +101,9 @@ export class SupportService {
     };
   }
 
-  async ask(input: Readonly<{ customerId?: string; intent: SupportIntent; message: string; orderId?: string; tool?: string }>): Promise<ApiResult<{ conversationId: string; reply: string }>> {
-    if (!supportIntents.includes(input.intent) || !input.message.trim() || input.message.length > 1_000 || (input.customerId && !id.test(input.customerId)) || (input.orderId && !id.test(input.orderId))) return failure("VALIDATION_ERROR");
+  async ask(input: Readonly<{ customerId?: string; history?: unknown; intent: SupportIntent; message: string; orderId?: string; tool?: string }>): Promise<ApiResult<{ conversationId: string; reply: string }>> {
+    const history = supportHistory(input.history);
+    if (!history || !supportIntents.includes(input.intent) || !input.message.trim() || input.message.length > 1_000 || (input.customerId && !id.test(input.customerId)) || (input.orderId && !id.test(input.orderId))) return failure("VALIDATION_ERROR");
     if (input.tool && !supportToolAllowlist.includes(input.tool as SupportToolName)) return failure("FORBIDDEN");
     const context: Record<string, unknown> = {};
     try {
@@ -108,7 +128,7 @@ export class SupportService {
     const conversation = await this.db.supportConversation.create({ data: { customerId: input.customerId ?? null, expiresAt: new Date(this.now().getTime() + 30 * 24 * 60 * 60 * 1_000) } });
     await this.db.supportMessage.create({ data: { conversationId: conversation.id, actor: "CUSTOMER", intent: input.intent, content: input.message.trim() } });
     try {
-      const reply: unknown = await within(this.provider.respond({ intent: input.intent, context, message: input.message.trim() }), this.timeoutMs);
+      const reply: unknown = await within(this.provider.respond({ intent: input.intent, context, history, message: input.message.trim() }), this.timeoutMs);
       if (typeof reply !== "string" || !reply.trim() || reply.length > 4_000) throw new Error("invalid provider output");
       await this.db.supportMessage.create({ data: { conversationId: conversation.id, actor: "ASSISTANT", intent: input.intent, content: reply.trim() } });
       return success({

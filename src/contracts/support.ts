@@ -7,10 +7,17 @@ export type SupportIntent =
   | "DELIVERY"
   | "FEEDBACK";
 
+export type SupportHistoryMessage = Readonly<{
+  actor: "CUSTOMER" | "ASSISTANT";
+  content: string;
+}>;
+
 export type SupportRequest = Readonly<{
   intent: SupportIntent;
   message: string;
   orderId?: EntityId;
+  /** Recent in-memory turns are untrusted reference material, never Palermo facts. */
+  history?: readonly SupportHistoryMessage[];
 }>;
 
 export type SupportReply = Readonly<{

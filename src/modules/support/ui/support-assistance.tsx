@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { appendPendingTurn, completeTurn, failTurn, markRetryPending, type CompactChatMessage } from "./compact-chat-state";
+import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory, type CompactChatMessage } from "./compact-chat-state";
 
 const intents: readonly Readonly<{ value: SupportIntent; label: string; hint: string }>[] = [
   { value: "PRODUCT", label: "Product guidance", hint: "Notes, concentration and suitability" },
@@ -81,6 +81,7 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
       intent: requestIntent,
       message: question,
       ...(requestOrderId ? { orderId: requestOrderId } : {}),
+      history: recentSupportHistory(transcript),
     });
     setPending(false);
     setTranscript(items => result.ok
