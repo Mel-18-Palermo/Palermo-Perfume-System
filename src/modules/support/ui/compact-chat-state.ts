@@ -1,5 +1,4 @@
-import type { SupportIntent } from "@/contracts/support";
-import type { SupportHistoryMessage } from "@/contracts/support";
+import type { SupportHistoryMessage, SupportIntent, SupportProductReference } from "@/contracts/support";
 
 const HISTORY_LIMIT = 6;
 const HISTORY_MESSAGE_LIMIT = 1_000;
@@ -11,6 +10,7 @@ export type CompactChatMessage = Readonly<{
   intent: SupportIntent;
   orderId?: string;
   conversationId?: string;
+  products?: readonly SupportProductReference[];
   state?: "pending" | "error";
   feedback?: "idle" | "sending" | "sent" | "error";
 }>;
@@ -36,7 +36,7 @@ export function markRetryPending(messages: readonly CompactChatMessage[], reques
   return messages.map(message => message.id === requestId ? { ...message, state: "pending", content: "" } : message);
 }
 
-export function completeTurn(messages: readonly CompactChatMessage[], requestId: string, conversationId: string, reply: string): readonly CompactChatMessage[] {
+export function completeTurn(messages: readonly CompactChatMessage[], requestId: string, conversationId: string, reply: string, products: readonly SupportProductReference[] = []): readonly CompactChatMessage[] {
   return messages.map(message => {
     if (message.id !== requestId) return message;
     return {
@@ -46,6 +46,7 @@ export function completeTurn(messages: readonly CompactChatMessage[], requestId:
       intent: message.intent,
       ...(message.orderId ? { orderId: message.orderId } : {}),
       conversationId,
+      products,
       feedback: "idle",
     };
   });
@@ -73,4 +74,13 @@ export function retryRequest(messages: readonly CompactChatMessage[], requestId:
     ...(customer.orderId ? { orderId: customer.orderId } : {}),
     history: recentSupportHistory(messages),
   };
+}
+
+/** Sends only the immediately preceding server-issued products for explicit link requests. */
+export function productLinkFollowUpIds(messages: readonly CompactChatMessage[], message: string): readonly string[] {
+  if (!/\b(link|url|open|view)\b/i.test(message)) return [];
+  for (const chat of [...messages].reverse()) {
+    if (chat.actor === "ASSISTANT") return chat.products?.map(product => product.id) ?? [];
+  }
+  return [];
 }

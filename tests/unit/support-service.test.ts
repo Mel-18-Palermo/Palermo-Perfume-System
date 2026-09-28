@@ -14,11 +14,13 @@ const otherCustomer = "27300000-0000-4000-8000-000000000002";
 const ownOrder = "27300000-0000-4000-8000-000000000003";
 const otherOrder = "27300000-0000-4000-8000-000000000004";
 const conversationId = "27300000-0000-4000-8000-000000000005";
+const productId = "27300000-0000-4000-8000-000000000006";
 
 function database(conversationOwner: string | null = customer) {
   return {
     perfume: {
       findMany: vi.fn(async () => [{
+        id: productId,
         name: "Saphire Chocolate",
         slug: "saphire-chocolate",
         description: "A published Palermo fragrance.",
@@ -61,7 +63,7 @@ describe("bounded support assistance", () => {
     const db = database();
     const service = new SupportService(db, provider(async input => { context = input.context; return "Policy answer"; }), fixedNow);
 
-    await expect(service.ask({ intent: "POLICY", message: "What is your returns policy?" })).resolves.toEqual({ ok: true, data: { conversationId, reply: "Policy answer" } });
+    await expect(service.ask({ intent: "POLICY", message: "What is your returns policy?" })).resolves.toEqual({ ok: true, data: { conversationId, reply: "Policy answer", products: [] } });
     const policy = context?.["policy"];
     expect(Array.isArray(policy)).toBe(true);
     const policyEntries = policy as readonly unknown[];
@@ -80,8 +82,11 @@ describe("bounded support assistance", () => {
     expect(context).toEqual({ product: {
       catalogueScope: "This is the complete bounded list of Palermo's currently public perfume catalogue. Palermo does not sell items outside this list.",
       products: [{
+        id: productId,
         name: "Saphire Chocolate",
         slug: "saphire-chocolate",
+        href: `/product/${productId}`,
+        priceLabel: "AUD $199.00",
         description: "A published Palermo fragrance.",
         family: "Amber",
         intensity: null,
@@ -96,6 +101,32 @@ describe("bounded support assistance", () => {
       }],
     } });
     expect(JSON.stringify(context)).not.toMatch(/customerId|orderNumber|inventory|priceMinor|sku|reservation|internal/i);
+  });
+
+  it("returns server-verified public product navigation for recommendations and link follow-ups", async () => {
+    let context: Readonly<Record<string, unknown>> | undefined;
+    const service = new SupportService(database(), provider(async input => { context = input.context; return "You can explore **Saphire Chocolate** here."; }), fixedNow);
+
+    await expect(service.ask({ intent: "PRODUCT", message: "Can I get the link?", productIds: [productId] })).resolves.toEqual({
+      ok: true,
+      data: {
+        conversationId,
+        reply: "You can explore **Saphire Chocolate** here.",
+        products: [{ id: productId, slug: "saphire-chocolate", name: "Saphire Chocolate", href: `/product/${productId}`, priceLabel: "AUD $199.00" }],
+      },
+    });
+    expect(context?.["followUpProducts"]).toEqual([{ id: productId, name: "Saphire Chocolate", slug: "saphire-chocolate", href: `/product/${productId}`, priceLabel: "AUD $199.00" }]);
+  });
+
+  it("does not trust arbitrary product IDs as product links", async () => {
+    let context: Readonly<Record<string, unknown>> | undefined;
+    const service = new SupportService(database(), provider(async input => { context = input.context; return "Here is the requested link."; }), fixedNow);
+
+    await expect(service.ask({ intent: "PRODUCT", message: "Can I get the link?", productIds: [otherOrder] })).resolves.toEqual({
+      ok: true,
+      data: { conversationId, reply: "Here is the requested link.", products: [] },
+    });
+    expect(context?.["followUpProducts"]).toBeUndefined();
   });
 
   it("passes only validated bounded history as untrusted provider reference material", async () => {
@@ -127,7 +158,7 @@ describe("bounded support assistance", () => {
     let context: Readonly<Record<string, unknown>> | undefined;
     const service = new SupportService(database(), provider(async input => { context = input.context; return "Order answer"; }), fixedNow, 100, [lookup]);
 
-    await expect(service.ask({ customerId: customer, intent: "ORDER", message: "Where is it?", orderId: ownOrder })).resolves.toEqual({ ok: true, data: { conversationId, reply: "Order answer" } });
+    await expect(service.ask({ customerId: customer, intent: "ORDER", message: "Where is it?", orderId: ownOrder })).resolves.toEqual({ ok: true, data: { conversationId, reply: "Order answer", products: [] } });
     expect(context).toMatchObject({ order: { orderNumber: "PAL-273", status: "SHIPPED" } });
     await expect(service.ask({ customerId: customer, intent: "ORDER", message: "Show theirs", orderId: otherOrder })).resolves.toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
     expect(lookup.invoke).toHaveBeenLastCalledWith({ customerId: customer, orderId: otherOrder });

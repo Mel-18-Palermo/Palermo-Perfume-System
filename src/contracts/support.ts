@@ -18,11 +18,23 @@ export type SupportRequest = Readonly<{
   orderId?: EntityId;
   /** Recent in-memory turns are untrusted reference material, never Palermo facts. */
   history?: readonly SupportHistoryMessage[];
+  /** Untrusted client hints; the service revalidates these against the public catalogue. */
+  productIds?: readonly EntityId[];
+}>;
+
+export type SupportProductReference = Readonly<{
+  id: EntityId;
+  slug: string;
+  name: string;
+  href: string;
+  priceLabel: string | null;
 }>;
 
 export type SupportReply = Readonly<{
   conversationId: EntityId;
   reply: string;
+  /** Product navigation is assembled by the server, never by model output. */
+  products: readonly SupportProductReference[];
 }>;
 
 export type SupportFeedback = Readonly<{

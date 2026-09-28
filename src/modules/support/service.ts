@@ -1,5 +1,5 @@
 import type { ApiResult } from "../../contracts/common";
-import type { SupportHistoryMessage } from "../../contracts/support";
+import type { SupportHistoryMessage, SupportProductReference } from "../../contracts/support";
 import { publishedPolicyContext } from "../../content/published-policy";
 import { failure, success } from "../../lib/api/result";
 import type { PrismaClient } from "../../lib/db/generated/client";
@@ -15,6 +15,7 @@ export const supportToolAllowlist: readonly SupportToolName[] = ["order.lookup"]
 const PRODUCT_CONTEXT_LIMIT = 100;
 const SUPPORT_HISTORY_LIMIT = 6;
 const SUPPORT_HISTORY_MESSAGE_LIMIT = 1_000;
+const PRODUCT_REFERENCE_LIMIT = 10;
 type PublicVariantAvailability = "AVAILABLE" | "OUT_OF_STOCK";
 const audienceCollections = ["Women", "Men", "Unisex"] as const;
 
@@ -28,6 +29,36 @@ function isAudienceCollection(value: string): value is typeof audienceCollection
 
 function customerPriceAmount(amountMinor: number): string {
   return (amountMinor / 100).toFixed(2);
+}
+
+type PublicProduct = Readonly<{
+  id: string;
+  name: string;
+  slug: string;
+  href: string;
+  priceLabel: string | null;
+  description: string;
+  family: string;
+  intensity: string | null;
+  audiences: readonly (typeof audienceCollections[number])[];
+  notes: readonly Readonly<{ layer: string; name: string }>[];
+  variants: readonly Readonly<{ bottleSize: string; concentration: string; price: Readonly<{ amount: string; currency: string }>; availability: "AVAILABLE" | "OUT_OF_STOCK" }>[];
+}>;
+
+function productPriceLabel(priceMinor: number, currency: string): string {
+  return `${currency} ${new Intl.NumberFormat("en-AU", { style: "currency", currency }).format(priceMinor / 100)}`;
+}
+
+function escaped(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function mentionsProduct(value: string, productName: string): boolean {
+  return new RegExp(`(^|[^a-z0-9])${escaped(productName)}(?=$|[^a-z0-9])`, "i").test(value);
+}
+
+function isProductLinkRequest(message: string): boolean {
+  return /\b(link|url|open|view)\b/i.test(message);
 }
 
 function supportHistory(value: unknown): readonly SupportHistoryMessage[] | null {
@@ -70,7 +101,7 @@ export class SupportService {
     this.tools = new Map(tools.map(tool => [tool.name, tool]));
   }
 
-  private async productContext(): Promise<Readonly<{ catalogueScope: string; products: readonly Readonly<{ name: string; slug: string; description: string; family: string; intensity: string | null; audiences: readonly (typeof audienceCollections[number])[]; notes: readonly Readonly<{ layer: string; name: string }>[]; variants: readonly Readonly<{ bottleSize: string; concentration: string; price: Readonly<{ amount: string; currency: string }>; availability: "AVAILABLE" | "OUT_OF_STOCK" }>[] }>[]}>> {
+  private async productContext(): Promise<Readonly<{ catalogueScope: string; products: readonly PublicProduct[] }>> {
     const products = await this.db.perfume.findMany({
       where: {
         status: "ACTIVE",
@@ -78,6 +109,7 @@ export class SupportService {
         variants: { some: { availability: { in: ["AVAILABLE", "OUT_OF_STOCK"] } } },
       },
       select: {
+        id: true,
         name: true,
         slug: true,
         description: true,
@@ -92,31 +124,54 @@ export class SupportService {
     });
     return {
       catalogueScope: "This is the complete bounded list of Palermo's currently public perfume catalogue. Palermo does not sell items outside this list.",
-      products: products.map(product => ({
-        name: product.name,
-        slug: product.slug,
-        description: product.description,
-        family: product.primaryFamily.name,
-        intensity: product.intensity?.name ?? null,
-        audiences: product.collections.map(({ collection }) => collection.name).filter(isAudienceCollection),
-        notes: product.notes.map(({ layer, note }) => ({ layer, name: note.name })),
-        variants: product.variants.flatMap(variant => !isPublicVariantAvailability(variant.availability) ? [] : [{
+      products: products.map(product => {
+        const variants = product.variants.flatMap(variant => !isPublicVariantAvailability(variant.availability) ? [] : [{
           bottleSize: variant.bottleSize,
           concentration: variant.concentration,
           price: { amount: customerPriceAmount(variant.priceMinor), currency: variant.currency },
           availability: variant.availability,
-        }]),
-      })),
+        }]);
+        const lowestPrice = product.variants.find(variant => isPublicVariantAvailability(variant.availability));
+        return {
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          href: `/product/${product.id}`,
+          priceLabel: lowestPrice ? productPriceLabel(lowestPrice.priceMinor, lowestPrice.currency) : null,
+          description: product.description,
+          family: product.primaryFamily.name,
+          intensity: product.intensity?.name ?? null,
+          audiences: product.collections.map(({ collection }) => collection.name).filter(isAudienceCollection),
+          notes: product.notes.map(({ layer, note }) => ({ layer, name: note.name })),
+          variants,
+        };
+      }),
     };
   }
 
-  async ask(input: Readonly<{ customerId?: string; history?: unknown; intent: SupportIntent; message: string; orderId?: string; tool?: string }>): Promise<ApiResult<{ conversationId: string; reply: string }>> {
+  private productReferences(products: readonly PublicProduct[], message: string, reply: string, requestedProductIds: readonly string[]): readonly SupportProductReference[] {
+    const requested = isProductLinkRequest(message) ? new Set(requestedProductIds) : new Set<string>();
+    return products
+      .filter(product => requested.has(product.id) || mentionsProduct(message, product.name) || mentionsProduct(reply, product.name))
+      .slice(0, PRODUCT_REFERENCE_LIMIT)
+      .map(({ id: productId, slug, name, href, priceLabel }) => ({ id: productId, slug, name, href, priceLabel }));
+  }
+
+  async ask(input: Readonly<{ customerId?: string; history?: unknown; intent: SupportIntent; message: string; orderId?: string; productIds?: readonly string[]; tool?: string }>): Promise<ApiResult<{ conversationId: string; reply: string; products: readonly SupportProductReference[] }>> {
     const history = supportHistory(input.history);
-    if (!history || !supportIntents.includes(input.intent) || !input.message.trim() || input.message.length > 1_000 || (input.customerId && !id.test(input.customerId)) || (input.orderId && !id.test(input.orderId))) return failure("VALIDATION_ERROR");
+    if (!history || !supportIntents.includes(input.intent) || !input.message.trim() || input.message.length > 1_000 || (input.customerId && !id.test(input.customerId)) || (input.orderId && !id.test(input.orderId)) || (input.productIds && (input.productIds.length > PRODUCT_REFERENCE_LIMIT || !input.productIds.every(candidate => id.test(candidate))))) return failure("VALIDATION_ERROR");
+    if (input.productIds?.length && input.intent !== "PRODUCT") return failure("FORBIDDEN");
     if (input.tool && !supportToolAllowlist.includes(input.tool as SupportToolName)) return failure("FORBIDDEN");
     const context: Record<string, unknown> = {};
+    let products: readonly PublicProduct[] = [];
     try {
-      if (input.intent === "PRODUCT") context.product = await this.productContext();
+      if (input.intent === "PRODUCT") {
+        const productContext = await this.productContext();
+        products = productContext.products;
+        context.product = productContext;
+        const followUpProducts = products.filter(product => input.productIds?.includes(product.id));
+        if (followUpProducts.length) context.followUpProducts = followUpProducts.map(({ id: productId, name, slug, href, priceLabel }) => ({ id: productId, name, slug, href, priceLabel }));
+      }
     } catch {
       return failure("TEMPORARILY_UNAVAILABLE");
     }
@@ -143,6 +198,7 @@ export class SupportService {
       return success({
         conversationId: conversation.id,
         reply: reply.trim(),
+        products: this.productReferences(products, input.message, reply.trim(), input.productIds ?? []),
       });
     } catch { return failure("TEMPORARILY_UNAVAILABLE"); }
   }

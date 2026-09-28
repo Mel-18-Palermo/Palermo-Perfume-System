@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory, retryRequest } from "../../src/modules/support/ui/compact-chat-state";
+import { appendPendingTurn, completeTurn, failTurn, markRetryPending, productLinkFollowUpIds, recentSupportHistory, retryRequest } from "../../src/modules/support/ui/compact-chat-state";
 
 describe("compact concierge chat state", () => {
   it("adds distinct customer and pending assistant turns to the current-session transcript", () => {
@@ -12,9 +12,10 @@ describe("compact concierge chat state", () => {
 
   it("replaces a pending turn with a successful assistant reply", () => {
     const pending = appendPendingTurn([], { requestId: "request-1", question: "Where is my order?", intent: "ORDER", orderId: "owned-order" });
-    expect(completeTurn(pending, "request-1", "conversation-1", "Your authorised order is shipped.")).toEqual([
+    const products = [{ id: "product-1", slug: "palermo-gold", name: "Palermo Gold", href: "/product/product-1", priceLabel: "AUD $35.00" }];
+    expect(completeTurn(pending, "request-1", "conversation-1", "Your authorised order is shipped.", products)).toEqual([
       pending[0],
-      { id: "request-1", actor: "ASSISTANT", content: "Your authorised order is shipped.", intent: "ORDER", orderId: "owned-order", conversationId: "conversation-1", feedback: "idle" },
+      { id: "request-1", actor: "ASSISTANT", content: "Your authorised order is shipped.", intent: "ORDER", orderId: "owned-order", conversationId: "conversation-1", products, feedback: "idle" },
     ]);
   });
 
@@ -68,5 +69,11 @@ describe("compact concierge chat state", () => {
       orderId: "owned-order",
       history: [],
     });
+  });
+
+  it("forwards only the immediately preceding server-issued products for a link follow-up", () => {
+    const transcript = completeTurn(appendPendingTurn([], { requestId: "request-1", question: "I like fruity", intent: "PRODUCT" }), "request-1", "conversation-1", "**Candy** could suit you.", [{ id: "product-candy", slug: "candy", name: "Candy", href: "/product/product-candy", priceLabel: "AUD $35.00" }]);
+    expect(productLinkFollowUpIds(transcript, "can I get the link?")).toEqual(["product-candy"]);
+    expect(productLinkFollowUpIds(transcript, "tell me more")).toEqual([]);
   });
 });

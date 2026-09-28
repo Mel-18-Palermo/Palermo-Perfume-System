@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SendHorizontal, ThumbsDown, ThumbsUp } from "lucide-react";
 import type { Session } from "@/contracts/auth";
 import type { OrderSummary } from "@/contracts/orders";
-import type { SupportIntent } from "@/contracts/support";
+import type { SupportIntent, SupportProductReference } from "@/contracts/support";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory, retryRequest, type CompactChatMessage } from "./compact-chat-state";
+import { appendPendingTurn, completeTurn, failTurn, markRetryPending, productLinkFollowUpIds, recentSupportHistory, retryRequest, type CompactChatMessage } from "./compact-chat-state";
+import { SupportProductLinks, SupportRichText } from "./support-rich-text";
 
 const intents: readonly Readonly<{ value: SupportIntent; label: string; hint: string }>[] = [
   { value: "PRODUCT", label: "Product guidance", hint: "Notes, concentration and suitability" },
@@ -20,7 +21,7 @@ const intents: readonly Readonly<{ value: SupportIntent; label: string; hint: st
   { value: "FEEDBACK", label: "Feedback", hint: "Share a store or service concern" },
 ];
 
-type Reply = Readonly<{ conversationId: string; question: string; reply: string }>;
+type Reply = Readonly<{ conversationId: string; question: string; reply: string; products: readonly SupportProductReference[] }>;
 function supportsOrderContext(intent: SupportIntent): boolean {
   return intent === "ORDER" || intent === "DELIVERY";
 }
@@ -36,6 +37,11 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
   const [pending, setPending] = useState(false);
   const nextMessageId = useRef(0);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+  const transcriptScrollRef = useRef<HTMLDivElement>(null);
+  const transcriptContentRef = useRef<HTMLDivElement>(null);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
+  const followTranscriptRef = useRef(true);
+  const pendingScrollRef = useRef<"force" | null>(null);
   const canUseOrderContext = customer !== null && supportsOrderContext(intent);
 
   useEffect(() => {
@@ -56,6 +62,34 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
     composer.style.height = `${Math.min(composer.scrollHeight, 144)}px`;
   }, [message]);
 
+  useEffect(() => {
+    const content = transcriptContentRef.current;
+    if (!content || typeof ResizeObserver === "undefined") return;
+    let animationFrame = 0;
+    const observer = new ResizeObserver(() => {
+      if (!followTranscriptRef.current) return;
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(() => transcriptEndRef.current?.scrollIntoView({ block: "end" }));
+    });
+    observer.observe(content);
+    return () => { observer.disconnect(); cancelAnimationFrame(animationFrame); };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!transcript.length || (!followTranscriptRef.current && pendingScrollRef.current !== "force")) return;
+    const animationFrame = requestAnimationFrame(() => {
+      transcriptEndRef.current?.scrollIntoView({ block: "end" });
+      pendingScrollRef.current = null;
+    });
+    return () => cancelAnimationFrame(animationFrame);
+  }, [transcript]);
+
+  function updateTranscriptFollow(): void {
+    const container = transcriptScrollRef.current;
+    if (!container) return;
+    followTranscriptRef.current = container.scrollHeight - container.scrollTop - container.clientHeight <= 48;
+  }
+
   function changeIntent(nextIntent: SupportIntent): void {
     setIntent(nextIntent);
     setOrderId("");
@@ -71,10 +105,12 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
     const requestId = retryId ?? `support-${nextMessageId.current++}`;
     const requestIntent = retry?.intent ?? intent;
     const requestOrderId = retry?.orderId ?? (canUseOrderContext && orderId ? orderId : undefined);
+    const productIds = requestIntent === "PRODUCT" ? productLinkFollowUpIds(transcript, question) : [];
     setPending(true);
     if (retry) {
       setTranscript(items => markRetryPending(items, requestId));
     } else {
+      pendingScrollRef.current = "force";
       setTranscript(items => appendPendingTurn(items, { requestId, question, intent: requestIntent, ...(requestOrderId ? { orderId: requestOrderId } : {}) }));
       setMessage("");
     }
@@ -84,10 +120,11 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
       message: question,
       ...(requestOrderId ? { orderId: requestOrderId } : {}),
       history: retry?.history ?? recentSupportHistory(transcript),
+      ...(productIds.length ? { productIds } : {}),
     });
     setPending(false);
     setTranscript(items => result.ok
-      ? completeTurn(items, requestId, result.data.conversationId, result.data.reply)
+      ? completeTurn(items, requestId, result.data.conversationId, result.data.reply, result.data.products)
       : failTurn(items, requestId, result.error.message));
   }
 
@@ -118,11 +155,12 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
         </div>}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto py-4" aria-live="polite" aria-label="Current conversation">
+      <div ref={transcriptScrollRef} onScroll={updateTranscriptFollow} className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4 pr-1" aria-live="polite" aria-label="Current conversation">
+        <div ref={transcriptContentRef}>
         {transcript.length === 0 ? <div className="py-3"><p className="max-w-[28rem] text-sm leading-6 text-text-muted">Ask about the public perfume catalogue, notes, or Palermo policy information.</p><div className="mt-4 flex flex-wrap gap-2">{["What perfumes do you sell?", "Which fragrances contain vanilla?", "Tell me about Saphire Chocolate."].map(prompt => <button key={prompt} type="button" onClick={() => setMessage(prompt)} className="min-h-11 rounded-full border border-border px-3 text-left text-xs text-text-muted transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{prompt}</button>)}</div></div> : <ol className="space-y-4">
           {transcript.map(chat => <li key={chat.id} className={chat.actor === "CUSTOMER" ? "ml-auto max-w-[85%] rounded-md rounded-br-sm bg-primary px-3 py-2 text-sm leading-6 text-primary-text sm:max-w-[78%]" : "max-w-[92%] border-l-2 border-accent px-3 text-sm leading-6 text-text sm:max-w-[86%]"}>
             <p className={`text-xs font-medium ${chat.actor === "CUSTOMER" ? "text-primary-text/75" : "text-text-muted"}`}>{chat.actor === "CUSTOMER" ? "You" : "Palermo concierge"}</p>
-            {chat.state === "pending" ? <div role="status" aria-busy="true" className="mt-1 flex items-center gap-2 text-text-muted"><Skeleton className="h-3 w-12" /><span className="text-xs">Thinking</span></div> : <p className="mt-1 whitespace-pre-wrap break-words">{chat.content}</p>}
+            {chat.state === "pending" ? <div role="status" aria-busy="true" className="mt-1 flex items-center gap-2 text-text-muted"><Skeleton className="h-3 w-12" /><span className="text-xs">Thinking</span></div> : chat.actor === "ASSISTANT" ? <div className="mt-1 break-words"><SupportRichText content={chat.content} products={chat.products ?? []} /><SupportProductLinks products={chat.products ?? []} /></div> : <p className="mt-1 whitespace-pre-wrap break-words">{chat.content}</p>}
             {chat.state === "error" && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => { void ask(chat.id); }}>Retry</Button>}
             {chat.actor === "ASSISTANT" && !chat.state && chat.conversationId && <div className="mt-2 flex items-center gap-1" aria-label="Rate this response">
               <span className="mr-1 text-xs text-text-muted">Helpful?</span>
@@ -133,6 +171,8 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
             </div>}
           </li>)}
         </ol>}
+        <div ref={transcriptEndRef} aria-hidden="true" />
+        </div>
       </div>
 
       <form className="shrink-0 border-t border-border bg-surface pt-3" onSubmit={event => { event.preventDefault(); void ask(); }}>
@@ -193,7 +233,7 @@ function DetailedSupportAssistance({ session, sessionLoading = false }: Readonly
       setError(result.error.message);
       return;
     }
-    setReply({ conversationId: result.data.conversationId, question: message.trim(), reply: result.data.reply });
+    setReply({ conversationId: result.data.conversationId, question: message.trim(), reply: result.data.reply, products: result.data.products });
     setMessage("");
   }
 
@@ -266,7 +306,7 @@ function DetailedSupportAssistance({ session, sessionLoading = false }: Readonly
           {reply && <section className="mt-6 space-y-4 border-t border-border pt-6" aria-labelledby="support-response-heading">
             <h2 id="support-response-heading" className="text-h3 font-semibold">Conversation</h2>
             <div className="rounded-lg border border-border p-4"><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">You</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{reply.question}</p></div>
-            <div className="rounded-lg bg-surface-muted p-4"><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Palermo concierge</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{reply.reply}</p></div>
+            <div className="rounded-lg bg-surface-muted p-4"><p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Palermo concierge</p><div className="mt-2 text-sm leading-6"><SupportRichText content={reply.reply} products={reply.products} /><SupportProductLinks products={reply.products} /></div></div>
             <div className="flex flex-wrap items-center gap-3" aria-label="Rate this response">
               <p className="text-sm font-medium">Was this response helpful?</p>
               <Button type="button" size="sm" variant="outline" disabled={feedback === "sending" || feedback === "sent"} onClick={() => { void sendFeedback(5); }}>Yes</Button>
