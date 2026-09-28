@@ -24,6 +24,7 @@ import { cataloguePopulationCases } from "./catalogue-population-cases";
 import { reviewCases } from "./review-cases";
 import { loyaltyCases } from "./loyalty-cases";
 import { promotionalContentCases } from "./promotional-content-cases";
+import { demoHistoryCases } from "./demo-history-cases";
 
 const testUrl = process.env["TEST_DATABASE_URL"];
 assertDevelopmentDatabase(testUrl, true);
@@ -139,6 +140,29 @@ describe("Prisma/PostgreSQL milestone foundation", () => {
     await rejectsConstraint('INSERT INTO "Invoice" (id,"orderId","invoiceNumber","totalMinor",currency,"paymentReferenceSnapshot") VALUES ($1,$2,$3,25000,$4,$5)',
       [seedId(906), ids.pendingOrder, "DEMO-UNPAID-INV", "AUD", "unverified"], "23514");
   });
+  it("keeps Payment providers constrained while allowing explicit imported history", async () => {
+    const address = { recipientName: "Provider Test", line1: "1 Test Street", line2: null, suburb: "Melbourne", state: "VIC", postcode: "3000", country: "AU" };
+    const createOrder = async (number: number) => db.order.create({ data: {
+      id: seedId(9700 + number), customerId: ids.otherCustomer, orderNumber: `PAYMENT-PROVIDER-${number}`,
+      idempotencyKey: `payment-provider-${number}`, requestFingerprint: `payment-provider-${number}`, deliveryMethodId: ids.delivery,
+      subtotalMinor: 0, discountTotalMinor: 0, deliveryChargeMinor: 0, totalMinor: 0, currency: "AUD",
+      deliveryAddressSnapshot: address, billingAddressSnapshot: address, deliveryMethodSnapshot: { id: ids.delivery, name: "Demo delivery", chargeMinor: 1000, currency: "AUD" },
+    } });
+    const orders = await Promise.all([1, 2, 3, 4, 5].map(createOrder));
+    const [first, second, third, fourth, fifth] = orders;
+    if (!first || !second || !third || !fourth || !fifth) throw new Error("Payment provider fixture creation failed.");
+    try {
+      const defaultPayment = await db.payment.create({ data: { orderId: first.id } });
+      expect(defaultPayment.provider).toBe("STRIPE_SANDBOX");
+      await rejectsConstraint('INSERT INTO "Payment" (id,"orderId",status,provider,"providerReference","updatedAt") VALUES ($1,$2,$3,$4,$5,now())', [seedId(9711), second.id, "PENDING", "UNKNOWN_PROVIDER", null], "23514");
+      await rejectsConstraint('INSERT INTO "Payment" (id,"orderId",status,provider,"providerReference","updatedAt") VALUES ($1,$2,\'SUCCEEDED\',\'STRIPE_SANDBOX\',NULL,now())', [seedId(9712), third.id], "23514");
+      await rejectsConstraint('INSERT INTO "Payment" (id,"orderId",status,provider,"providerReference","updatedAt") VALUES ($1,$2,\'SUCCEEDED\',\'DEMO_HISTORY_IMPORT\',NULL,now())', [seedId(9713), fourth.id], "23514");
+      await expect(db.payment.create({ data: { orderId: fifth.id, provider: "DEMO_HISTORY_IMPORT", status: "SUCCEEDED", providerReference: "demo_history_pi_constraint_test", lastProviderEventId: "demo_history_evt_constraint_test", attemptSequence: 1 } })).resolves.toMatchObject({ provider: "DEMO_HISTORY_IMPORT", status: "SUCCEEDED" });
+    } finally {
+      await db.payment.deleteMany({ where: { orderId: { in: orders.map(order => order.id) } } });
+      await db.order.deleteMany({ where: { id: { in: orders.map(order => order.id) } } });
+    }
+  });
   it("prevents stock below zero or reservation beyond on-hand stock", async () => {
     await rejectsConstraint('UPDATE "InventoryBalance" SET "onHand"=-1 WHERE "variantId"=$1', [ids.variant], "23514");
     await rejectsConstraint('UPDATE "InventoryBalance" SET reserved=13 WHERE "variantId"=$1', [ids.variant], "23514");
@@ -204,3 +228,4 @@ discoveryCompletionCases(db);
 
 // Keep population last because this suite shares one disposable schema across cases.
 cataloguePopulationCases(db);
+demoHistoryCases(db);
