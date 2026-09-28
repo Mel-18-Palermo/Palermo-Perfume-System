@@ -1,7 +1,7 @@
 # Final customer UI/browser QA — production release candidate
 
 - **Execution date:** 29 September 2026 (Melbourne)
-- **Tested main baseline:** `090edc8c6165938927383b786e29c350313c4b6b`
+- **Tested main baseline:** `2dd4faa6a54ec060c04f71b68b3bf9bd5c4ac702` (documentation-only advance from the application release candidate)
 - **Endpoint:** `https://www.palermoperfumes.store/`
 - **Browser:** Playwright Chromium (headless)
 - **Viewports exercised:** 375 × 812, 768 × 900, and 1440 × 900
