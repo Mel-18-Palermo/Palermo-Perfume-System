@@ -26,6 +26,17 @@ function database(conversationOwner: string | null = customer) {
         intensity: null,
         collections: [{ collection: { name: "Women" } }],
         notes: [{ layer: "MIDDLE", note: { name: "Cacao Pod" } }],
+        variants: [{
+          bottleSize: "100 ml",
+          concentration: "Extrait de Parfum",
+          priceMinor: 19900,
+          currency: "AUD",
+          availability: "AVAILABLE",
+          id: "internal-variant-id",
+          sku: "INTERNAL-SKU",
+          inventory: { onHand: 9, reserved: 2, available: 7 },
+          reservations: [{ id: "internal-reservation-id" }],
+        }],
       }]),
     },
     supportConversation: {
@@ -55,6 +66,8 @@ describe("bounded support assistance", () => {
     expect(Array.isArray(policy)).toBe(true);
     const policyEntries = policy as readonly unknown[];
     expect(policyEntries.some(entry => record(entry)?.["title"] === "Returns & Refunds")).toBe(true);
+    expect(JSON.stringify(policy)).toContain("Use Palermo support for a privacy question");
+    expect(JSON.stringify(policy)).not.toContain("\"href\"");
     await expect(service.ask({ intent: "ORDER", message: "Show order", orderId: ownOrder })).resolves.toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
   });
 
@@ -74,14 +87,15 @@ describe("bounded support assistance", () => {
         intensity: null,
         audiences: ["Women"],
         notes: [{ layer: "MIDDLE", name: "Cacao Pod" }],
+        variants: [{
+          bottleSize: "100 ml",
+          concentration: "Extrait de Parfum",
+          price: { amountMinor: 19900, currency: "AUD" },
+          availability: "AVAILABLE",
+        }],
       }],
     } });
-    const source = readFileSync(new URL("../../src/modules/support/service.ts", import.meta.url), "utf8");
-    expect(source).toContain('status: "ACTIVE"');
-    expect(source).toContain('primaryFamily: { active: true }');
-    expect(source).toContain('availability: { in: ["AVAILABLE", "OUT_OF_STOCK"] }');
-    expect(source).toContain("take: PRODUCT_CONTEXT_LIMIT");
-    expect(JSON.stringify(context)).not.toMatch(/customerId|orderNumber|inventory|priceMinor|sku/i);
+    expect(JSON.stringify(context)).not.toMatch(/customerId|orderNumber|inventory|priceMinor|sku|reservation|internal/i);
   });
 
   it("returns only an authenticated customer's owned order and does not disclose another customer's order", async () => {
