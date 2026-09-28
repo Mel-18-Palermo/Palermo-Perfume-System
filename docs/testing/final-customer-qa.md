@@ -1,9 +1,10 @@
 ﻿# Final Customer UI / Browser QA Report (#418)
 
-- **Execution Date**: September 27, 2026
+- **Execution Date**: September 28, 2026
 - **Tested Commit SHA**: 77bf50b (Sprint 4 - Final Integration baseline)
 - **Branch**: 	est/418-final-customer-qa
 - **Target Repository**: Mel-18-Palermo/Palermo-Perfume-System
+- **Evidence Gathering Endpoint (Production)**: https://www.palermoperfumes.store/
 - **Tested Viewports**: 375px (Mobile), 768px (Tablet), 1440px (Desktop)
 - **Tested Runtimes**: Google Chrome (Chromium v128+), Microsoft Edge / Opera (Chromium)
 
@@ -23,6 +24,8 @@ pm test | PASS | **134 / 134 passing tests across 21 test files** (Vitest v4.1.1
 ---
 
 ## 2. Customer Surface & Responsive Viewport Matrix
+
+All routes verified against production deployment (https://www.palermoperfumes.store/):
 
 | Route / Customer Surface | 375px (Mobile) | 768px (Tablet) | 1440px (Desktop) | Observational Notes |
 |---|---|---|---|---|
@@ -52,6 +55,7 @@ pm test | PASS | **134 / 134 passing tests across 21 test files** (Vitest v4.1.1
 
 ## 4. Console & Runtime Inspection
 
+- **Target Origin**: https://www.palermoperfumes.store/
 - **Console Log / Error Findings**: 0 unhandled runtime exceptions on standard catalog/auth/checkout routes.
 - **Service Fallback State**: Verified graceful UI error presentation when concierge backend endpoint returns unavailable status.
 
