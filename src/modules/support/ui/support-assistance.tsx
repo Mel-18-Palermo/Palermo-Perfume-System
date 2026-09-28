@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory, type CompactChatMessage } from "./compact-chat-state";
+import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory, retryRequest, type CompactChatMessage } from "./compact-chat-state";
 
 const intents: readonly Readonly<{ value: SupportIntent; label: string; hint: string }>[] = [
   { value: "PRODUCT", label: "Product guidance", hint: "Notes, concentration and suitability" },
@@ -63,10 +63,12 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
     setOrdersError(null);
   }
 
-  async function ask(retry?: CompactChatMessage): Promise<void> {
-    const question = retry?.content ?? message.trim();
+  async function ask(retryId?: string): Promise<void> {
+    const retry = retryId ? retryRequest(transcript, retryId) : null;
+    if (retryId && !retry) return;
+    const question = retry?.question ?? message.trim();
     if (pending || !question) return;
-    const requestId = retry?.id ?? `support-${nextMessageId.current++}`;
+    const requestId = retryId ?? `support-${nextMessageId.current++}`;
     const requestIntent = retry?.intent ?? intent;
     const requestOrderId = retry?.orderId ?? (canUseOrderContext && orderId ? orderId : undefined);
     setPending(true);
@@ -81,7 +83,7 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
       intent: requestIntent,
       message: question,
       ...(requestOrderId ? { orderId: requestOrderId } : {}),
-      history: recentSupportHistory(transcript),
+      history: retry?.history ?? recentSupportHistory(transcript),
     });
     setPending(false);
     setTranscript(items => result.ok
@@ -121,7 +123,7 @@ function CompactSupportAssistance({ session, sessionLoading }: Readonly<{ sessio
           {transcript.map(chat => <li key={chat.id} className={chat.actor === "CUSTOMER" ? "ml-auto max-w-[85%] rounded-md rounded-br-sm bg-primary px-3 py-2 text-sm leading-6 text-primary-text sm:max-w-[78%]" : "max-w-[92%] border-l-2 border-accent px-3 text-sm leading-6 text-text sm:max-w-[86%]"}>
             <p className={`text-xs font-medium ${chat.actor === "CUSTOMER" ? "text-primary-text/75" : "text-text-muted"}`}>{chat.actor === "CUSTOMER" ? "You" : "Palermo concierge"}</p>
             {chat.state === "pending" ? <div role="status" aria-busy="true" className="mt-1 flex items-center gap-2 text-text-muted"><Skeleton className="h-3 w-12" /><span className="text-xs">Thinking</span></div> : <p className="mt-1 whitespace-pre-wrap break-words">{chat.content}</p>}
-            {chat.state === "error" && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => { void ask(chat); }}>Retry</Button>}
+            {chat.state === "error" && <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => { void ask(chat.id); }}>Retry</Button>}
             {chat.actor === "ASSISTANT" && !chat.state && chat.conversationId && <div className="mt-2 flex items-center gap-1" aria-label="Rate this response">
               <span className="mr-1 text-xs text-text-muted">Helpful?</span>
               <Button type="button" size="icon" variant="ghost" className="h-10 min-h-10 w-10" disabled={chat.feedback === "sending" || chat.feedback === "sent"} onClick={() => { void sendFeedback(chat, 5); }} aria-label="This response was helpful" title="Helpful"><ThumbsUp className="h-4 w-4" aria-hidden="true" /></Button>
