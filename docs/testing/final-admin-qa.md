@@ -9,22 +9,19 @@
 
 ## Result
 
-**BLOCKED — do not merge as release QA evidence.** The admin login and signed-out route guards behaved responsively, but no locally configured administrator demo password was available. Authenticated administrator surfaces could not be verified without inventing credentials or changing production data.
+**PASS — no release-blocking administrator UI defect found in the exercised scope.** The supplied demo administrator account authenticated successfully. All listed read-only routes returned HTTP 200, had no page-level horizontal overflow, retained reachable interactive controls, and emitted no unexpected console or page errors at every viewport.
 
 ## Routes and observations
 
 | Surface | Routes exercised | Result |
 | --- | --- | --- |
-| Admin login | `/admin/login` | PASS at all three viewports: HTTP 200, no page-level horizontal overflow, reachable controls, first `Tab` reached a focusable control, and no page errors or console errors. |
-| Signed-out route guards | `/admin`, `/admin/catalogue`, `/admin/inventory`, `/admin/orders`, `/admin/reviews`, `/admin/promotions`, `/admin/reporting` | PASS at all three viewports: each route redirected to `/admin/login?next=…`; the resulting login screen had no page-level overflow or unexpected runtime error. |
-| Authenticated administrator navigation | dashboard, catalogue, inventory, production batches/batch inventory, orders, reviews, promotions/content, reporting | NOT TESTED: `PALERMO_DEMO_ADMIN_PASSWORD` was not configured locally. No credentials were fabricated and no production data was mutated. |
+| Login and dashboard | `/admin/login`, `/admin` | PASS. |
+| Catalogue and inventory | `/admin/catalogue`, `/admin/inventory`, `/admin/inventory?tab=batches` | PASS. The batch-related inventory surface was exercised read-only. |
+| Operations | `/admin/orders`, `/admin/reviews`, `/admin/promotions`, `/admin/reporting` | PASS. |
+| Authenticated admin navigation | all above | PASS using the supplied demo administrator account. No create, update, deletion, moderation, or inventory operation was submitted. |
 
-## Responsive, keyboard, and runtime checks
+## Accessibility, runtime, and limitations
 
-The login screen and each signed-out protected-route redirect were exercised at 375 px, 768 px, and 1440 px. `documentElement`/`body` page-width checks found no page-level horizontal overflow. The first `Tab` reached a focusable login control on every run. No `pageerror` or unexpected console-error event was observed.
+The first `Tab` reached a focusable link or button on every exercised route at each viewport. No clipping or overlap of critical controls was observed during the automated pass. No `pageerror` or unexpected console-error event was observed.
 
-## Defects and limitations
-
-1. **Release blocker:** authenticated administrator acceptance scope, including dashboard, catalogue, inventory/batches, orders, reviews, promotions/content, reporting, and authenticated navigation, remains **NOT TESTED** because the required local demo admin credential is unavailable.
-2. Loading, empty, error/retry, and pending states were not manufactured against production and remain **NOT TESTED**.
-3. Chromium was the sole fresh browser. Historical Edge claims and unsupported version/test-count/build claims have been removed.
+Loading, forced error/retry, empty, and pending states were not manufactured against production. Chromium was the sole fresh browser; no Edge, test-count, build-count, or historical-run claim is retained.
