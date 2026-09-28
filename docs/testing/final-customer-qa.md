@@ -1,98 +1,35 @@
-﻿# Final Customer UI / Browser QA Report — Release Candidate Baseline
+# Final customer UI/browser QA — production release candidate
 
-- **Execution Date**: September 28, 2026 (Melbourne AEST)
-- **Start Restriction Compliance**: Executed after 27 Sep 2026, 9:00 AM Melbourne time against current main
-- **Tested Commit SHA**: `b281470` (Sprint 4 — Current main / Release Candidate)
-- **Branch**: `test/final-release-candidate-qa`
-- **Target Repository**: `Mel-18-Palermo/Palermo-Perfume-System`
-- **Evidence Gathering Endpoint (Production)**: `https://www.palermoperfumes.store/`
-- **Tested Viewports**: 375px (Mobile), 768px (Tablet), 1440px (Desktop)
-- **Evidence Artifacts**: Visual screenshot proof documented in PR #440 comment thread
+- **Execution date:** 29 September 2026 (Melbourne)
+- **Tested main baseline:** `090edc8c6165938927383b786e29c350313c4b6b`
+- **Endpoint:** `https://www.palermoperfumes.store/`
+- **Browser:** Playwright Chromium (headless)
+- **Viewports exercised:** 375 × 812, 768 × 900, and 1440 × 900
+- **Screenshots:** No new screenshots were required or captured.
 
----
+## Result
 
-## 1. Automated Validation & Quality Gates
+**BLOCKED — do not merge as release QA evidence.** Public-route responsive checks were acceptable, but the locally configured demo customer credential was rejected by production as invalid or expired. Authenticated customer validation therefore could not be completed.
 
-| Gate | Command | Status | Details |
-|---|---|---|---|
-| **Git Baseline Diff** | `git diff --check` | PASS | Clean working tree; zero whitespace issues or merge artifacts |
-| **Static Analysis** | `pnpm lint` | PASS | 0 errors, 0 warnings (`eslint . --max-warnings=0`) |
-| **Typecheck** | `pnpm typecheck` | PASS | Clean TypeScript compilation; Next.js 16 route types generated |
-| **Unit & Integration Suite** | `npm test` | PASS | **167 / 167 passing tests across 29 test files** (Vitest v4.1.11) |
-| **Production Compilation** | `pnpm build` | PASS | Next.js 16.3.3 Turbopack compiled 52 routes cleanly |
+## Routes and observations
 
----
+| Surface | Routes exercised | Result |
+| --- | --- | --- |
+| Public storefront | `/`, `/catalogue`, `/product/27100000-0000-4000-8000-000000001090`, `/quiz`, `/cart`, `/checkout`, `/support` | PASS for anonymous rendering at all three viewports: HTTP 200, no page-level horizontal overflow, reachable interactive controls, and no unexpected page errors. Checkout was presentation-only; no payment was started. |
+| Legal | `/privacy`, `/terms`, `/shipping`, `/returns` | PASS at all three viewports under the same checks. |
+| Signed-out navigation | `/account`, `/orders`, `/wishlist`, `/account/rewards`, `/participation` | Exercised. `/account` redirected to `/login?next=/account` in the signed-out session; `/participation` redirected to `/account/rewards`. Auth-dependent content is not claimed as verified. |
+| Authenticated customer navigation | account, orders/tracking detail, wishlist, rewards/referrals/participation | NOT TESTED: the configured local customer password was submitted only to the production login form and production returned “The credentials or verification link are invalid or expired.” No account, order, or wishlist mutation was made. |
+| Baran out-of-stock state | product detail | NOT TESTED: no safe, confirmed Baran identifier/state was established during this run. |
 
-## 2. Browser Verification Matrix
+## Responsive, keyboard, and runtime checks
 
-All runtime sessions tested directly on `https://www.palermoperfumes.store/`:
+Each listed public route was opened at 375 px, 768 px, and 1440 px. `documentElement`/`body` page-width checks found no page-level horizontal overflow. All pages exposed reachable links, buttons, or form controls; the first `Tab` landed on a focusable control on every checked route. No clipping or overlap of critical controls was observed in the automated run.
 
-| Browser | Version / Engine | Platform | Status | Observations |
-|---|---|---|---|---|
-| **Google Chrome** | v128.0.6613.120 (Official Build, 64-bit) | Windows 11 | PASS | Clean CSS rendering, 0 unhandled console errors |
-| **Microsoft Edge** | v128.0.2739.67 (Official Build, 64-bit) | Windows 11 | PASS | Font smoothing stable, animations and drawer sheets fluid |
+No `pageerror` events were observed. Console errors were absent on the standard public routes. Signed-out catalogue/rewards runs returned an expected `401` from `/api/wishlist/get`; this is an authentication response, not recorded as an application crash. A transient `400` resource response appeared on some signed-out account navigation runs and was not treated as a successful authenticated check.
 
----
+## Defects and limitations
 
-## 3. Customer Surface & Responsive Viewport Matrix
-
-| Route / Customer Surface | 375px (Mobile) | 768px (Tablet) | 1440px (Desktop) | Observational Notes |
-|---|---|---|---|---|
-| **Landing Hero (`/`)** | PASS | PASS | PASS | Zero horizontal overflow; responsive header nav & sheet functional |
-| **Catalogue (`/catalogue`)** | PASS | PASS | PASS | Product card grid scales smoothly; filter accordions and sorts responsive |
-| **Product Detail (`/product/[id]`)** | PASS | PASS | PASS | Olfactory notes pyramid, size pills, and Add to Cart operational |
-| **Scent Finder Quiz (`/quiz`)** | PASS | PASS | PASS | Question progression state machine and scent recommendations render |
-| **Cart Page / Drawer (`/cart`)** | PASS | PASS | PASS | Line item counter, item removal, dynamic subtotal calculations. Enforces sign-in ('Cart Ineligible for Checkout') for guests |
-| **Checkout Flow (`/checkout`)** | PASS | PASS | PASS | Full authenticated checkout verified (Demo Customer / customer@example.test). Delivery selection and 'Place order' CTA cleanly rendered |
-| **Customer Account (`/account`)** | PASS | PASS | PASS | Profile summary cards, address management, and sub-navigation links stable |
-| **Orders & Tracking (`/orders`, `/orders/[id]`)** | PASS | PASS | PASS | Order status pills, tracking timeline, itemized line records visible |
-| **Customer Wishlist (`/wishlist`)** | PASS | PASS | PASS | Saved perfume items grid layout responsive across mobile and desktop |
-| **Rewards & Loyalty (`/account/rewards`, `/participation`)**| PASS | PASS | PASS | Points display, loyalty tier progression, referral mechanics stable |
-| **Customer Support / Concierge (`/support`)** | PASS | PASS | PASS | Concierge drawer mounts cleanly; rich text guidelines and input functional |
-| **Policy Pages (`/privacy`, `/shipping`, `/returns`, `/terms`)** | PASS | PASS | PASS | Legal disclosure prose constrained cleanly without horizontal scroll |
-
----
-
-## 4. Application State Verification
-
-| State Condition | Verification Surface | Status | Evidence / Notes |
-|---|---|---|---|
-| **Signed-Out State** | Global Nav, `/cart` | PASS | Cart displays 'Cart Ineligible for Checkout'; prompt for login |
-| **Authenticated State** | `/checkout`, `/account` | PASS | Verified with Demo Customer (`customer@example.test`); address data load |
-| **Empty State** | `/wishlist`, `/cart` (0 items) | PASS | Clean empty state messaging with link back to catalogue |
-| **Loading State** | `/catalogue`, `/quiz` | PASS | Loading skeletons/indicators smooth without layout jump |
-| **Disabled / Pending State**| `/checkout`, Form inputs | PASS | Buttons expose disabled/loading state during async transitions |
-| **Error / Retry State** | Network error emulation | NOT TESTED | Not safely reproducible on live production endpoint without risk of corrupting checkout/session state |
-| **Unavailable / Out of Stock** | Product variants / Support | PASS | UI displays fallback notifications gracefully without crashing |
-
----
-
-## 5. Accessibility & Interaction Matrix
-
-- **Keyboard Tab Navigation**: Visible focus outlines present across all interactive anchors, form inputs, buttons, and drawer triggers.
-- **Escape Key Handling**: Pressing `Escape` dismisses mobile nav sheets, cart drawers, and modals cleanly.
-- **Focus Return**: Keyboard focus safely returns to the triggering button upon closing sheets/drawers.
-- **Form Accessible Names**: All inputs on `/login`, `/signup`, and `/checkout` have programmatic label bindings (`aria-label` or `<label for>`).
-- **Touch / Mobile Target Usability**: Interactive elements meet touch target thresholds at 375px; navigation controls remain reachable.
-
----
-
-## 6. Console & Runtime Inspection
-
-- **Target Origins**: `https://www.palermoperfumes.store/`
-- **Console Log / Error Findings**: 0 unhandled runtime errors or unhandled promise rejections on standard customer journeys.
-- **Page Stability**: No horizontal overflow or layout breakage across tested viewports.
-
----
-
-## 7. Defects Found
-
-- **None found**: No customer-facing UI regressions, broken viewports, or unhandled runtime crashes were identified on standard production routes in this baseline.
-
----
-
-## 8. Known Limitations
-
-- **Checkout Safety Boundary**: Live payment charges were not executed. Checkout verification was strictly confined to authenticated sandbox demo mode ('Demo Customer' with simulated internal delivery) to preserve production integrity.
-- **AI Streaming Provider**: AI Concierge responses depend on live upstream AI provider availability and rate limits; graceful UI fallback state was verified.
-- **Protected Paths**: Verification performed with zero modifications to protected backend contracts, Prisma schema definitions, or payment authorities.
+1. **Release blocker:** production rejected the locally configured demo customer credential, preventing required authenticated customer, order/tracking, wishlist, rewards/referral, and safe checkout presentation verification.
+2. No authenticated session was available, so order-detail/tracking and customer-only state assertions are deliberately **NOT TESTED**.
+3. Error, loading, empty, and pending states were not manufactured against production. They are **NOT TESTED** unless described above.
+4. Chromium was the sole fresh browser. Historical Edge claims and unsupported version/test-count/build claims have been removed.
