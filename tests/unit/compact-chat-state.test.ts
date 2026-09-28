@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory } from "../../src/modules/support/ui/compact-chat-state";
+import { appendPendingTurn, completeTurn, failTurn, markRetryPending, recentSupportHistory, retryRequest } from "../../src/modules/support/ui/compact-chat-state";
 
 describe("compact concierge chat state", () => {
   it("adds distinct customer and pending assistant turns to the current-session transcript", () => {
@@ -34,5 +34,39 @@ describe("compact concierge chat state", () => {
       { actor: "CUSTOMER", content: "Tell me about Palermo vanilla." },
       { actor: "ASSISTANT", content: "Palermo has a vanilla fragrance." },
     ]);
+  });
+
+  it("returns at most six completed messages as history", () => {
+    const transcript = Array.from({ length: 8 }, (_, index) => ({
+      id: `message-${index}`,
+      actor: index % 2 === 0 ? "CUSTOMER" as const : "ASSISTANT" as const,
+      content: `Message ${index}`,
+      intent: "PRODUCT" as const,
+    }));
+
+    expect(recentSupportHistory(transcript)).toEqual([
+      { actor: "CUSTOMER", content: "Message 2" },
+      { actor: "ASSISTANT", content: "Message 3" },
+      { actor: "CUSTOMER", content: "Message 4" },
+      { actor: "ASSISTANT", content: "Message 5" },
+      { actor: "CUSTOMER", content: "Message 6" },
+      { actor: "ASSISTANT", content: "Message 7" },
+    ]);
+  });
+
+  it("retries the associated customer question rather than the failed error message", () => {
+    const failed = failTurn(appendPendingTurn([], {
+      requestId: "request-1",
+      question: "Which fragrances contain vanilla?",
+      intent: "PRODUCT",
+      orderId: "owned-order",
+    }), "request-1", "The support service is temporarily unavailable.");
+
+    expect(retryRequest(failed, "request-1")).toEqual({
+      question: "Which fragrances contain vanilla?",
+      intent: "PRODUCT",
+      orderId: "owned-order",
+      history: [],
+    });
   });
 });

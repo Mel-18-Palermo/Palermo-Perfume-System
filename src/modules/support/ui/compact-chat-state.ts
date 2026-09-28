@@ -1,7 +1,7 @@
 import type { SupportIntent } from "@/contracts/support";
 import type { SupportHistoryMessage } from "@/contracts/support";
 
-const HISTORY_LIMIT = 8;
+const HISTORY_LIMIT = 6;
 const HISTORY_MESSAGE_LIMIT = 1_000;
 
 export type CompactChatMessage = Readonly<{
@@ -61,4 +61,16 @@ export function recentSupportHistory(messages: readonly CompactChatMessage[]): r
     && (message.actor === "ASSISTANT" || (messages[index + 1]?.actor === "ASSISTANT" && !messages[index + 1]?.state)))
     .slice(-HISTORY_LIMIT)
     .map(message => ({ actor: message.actor, content: message.content.trim().slice(0, HISTORY_MESSAGE_LIMIT) }));
+}
+
+export function retryRequest(messages: readonly CompactChatMessage[], requestId: string): Readonly<{ question: string; intent: SupportIntent; orderId?: string; history: readonly SupportHistoryMessage[] }> | null {
+  const failedIndex = messages.findIndex(message => message.id === requestId && message.actor === "ASSISTANT" && message.state === "error");
+  const customer = failedIndex > 0 ? messages[failedIndex - 1] : undefined;
+  if (!customer || customer.actor !== "CUSTOMER") return null;
+  return {
+    question: customer.content,
+    intent: customer.intent,
+    ...(customer.orderId ? { orderId: customer.orderId } : {}),
+    history: recentSupportHistory(messages),
+  };
 }
