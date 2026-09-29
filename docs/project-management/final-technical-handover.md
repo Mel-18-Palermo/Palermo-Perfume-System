@@ -71,7 +71,7 @@ Final state: **22 active canonical products** and **2 archived legacy demo produ
 | Security / NFR | [Release-candidate recheck](../security/288-release-candidate-recheck.md); [#288](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/288); [#446](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/pull/446) |
 | Production provisioning / isolation | [#419](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/419) |
 | Release freeze | [Final release freeze](final-release-freeze.md); [#447](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/pull/447) |
-| Governance gate | [#289](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/289) |
+| Governance gate | [#328](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/328) |
 | Database / migrations | [Prisma operations](../../prisma/README.md); [#419](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/issues/419) |
 | Final documentation | [#445](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/pull/445); [#447](https://github.com/Mel-18-Palermo/Palermo-Perfume-System/pull/447) |
 
