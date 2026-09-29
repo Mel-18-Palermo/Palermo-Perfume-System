@@ -5,6 +5,16 @@ const e2eCitrusProductPath = "/product/39300000-0000-4000-8000-000000000108";
 const e2eOrderId = "39300000-0000-4000-8000-000000000112";
 const e2eShipmentId = "39300000-0000-4000-8000-000000000113";
 
+function hasPromotionCode(postData: string | null, code: string): boolean {
+  if (postData === null) return false;
+  try {
+    const body: unknown = JSON.parse(postData);
+    return typeof body === "object" && body !== null && "code" in body && body.code === code;
+  } catch {
+    return false;
+  }
+}
+
 async function customerLogin(page: Page, next: string): Promise<void> {
   await page.goto(`/login?next=${encodeURIComponent(next)}`);
   await page.getByLabel("Email").fill(customer.email);
@@ -33,11 +43,24 @@ test("catalogue, cart, checkout boundary, and owned tracking work through the br
   await expect(checkoutLink).toBeVisible();
   await checkoutLink.click();
   await expect(page.getByRole("heading", { name: "Checkout" })).toBeVisible();
-  const promotionResponse = page.waitForResponse(response => new URL(response.url()).pathname === "/api/cart/promotion");
-  await page.getByLabel("Promotion code").fill(" welcome10 ");
+  const promotionInput = page.getByLabel("Promotion code");
+  await expect(promotionInput).toBeEnabled();
+  await promotionInput.fill(" welcome10 ");
+  await expect(promotionInput).toHaveValue(" welcome10 ");
+  const promotionResponse = page.waitForResponse(response => {
+    const request = response.request();
+    return new URL(response.url()).pathname === "/api/cart/promotion"
+      && request.method() === "POST"
+      && hasPromotionCode(request.postData(), "welcome10");
+  });
   await page.getByRole("button", { name: "Apply" }).click();
-  expect(await (await promotionResponse).json()).toMatchObject({ ok: true, data: { promotionCode: "WELCOME10", pricing: { discountTotal: { amountMinor: 1200 }, total: { amountMinor: 10800 } } } });
-  await expect(page.getByText("−$12.00")).toBeVisible();
+  const promotionJson: unknown = await (await promotionResponse).json();
+  expect(promotionJson).toMatchObject({ ok: true, data: { promotionCode: "WELCOME10" } });
+  const pricing = (promotionJson as { data: { pricing: { subtotal: { amountMinor: number }; discountTotal: { amountMinor: number; currency: string }; total: { amountMinor: number } } } }).data.pricing;
+  expect(pricing.discountTotal.amountMinor).toBe(Math.floor(pricing.subtotal.amountMinor * 1000 / 10000));
+  expect(pricing.total.amountMinor).toBe(pricing.subtotal.amountMinor - pricing.discountTotal.amountMinor);
+  const displayedDiscount = `−${new Intl.NumberFormat("en-AU", { style: "currency", currency: pricing.discountTotal.currency }).format(pricing.discountTotal.amountMinor / 100)}`;
+  await expect(page.getByText("Promotion", { exact: true }).locator("..")).toContainText(displayedDiscount);
   await page.getByRole("button", { name: /Place order/ }).click();
   await expect(page.getByRole("button", { name: /Continue to payment/ })).toBeVisible();
 
