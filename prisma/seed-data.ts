@@ -13,6 +13,7 @@ export const ids = {
   paidOrder: seedId(41), pendingOrder: seedId(42), payment: seedId(43), pendingPayment: seedId(44),
   invoice: seedId(45), shipment: seedId(46), reservation: seedId(47), batch: seedId(48),
   role: seedId(50), admin: seedId(51), permission: seedId(52), inventoryPermission: seedId(53), reportingPermission: seedId(54), reviewsPermission: seedId(55), promotionsPermission: seedId(56), ordersPermission: seedId(57),
+  promotion: seedId(58),
   quiz: seedId(60), question: seedId(61), option: seedId(62), attempt: seedId(63), recommendation: seedId(64),
   citrusOpeningMovement: seedId(70), woodyOpeningMovement: seedId(71), paidOrderMovement: seedId(72),
   trackingEvent: seedId(73), paidOrderItem: seedId(80), pendingOrderItem: seedId(81),
@@ -115,6 +116,9 @@ export async function seedCanonicalRecords(tx: Prisma.TransactionClient): Promis
   await tx.cartItem.upsert({ where: { id: ids.cartItem }, update: {}, create: { id: ids.cartItem, cartId: ids.cart, variantId: ids.variant, quantity: 1 } });
   await tx.deliveryMethod.upsert({ where: { id: ids.delivery }, update: {}, create: {
     id: ids.delivery, name: "Demo delivery", chargeMinor: 1000, currency: "AUD", displayInformation: "Internal simulated delivery.",
+  } });
+  await tx.promotion.upsert({ where: { id: ids.promotion }, update: {}, create: {
+    id: ids.promotion, code: "WELCOME10", discountType: "PERCENTAGE", discountValue: 1_000, active: true,
   } });
   for (const record of [{ id: ids.paidOrder, number: "DEMO-001", paid: true }, { id: ids.pendingOrder, number: "DEMO-002", paid: false }]) {
     await tx.order.upsert({ where: { id: record.id }, update: {}, create: {

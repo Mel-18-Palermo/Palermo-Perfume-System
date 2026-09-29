@@ -5,6 +5,7 @@ import type { ApiResult } from "../../../contracts/common";
 import { failure, success } from "../../../lib/api/result";
 import { isVariantSellable } from "../availability";
 import { CartService } from "../cart/service";
+import { isPromotionEligible, promotionDiscount } from "../promotion";
 
 const RESERVATION_WINDOW_MS = 15 * 60 * 1000;
 const include = { items: { include: { variant: { include: { perfume: true, inventory: true } } } }, promotion: true } as const;
@@ -24,22 +25,10 @@ function customisationValid(item: Cart["items"][number]): boolean {
     && (item.giftMessage === null || item.variant.giftMessage)
     && (item.giftPackagingId === null || options(item.variant.giftPackagingOptions).includes(item.giftPackagingId));
 }
-function promotionEligible(promotion: NonNullable<Cart["promotion"]>, currency: string, now: Date): boolean {
-  if (!promotion.active || (promotion.activeFrom && promotion.activeFrom > now) || (promotion.activeUntil && promotion.activeUntil <= now)) return false;
-  if (promotion.currency !== null && promotion.currency !== currency) return false;
-  if (typeof promotion.eligibility !== "object" || promotion.eligibility === null || Array.isArray(promotion.eligibility)) return false;
-  // No non-empty eligibility rule has a canonical schema yet. Unknown rules fail closed.
-  return Object.keys(promotion.eligibility).length === 0;
-}
 function money(cart: Cart, now: Date): { subtotal: number; discount: number; total: number } {
   const subtotal = cart.items.reduce((sum, item) => sum + item.variant.priceMinor * item.quantity, 0);
   const currency = cart.items[0]?.variant.currency ?? "AUD";
-  const promotion = cart.promotion;
-  const discount = promotion && promotionEligible(promotion, currency, now)
-    ? promotion.discountType === "FIXED"
-      ? Math.min(subtotal, promotion.discountValue)
-      : Math.min(subtotal, Math.floor(subtotal * promotion.discountValue / 10000))
-    : 0;
+  const discount = promotionDiscount(cart.promotion, subtotal, currency, now);
   return { subtotal, discount, total: subtotal - discount };
 }
 
@@ -101,8 +90,8 @@ export class CheckoutService {
 
         const currency = cart.items[0]?.variant.currency ?? method.currency;
         if (cart.items.some(item => item.variant.currency !== currency) || method.currency !== currency) throw new CheckoutAbort({ status: "CHECKOUT_CONFLICT", message: "Reload current pricing and delivery options." });
-        if (input.promotionCode !== undefined && input.promotionCode.toUpperCase() !== (cart.promotion?.code ?? "")) throw new CheckoutAbort({ status: "INVALID_PROMOTION", message: "The promotion changed. Review your cart before checkout." });
-        if (cart.promotion && !promotionEligible(cart.promotion, currency, this.now())) throw new CheckoutAbort({ status: "INVALID_PROMOTION", message: "The promotion is inactive, expired or ineligible." });
+        if (input.promotionCode !== undefined && input.promotionCode.trim().toUpperCase() !== (cart.promotion?.code ?? "")) throw new CheckoutAbort({ status: "INVALID_PROMOTION", message: "The promotion changed. Review your cart before checkout." });
+        if (cart.promotion && !isPromotionEligible(cart.promotion, currency, this.now())) throw new CheckoutAbort({ status: "INVALID_PROMOTION", message: "The promotion is inactive, expired or ineligible." });
 
         const unavailable = cart.items.filter(item => !isVariantSellable(item.variant.availability, item.variant.inventory, item.quantity)).map(item => item.variantId);
         if (unavailable.length) throw new CheckoutAbort({ status: "OUT_OF_STOCK", variantIds: unavailable });

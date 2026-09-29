@@ -16,6 +16,12 @@ async function actor(request: Request): Promise<CartActor> {
   return { kind: "VISITOR", visitorSessionKey: visitor && /^[A-Za-z0-9_-]{16,128}$/.test(visitor) ? visitor : randomBytes(32).toString("base64url") };
 }
 async function body(request: Request): Promise<unknown> { try { return await request.json(); } catch { return null; } }
+function promotionInput(value: unknown): value is { cartId: string; expectedRevision: string; code: string | null } {
+  return typeof value === "object" && value !== null
+    && typeof (value as Record<string, unknown>)["cartId"] === "string"
+    && typeof (value as Record<string, unknown>)["expectedRevision"] === "string"
+    && (typeof (value as Record<string, unknown>)["code"] === "string" || (value as Record<string, unknown>)["code"] === null);
+}
 export async function GET(request: Request): Promise<Response> {
   const current = await actor(request);
   const result = await cartApi(getCartService(), current).get();
@@ -30,7 +36,7 @@ export async function POST(request: Request, context: { params: Promise<{ operat
   if (operation === "add") result = await api.addItem(input as Parameters<typeof api.addItem>[0]);
   else if (operation === "update") result = await api.updateQuantity(input as Parameters<typeof api.updateQuantity>[0]);
   else if (operation === "remove") result = await api.removeItem(input as Parameters<typeof api.removeItem>[0]);
-  else if (operation === "promotion") result = await api.applyPromotion(input as Parameters<typeof api.applyPromotion>[0]);
+  else if (operation === "promotion") result = promotionInput(input) ? await api.applyPromotion(input) : { ok: false as const, error: { code: "VALIDATION_ERROR" as const, message: "Check the supplied values." } };
   else result = { ok: false as const, error: { code: "NOT_FOUND" as const, message: "Cart operation not found." } };
   return NextResponse.json(result, { status: result.ok ? 200 : result.error.code === "CONFLICT" ? 409 : result.error.code === "NOT_FOUND" ? 404 : 400, headers: { "cache-control": "no-store" } });
 }

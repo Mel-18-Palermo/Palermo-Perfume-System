@@ -33,6 +33,11 @@ test("catalogue, cart, checkout boundary, and owned tracking work through the br
   await expect(checkoutLink).toBeVisible();
   await checkoutLink.click();
   await expect(page.getByRole("heading", { name: "Checkout" })).toBeVisible();
+  const promotionResponse = page.waitForResponse(response => new URL(response.url()).pathname === "/api/cart/promotion");
+  await page.getByLabel("Promotion code").fill(" welcome10 ");
+  await page.getByRole("button", { name: "Apply" }).click();
+  expect(await (await promotionResponse).json()).toMatchObject({ ok: true, data: { promotionCode: "WELCOME10", pricing: { discountTotal: { amountMinor: 1200 }, total: { amountMinor: 10800 } } } });
+  await expect(page.getByText("−$12.00")).toBeVisible();
   await page.getByRole("button", { name: /Place order/ }).click();
   await expect(page.getByRole("button", { name: /Continue to payment/ })).toBeVisible();
 

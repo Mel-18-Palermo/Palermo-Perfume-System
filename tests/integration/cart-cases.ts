@@ -85,14 +85,28 @@ export function cartCases(db: PrismaClient): void {
       await db.perfumeVariant.update({ where: { id: ids.variant }, data: { priceMinor: 12500 } });
       try { const current = await service.get(customer); expect(current.ok && current.data.items[0]?.unitPrice.amountMinor).toBe(12500); expect(current.ok && current.data.validationMessages.some(message => message.code === "PRICE_CHANGED")).toBe(false); } finally { await db.perfumeVariant.update({ where: { id: ids.variant }, data: { priceMinor: 12000 } }); }
     });
-    it("applies and removes an active promotion through the server hook", async () => {
+    it("applies a normalized valid code, recalculates the server total, and persists it across a cart refresh", async () => {
       await cleanup(); const empty = await service.get(customer); if (!empty.ok) throw new Error("cart setup failed");
-      const promotion = await db.promotion.create({ data: { code: "CART-250", discountType: "FIXED", discountValue: 1000, currency: "AUD", active: true } });
+      const added = await service.addItem(customer, { cartId: empty.data.id, expectedRevision: empty.data.revision, variantId: ids.variant, quantity: 1, customisation: { personalisedLabel: null, engravingName: null, giftMessage: null, giftPackagingId: null } }); if (!added.ok) throw new Error("cart item setup failed");
+      const promotion = await db.promotion.create({ data: { code: "CART-250", discountType: "PERCENTAGE", discountValue: 2_500, active: true } });
       try {
-        const applied = await service.applyPromotion(customer, { cartId: empty.data.id, expectedRevision: empty.data.revision, code: promotion.code });
+        const applied = await service.applyPromotion(customer, { cartId: added.data.id, expectedRevision: added.data.revision, code: " cart-250 " });
         expect(applied.ok && applied.data.promotionCode).toBe("CART-250");
+        expect(applied.ok && applied.data.pricing).toMatchObject({ subtotal: { amountMinor: 12000 }, discountTotal: { amountMinor: 3000 }, total: { amountMinor: 9000 } });
+        const refreshed = await service.get(customer);
+        expect(refreshed.ok && refreshed.data.pricing.total.amountMinor).toBe(9000);
         if (applied.ok) { const removed = await service.applyPromotion(customer, { cartId: applied.data.id, expectedRevision: applied.data.revision, code: null }); expect(removed.ok && removed.data.promotionCode).toBeNull(); }
       } finally { await db.promotion.delete({ where: { id: promotion.id } }); }
+    });
+    it("rejects unknown, expired, inactive, currency-mismatched, and unsupported promotions without applying a discount", async () => {
+      await cleanup(); const empty = await service.get(customer); if (!empty.ok) throw new Error("cart setup failed");
+      const inactive = await db.promotion.create({ data: { code: "CART-INACTIVE", discountType: "FIXED", discountValue: 1000, currency: "AUD", active: false } });
+      const expired = await db.promotion.create({ data: { code: "CART-EXPIRED", discountType: "FIXED", discountValue: 1000, currency: "AUD", active: true, activeUntil: new Date("2026-09-07T23:59:59.000Z") } });
+      const mismatched = await db.promotion.create({ data: { code: "CART-USD", discountType: "FIXED", discountValue: 1000, currency: "USD", active: true } });
+      const unsupported = await db.promotion.create({ data: { code: "CART-RULE", discountType: "FIXED", discountValue: 1000, currency: "AUD", active: true, eligibility: { channel: "WEB" } } });
+      try {
+        for (const code of ["CART-UNKNOWN", inactive.code, expired.code, mismatched.code, unsupported.code]) expect(errorCode(await service.applyPromotion(customer, { cartId: empty.data.id, expectedRevision: empty.data.revision, code }))).toBe("VALIDATION_ERROR");
+      } finally { await db.promotion.deleteMany({ where: { id: { in: [inactive.id, expired.id, mismatched.id, unsupported.id] } } }); }
     });
     it("never reserves stock when adding visitor or customer items", async () => {
       await cleanup(); const guest = await service.get(visitor); if (!guest.ok) throw new Error("cart setup failed");
