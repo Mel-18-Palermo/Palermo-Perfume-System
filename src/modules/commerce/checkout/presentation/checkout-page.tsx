@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { getStripeClient } from "@/lib/payment/stripe-elements";
+import { checkoutTotalMinor } from "../pricing";
 import { isVerifiedOrderCompletion, orderConfirmationHref } from "./verified-order-completion";
 
 type Stage =
@@ -59,6 +60,16 @@ export function CheckoutPage() {
   const controlsFrozen = orderId !== null || stage === "CHECKOUT_SUBMITTING";
   const promotionControlsDisabled = cart === null || stage === "INITIALISING" || controlsFrozen || promotionBusy;
   const selectedDeliveryMethod = methods.find((method) => method.id === deliveryMethodId) ?? null;
+  const checkoutTotal = cart && selectedDeliveryMethod
+    ? {
+        amountMinor: checkoutTotalMinor(
+          cart.pricing.subtotal.amountMinor,
+          cart.pricing.discountTotal.amountMinor,
+          selectedDeliveryMethod.charge.amountMinor,
+        ),
+        currency: cart.pricing.subtotal.currency,
+      }
+    : null;
   const requestFingerprint = React.useMemo(
     () => cart && deliveryAddressId && billingAddressId && deliveryMethodId
       ? [cart.id, cart.revision, deliveryAddressId, billingAddressId, deliveryMethodId, cart.promotionCode ?? ""].join("|")
@@ -335,7 +346,7 @@ export function CheckoutPage() {
               <div className="flex justify-between gap-4 text-text-muted"><span>Subtotal</span><span className="font-medium tabular-nums text-text">{cart ? money(cart.pricing.subtotal) : "—"}</span></div>
               {cart?.pricing.discountTotal && cart.pricing.discountTotal.amountMinor > 0 && <div className="flex justify-between gap-4 text-success"><span>Promotion</span><span className="font-medium tabular-nums">−{money(cart.pricing.discountTotal)}</span></div>}
               <div className="flex justify-between gap-4 text-text-muted"><span>Delivery{selectedDeliveryMethod ? ` · ${selectedDeliveryMethod.name}` : ""}</span><span className="font-medium tabular-nums text-text">{selectedDeliveryMethod ? money(selectedDeliveryMethod.charge) : "Select a method"}</span></div>
-              <div className="flex justify-between gap-4 border-t border-border pt-5 text-lg font-medium tabular-nums text-text"><span>Cart total</span><span>{cart ? money(cart.pricing.total) : "—"}</span></div>
+              <div className="flex justify-between gap-4 border-t border-border pt-5 text-lg font-medium tabular-nums text-text"><span>Cart total</span><span>{checkoutTotal ? money(checkoutTotal) : "—"}</span></div>
               <p className="text-xs leading-5 text-text-muted">Delivery is shown separately and is confirmed with your order.</p>
             </div>
             <div className="mt-6 border-t border-border pt-5"><label htmlFor="promotion-code" className="text-xs font-medium uppercase tracking-[0.13em] text-text-muted">Promotion code</label><form className="mt-3 flex gap-2" onSubmit={(event) => { event.preventDefault(); const value = new FormData(event.currentTarget).get("promotionCode"); void applyPromotion(typeof value === "string" ? value.trim() || null : null); }}><Input id="promotion-code" name="promotionCode" disabled={promotionControlsDisabled} aria-label="Promotion code" error={promotionError ?? undefined} className="rounded-none" value={promotionInput} onChange={(event) => { if (!checkoutInFlightRef.current) { setPromotionInput(event.target.value); setPromotionError(null); } }} /><Button type="submit" disabled={promotionControlsDisabled} variant="outline" className="rounded-none">Apply</Button></form>{cart?.promotionCode && !controlsFrozen && <Button disabled={promotionBusy} variant="link" className="mt-3 text-xs" onClick={() => { void applyPromotion(null); }}>Remove {cart.promotionCode}</Button>}</div>
