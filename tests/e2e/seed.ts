@@ -23,6 +23,7 @@ export const e2e = {
   orderId: "39300000-0000-4000-8000-000000000112",
   shipmentId: "39300000-0000-4000-8000-000000000113",
   unisexCollectionId: "39300000-0000-4000-8000-000000000114",
+  promotionId: "39300000-0000-4000-8000-000000000125",
 } as const;
 
 const url = process.env["TEST_DATABASE_URL"];
@@ -64,6 +65,7 @@ try {
     await tx.perfumeVariant.create({ data: { id: e2e.variantId, perfumeId: e2e.perfumeId, sku: "E2E-CITRUS-50", bottleSize: "50 ml", concentration: "Eau de Parfum", priceMinor: 12000, currency: "AUD" } });
     await tx.inventoryBalance.create({ data: { variantId: e2e.variantId, onHand: 8, reserved: 0, lowStockThreshold: 2, updatedAt: at } });
     await tx.deliveryMethod.create({ data: { id: e2e.deliveryId, name: "E2E delivery", chargeMinor: 1000, currency: "AUD", displayInformation: "Deterministic local delivery." } });
+    await tx.promotion.create({ data: { id: e2e.promotionId, code: "WELCOME10", discountType: "PERCENTAGE", discountValue: 1_000, active: true } });
     await tx.order.create({ data: { id: e2e.orderId, customerId: e2e.customerId, orderNumber: "E2E-393", idempotencyKey: "e2e-order-393", requestFingerprint: "e2e-order-393", deliveryMethodId: e2e.deliveryId, status: "CONFIRMED", subtotalMinor: 12000, discountTotalMinor: 0, deliveryChargeMinor: 1000, totalMinor: 13000, currency: "AUD", deliveryAddressSnapshot: address, billingAddressSnapshot: address, deliveryMethodSnapshot: { id: e2e.deliveryId, name: "E2E delivery", chargeMinor: 1000, currency: "AUD" }, placedAt: at } });
     await tx.orderItem.create({ data: { orderId: e2e.orderId, variantId: e2e.variantId, skuSnapshot: "E2E-CITRUS-50", nameSnapshot: "E2E Citrus", unitPriceMinor: 12000, quantity: 1 } });
     await tx.payment.create({ data: { orderId: e2e.orderId, status: "SUCCEEDED", providerReference: "e2e-payment", updatedAt: at } });

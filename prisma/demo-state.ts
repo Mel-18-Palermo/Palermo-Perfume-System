@@ -13,7 +13,7 @@ const expectedCounts = {
   fragranceIdentity: 1, fragranceNote: 2, fragranceProfile: 1, identitySession: 0, intensity: 1,
   inventoryBalance: 2, inventoryMovement: 3, inventoryReservation: 1, invoice: 1, order: 2,
   orderItem: 2, payment: 2, perfume: 2, perfumeImage: 2, perfumeNote: 2, perfumeSuitability: 0,
-  perfumeVariant: 2, permission: 5, productionBatch: 1, profileFavouriteNote: 1, promotion: 0,
+  perfumeVariant: 2, permission: 5, productionBatch: 1, profileFavouriteNote: 1, promotion: 1,
   quiz: 1, quizAttempt: 1, quizOption: 1, quizQuestion: 1, quizResponse: 1, recommendationItem: 1,
   recommendationRun: 1, rolePermission: 5, shipment: 1, suitabilityTag: 0, trackingEvent: 1,
   wishlistItem: 0, review: 0, loyaltyAccount: 0, loyaltyLedgerEntry: 0, subscription: 0, referralCode: 0, referral: 0,

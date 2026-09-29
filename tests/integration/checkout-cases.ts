@@ -123,6 +123,19 @@ export function checkoutCases(db: PrismaClient): void {
       await cleanup();
     });
 
+    it("calculates a percentage promotion server-side for the persisted order total", async () => {
+      await cleanup();
+      const promotion = await db.promotion.create({ data: { code: "CHECKOUT-PERCENTAGE", discountType: "PERCENTAGE", discountValue: 2_500, active: true } });
+      const { input } = await setup(ids.otherCustomer, 962, promotion.id);
+      const result = outcome(await service.submit(ids.otherCustomer, { ...input, promotionCode: ` ${promotion.code.toLowerCase()} ` }));
+      expect(result.status).toBe("READY_FOR_PAYMENT");
+      if (result.status === "READY_FOR_PAYMENT") {
+        const order = await db.order.findUniqueOrThrow({ where: { id: result.orderId } });
+        expect(order).toMatchObject({ subtotalMinor: 12000, discountTotalMinor: 3000, deliveryChargeMinor: 1000, totalMinor: 10000 });
+      }
+      await cleanup();
+    });
+
     it("rejects invalid address and delivery method without partial commerce state", async () => {
       await cleanup();
       const { input, cartId } = await setup(ids.otherCustomer, 955);
