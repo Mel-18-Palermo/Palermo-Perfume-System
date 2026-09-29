@@ -6,6 +6,7 @@ import { failure, success } from "../../../lib/api/result";
 import { isVariantSellable } from "../availability";
 import { CartService } from "../cart/service";
 import { isPromotionEligible, promotionDiscount } from "../promotion";
+import { checkoutTotalMinor } from "./pricing";
 
 const RESERVATION_WINDOW_MS = 15 * 60 * 1000;
 const include = { items: { include: { variant: { include: { perfume: true, inventory: true } } } }, promotion: true } as const;
@@ -25,11 +26,11 @@ function customisationValid(item: Cart["items"][number]): boolean {
     && (item.giftMessage === null || item.variant.giftMessage)
     && (item.giftPackagingId === null || options(item.variant.giftPackagingOptions).includes(item.giftPackagingId));
 }
-function money(cart: Cart, now: Date): { subtotal: number; discount: number; total: number } {
+function money(cart: Cart, deliveryChargeMinor: number, now: Date): { subtotal: number; discount: number; total: number } {
   const subtotal = cart.items.reduce((sum, item) => sum + item.variant.priceMinor * item.quantity, 0);
   const currency = cart.items[0]?.variant.currency ?? "AUD";
   const discount = promotionDiscount(cart.promotion, subtotal, currency, now);
-  return { subtotal, discount, total: subtotal - discount };
+  return { subtotal, discount, total: checkoutTotalMinor(subtotal, discount, deliveryChargeMinor) };
 }
 
 export class CheckoutService {
@@ -95,7 +96,7 @@ export class CheckoutService {
 
         const unavailable = cart.items.filter(item => !isVariantSellable(item.variant.availability, item.variant.inventory, item.quantity)).map(item => item.variantId);
         if (unavailable.length) throw new CheckoutAbort({ status: "OUT_OF_STOCK", variantIds: unavailable });
-        const totals = money(cart, this.now());
+        const totals = money(cart, method.chargeMinor, this.now());
 
         await tx.order.create({ data: {
           id: orderId,
@@ -108,7 +109,7 @@ export class CheckoutService {
           subtotalMinor: totals.subtotal,
           discountTotalMinor: totals.discount,
           deliveryChargeMinor: method.chargeMinor,
-          totalMinor: totals.total + method.chargeMinor,
+          totalMinor: totals.total,
           currency,
           deliveryAddressSnapshot: this.snapshot(delivery),
           billingAddressSnapshot: this.snapshot(billing),

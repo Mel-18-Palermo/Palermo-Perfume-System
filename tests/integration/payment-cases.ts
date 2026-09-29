@@ -5,6 +5,7 @@ import type { PrismaClient } from "../../src/lib/db/generated/client";
 import { InventoryService } from "../../src/modules/inventory/service";
 import {
   PaymentService,
+  type PaymentGateway,
   SandboxPaymentGateway,
   UnavailablePaymentGateway,
 } from "../../src/modules/commerce/payment/service";
@@ -29,6 +30,17 @@ function value<T>(result: { ok: true; data: T } | { ok: false; error: unknown })
   expect(result.ok).toBe(true);
   if (!result.ok) throw new Error("Expected successful payment result");
   return result.data;
+}
+
+class CapturingPaymentGateway implements PaymentGateway {
+  readonly amounts: number[] = [];
+
+  async createPayment(input: { paymentId: string; orderId: string; amountMinor: number; currency: string; attemptSequence: number }): Promise<{ providerReference: string; clientSecret: null }> {
+    this.amounts.push(input.amountMinor);
+    return { providerReference: `captured_pi_${input.orderId}_${input.attemptSequence}`, clientSecret: null };
+  }
+
+  parseWebhook(): null { return null; }
 }
 
 export function paymentCases(db: PrismaClient): void {
@@ -129,6 +141,14 @@ export function paymentCases(db: PrismaClient): void {
       expect(persisted.providerReference).toBe(initiated.providerReference);
       expect(persisted.attemptSequence).toBe(1);
       expect(Object.keys(persisted)).not.toEqual(expect.arrayContaining(["pan", "cardNumber", "cvc", "cvv", "expiry"]));
+    });
+
+    it("sends the persisted payable order total to the payment gateway", async () => {
+      const record = await setup();
+      const gateway = new CapturingPaymentGateway();
+      const paymentService = new PaymentService(db, gateway, () => initialTime);
+      await paymentService.initiate(ids.otherCustomer, record.orderId);
+      expect(gateway.amounts).toEqual([31_000]);
     });
 
     it("fails closed without configured Stripe transport and preserves the reservation", async () => {
