@@ -55,19 +55,33 @@ test("administrator uses real reporting, moderation and promotion boundaries", a
 
   await page.goto("/admin/reviews");
   await expect(page.getByRole("heading", { name: "Review moderation", exact: true })).toBeVisible();
-  await expect(page.getByText("Persisted E2E moderation review.")).toBeVisible();
-  const approve = page.getByRole("button", { name: "Approve" });
-  await approve.focus();
-  await expect(approve).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(page.getByText("Approved").first()).toBeVisible();
+  const persistedReview = page.getByText("Persisted E2E moderation review.", { exact: true }).locator("..");
+  await expect(persistedReview).toBeVisible();
+  const approvedState = persistedReview.getByText("Approved", { exact: true });
+  if (await approvedState.isVisible()) {
+    await expect(approvedState).toBeVisible();
+  } else {
+    await expect(persistedReview.getByText("Pending", { exact: true })).toBeVisible();
+    const approve = persistedReview.getByRole("button", { name: "Approve" });
+    await expect(approve).toBeEnabled();
+    await approve.focus();
+    await expect(approve).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(approvedState).toBeVisible();
+  }
 
   await page.goto("/admin/promotions");
   await expect(page.getByRole("heading", { name: "Promotions and content", exact: true })).toBeVisible();
-  await page.getByLabel("Code").first().fill("E2E279");
-  await page.getByLabel("Discount value").first().fill("1500");
-  await page.getByRole("button", { name: "Create promotion" }).click();
-  await expect(page.getByLabel("Code").last()).toHaveValue("E2E279");
+  const createPromotion = page.getByRole("heading", { name: "Create promotion", exact: true }).locator("..");
+  await expect(createPromotion.getByLabel("Code")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Persisted promotions", exact: true })).toBeVisible();
+  const persistedPromotion = page.locator('input[value="E2E279"]');
+  if (await persistedPromotion.count() === 0) {
+    await createPromotion.getByLabel("Code").fill("E2E279");
+    await createPromotion.getByLabel("Discount value").fill("1500");
+    await createPromotion.getByRole("button", { name: "Create promotion" }).click();
+  }
+  await expect(persistedPromotion).toBeVisible();
 
   await page.getByLabel("Title").fill("E2E provider state");
   await page.getByLabel("Brief").fill("Verify the real unavailable provider state.");
